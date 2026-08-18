@@ -150,7 +150,7 @@ module.exports = async function handler(req, res) {
   } catch (error) {
 
     console.error(
-      "Countries API error:",
+      "Countries API error faah:",
       error
     );
 
