@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TGA Store</title>
+
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #000;
+  color: #fff;
+  min-height: 100vh;
+}
+
+/* LOGIN */
+
+#loginScreen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.login-card {
+  background: #0d0d0d;
+  border: 1px solid #1f1f1f;
+  border-radius: 20px;
+  padding: 40px 32px;
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+}
+
+.logo-hex {
+  width: 90px;
+  height: 90px;
+  margin: 0 auto 16px;
+  border: 3px solid #e5e5e5;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+}
+
+.brand-title {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.brand-sub {
+  font-size: 11px;
+  color: #777;
+  letter-spacing: 3px;
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+
+.welcome-text {
+  margin-top: 28px;
+  font-size: 20px;
+  font-weight: 700;
+  text-align: left;
+}
+
+.welcome-sub {
+  text-align: left;
+  color: #999;
+  font-size: 13px;
+  margin-top: 4px;
+  margin-bottom: 24px;
+}
+
+.field-label {
+  text-align: left;
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 6px;
+  margin-top: 14px;
+}
+
+.field-input {
+  width: 100%;
+  background: #161616;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: #fff;
+  font-size: 15px;
+  outline: none;
+}
+
+.field-input:focus {
+  border-color: #4a9eff;
+}
+
+.login-btn {
+  width: 100%;
+  background: #fff;
+  color: #000;
+  border: none;
+  border-radius: 14px;
+  padding: 15px;
+  font-size: 15px;
+  font-weight: 700;
+  margin-top: 24px;
+  cursor: pointer;
+}
+
+.login-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.login-error {
+  color: #ff5c5c;
+  font-size: 13px;
+  margin-top: 12px;
+  display: none;
+}
+
+.demo-hint {
+  margin-top: 16px;
+  font-size: 12px;
+  color: #666;
+}
+
+/* DASHBOARD */
+
+#dashboardScreen {
+  display: none;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid #1a1a1a;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topbar-title {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.nav-links {
+  display: flex;
+  gap: 22px;
+  font-size: 14px;
+  color: #999;
+  flex-wrap: wrap;
+}
+
+.nav-links span {
+  cursor: pointer;
+  padding: 6px 4px;
+}
+
+.nav-links span.active {
+  color: #fff;
+  font-weight: 700;
+  border-bottom: 2px solid #fff;
+}
+
+.logout-btn {
+  background: #161616;
+  border: 1px solid #2a2a2a;
+  color: #ccc;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.welcome-line {
+  color: #999;
+  font-size: 14px;
+}
+
+.welcome-name {
+  font-size: 26px;
+  font-weight: 800;
+  margin-top: 4px;
+  margin-bottom: 24px;
+}
+
+.balance-card {
+  background: #0d0d0d;
+  border: 1px solid #1f1f1f;
+  border-radius: 18px;
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.balance-label {
+  color: #999;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.balance-value {
+  font-size: 40px;
+  font-weight: 800;
+}
+
+.stats-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.stat-card {
+  flex: 1;
+  min-width: 160px;
+  background: #0d0d0d;
+  border: 1px solid #1f1f1f;
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.stat-label {
+  color: #999;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.section-title {
+  font-size: 19px;
+  font-weight: 800;
+  margin-bottom: 14px;
+}
+
+.order-card {
+  background: #0d0d0d;
+  border: 1px solid #1f1f1f;
+  border-radius: 16px;
+  padding: 18px 20px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.order-left {
+  flex: 1;
+  min-width: 180px;
+}
+
+.order-country {
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 6px;
+}
+
+.order-detail {
+  color: #999;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.order-detail b {
+  color: #ddd;
+}
+
+.order-right {
+  text-align: right;
+}
+
+.order-price {
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 6px;
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.status-completed {
+  background: rgba(61,220,132,0.15);
+  color: #3ddc84;
+}
+
+.status-waiting {
+  background: rgba(255,193,61,0.15);
+  color: #ffc13d;
+}
+
+.status-cancelled {
+  background: rgba(255,92,92,0.15);
+  color: #ff5c5c;
+}
+
+.empty-state {
+  text-align: center;
+  color: #666;
+  padding: 40px 20px;
+  background: #0d0d0d;
+  border: 1px solid #1f1f1f;
+  border-radius: 16px;
+}
+
+.loading-spin {
+  width: 28px;
+  height: 28px;
+  border: 3px solid #2a2a2a;
+  border-top-color: #fff;
+  border-radius: 50%;
+  margin: 30px auto;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 600px) {
+  .topbar {
+    padding: 14px 16px;
+  }
+
+  .container {
+    padding: 18px 16px;
+  }
+
+  .nav-links {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    gap: 14px;
+  }
+
+  .order-right {
+    text-align: left;
+  }
+
+  .balance-value {
+    font-size: 34px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+
+<div id="loginScreen">
+
+  <div class="login-card">
+
+    <div class="logo-hex">🛡️</div>
+
+    <div class="brand-title">TGA STORE</div>
+
+    <div class="brand-sub">
+      Powered by Rule Breaker
+    </div>
+
+    <div class="welcome-text">
+      Welcome Back
+    </div>
+
+    <div class="welcome-sub">
+      Login with your Telegram ID
+    </div>
+
+    <div class="field-label">
+      Telegram User ID
+    </div>
+
+    <input
+      type="text"
+      id="telegramIdInput"
+      class="field-input"
+      placeholder="e.g. 123456789"
+      inputmode="numeric"
+      autocomplete="off"
+    >
+
+    <div class="field-label">
+      Password
+    </div>
+
+    <input
+      type="password"
+      id="passwordInput"
+      class="field-input"
+      placeholder="Enter password"
+      autocomplete="off"
+    >
+
+    <button
+      class="login-btn"
+      id="loginBtn"
+      onclick="handleLogin()"
+    >
+      Login Now
+    </button>
+
+    <div
+      class="login-error"
+      id="loginError"
+    ></div>
+
+    <div class="demo-hint">
+      Demo password: <b>demo</b>
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- DASHBOARD -->
+
+<div id="dashboardScreen">
+
+  <div class="topbar">
+
+    <div class="topbar-left">
+      <span style="font-size:20px;">🛡️</span>
+      <span class="topbar-title">TGA Store</span>
+    </div>
+
+    <div class="nav-links">
+      <span class="active">Home</span>
+      <span>Buy</span>
+      <span>Recharge</span>
+      <span>Orders</span>
+      <span>Settings</span>
+    </div>
+
+    <button
+      class="logout-btn"
+      onclick="handleLogout()"
+    >
+      Logout
+    </button>
+
+  </div>
+
+  <div class="container">
+
+    <div class="welcome-line">
+      Welcome back,
+    </div>
+
+    <div
+      class="welcome-name"
+      id="welcomeName"
+    >
+      -
+    </div>
+
+    <div class="balance-card">
+
+      <div class="balance-label">
+        💳 Total Balance
+      </div>
+
+      <div>
+        <span
+          class="balance-value"
+          id="balanceValue"
+        >
+          ₹0.00
+        </span>
+      </div>
+
+    </div>
+
+    <div class="stats-row">
+
+      <div class="stat-card">
+
+        <div class="stat-label">
+          ⚡ Total Recharge
+        </div>
+
+        <div
+          class="stat-value"
+          id="totalRecharge"
+        >
+          0
+        </div>
+
+      </div>
+
+      <div class="stat-card">
+
+        <div class="stat-label">
+          🔑 Total Orders
+        </div>
+
+        <div
+          class="stat-value"
+          id="totalOrders"
+        >
+          0
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="section-title">
+      📦 Order History
+    </div>
+
+    <div id="ordersList">
+      <div class="loading-spin"></div>
+    </div>
+
+  </div>
+
+</div>
+
+
+<script>
+
+/* ==========================================
+   LOGIN
+========================================== */
+
+async function handleLogin() {
+
+  const idInput =
+    document.getElementById("telegramIdInput")
+      .value.trim();
+
+  const password =
+    document.getElementById("passwordInput")
+      .value;
+
+  const button =
+    document.getElementById("loginBtn");
+
+  hideError();
+
+  if (!idInput || !/^\d+$/.test(idInput)) {
+
+    showError(
+      "Enter a valid numeric Telegram ID."
+    );
+
+    return;
+  }
+
+  if (!password) {
+
+    showError(
+      "Enter your password."
+    );
+
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "Logging in...";
+
+  try {
+
+    const response = await fetch(
+      "/api/login",
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+          telegramId: idInput,
+          password: password
+        })
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+
+      showError(
+        result.message ||
+        "Login failed."
+      );
+
+      return;
+    }
+
+    const telegramId =
+      String(result.user.telegramId);
+
+    const username =
+      result.user.username || "User";
+
+    localStorage.setItem(
+      "tga_telegram_id",
+      telegramId
+    );
+
+    localStorage.setItem(
+      "tga_username",
+      username
+    );
+
+    showDashboard(
+      telegramId,
+      username
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    showError(
+      "Unable to connect to server."
+    );
+
+  } finally {
+
+    button.disabled = false;
+    button.textContent = "Login Now";
+  }
+}
+
+
+/* ==========================================
+   DASHBOARD
+========================================== */
+
+async function loadDashboardData(telegramId) {
+
+  const ordersList =
+    document.getElementById("ordersList");
+
+  ordersList.innerHTML =
+    '<div class="loading-spin"></div>';
+
+  try {
+
+    const response = await fetch(
+      "/api/dashboard?telegramId=" +
+      encodeURIComponent(telegramId)
+    );
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error(
+        result.message ||
+        "Could not load dashboard."
+      );
+    }
+
+    const user = result.user || {};
+
+    const balance =
+      Number(user.balance || 0);
+
+    document.getElementById(
+      "welcomeName"
+    ).textContent =
+      user.username || "User";
+
+    document.getElementById(
+      "balanceValue"
+    ).textContent =
+      formatMoney(balance);
+
+    document.getElementById(
+      "totalOrders"
+    ).textContent =
+      result.totalOrders || 0;
+
+    document.getElementById(
+      "totalRecharge"
+    ).textContent =
+      result.totalRecharge || 0;
+
+    renderOrders(
+      result.orders || []
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    ordersList.innerHTML =
+      '<div class="empty-state">' +
+      '⚠️ Could not load data.<br>' +
+      escapeHtml(error.message) +
+      '</div>';
+  }
+}
+
+
+/* ==========================================
+   RENDER ORDERS
+========================================== */
+
+function renderOrders(orders) {
+
+  const container =
+    document.getElementById("ordersList");
+
+  if (!orders.length) {
+
+    container.innerHTML =
+      '<div class="empty-state">' +
+      '😔 No orders yet.' +
+      '</div>';
+
+    return;
+  }
+
+  container.innerHTML =
+    orders.map(function(order) {
+
+      const country =
+        escapeHtml(
+          order.country || "N/A"
+        );
+
+      const number =
+        escapeHtml(
+          order.number || "N/A"
+        );
+
+      const otp =
+        escapeHtml(
+          order.otp || "Not received"
+        );
+
+      const status =
+        escapeHtml(
+          order.status || "unknown"
+        );
+
+      const price =
+        formatMoney(
+          order.price || 0
+        );
+
+      const date =
+        formatDate(
+          order.created_at
+        );
+
+      return `
+        <div class="order-card">
+
+          <div class="order-left">
+
+            <div class="order-country">
+              🌍 ${country}
+            </div>
+
+            <div class="order-detail">
+
+              <b>Number:</b>
+              ${number}
+
+              <br>
+
+              <b>OTP:</b>
+              ${otp}
+
+              <br>
+
+              <b>Date:</b>
+              ${date}
+
+            </div>
+
+          </div>
+
+          <div class="order-right">
+
+            <div class="order-price">
+              ${price}
+            </div>
+
+            <span
+              class="status-pill ${getStatusClass(order.status)}"
+            >
+              ${status}
+            </span>
+
+          </div>
+
+        </div>
+      `;
+
+    }).join("");
+}
+
+
+/* ==========================================
+   STATUS
+========================================== */
+
+function getStatusClass(status) {
+
+  const value =
+    String(status || "")
+      .toLowerCase();
+
+  if (value.includes("complet")) {
+    return "status-completed";
+  }
+
+  if (value.includes("cancel")) {
+    return "status-cancelled";
+  }
+
+  return "status-waiting";
+}
+
+
+/* ==========================================
+   DATE
+========================================== */
+
+function formatDate(value) {
+
+  if (!value) {
+    return "N/A";
+  }
+
+  try {
+
+    let dateValue = value;
+
+    if (
+      typeof value === "object" &&
+      value.$date
+    ) {
+      dateValue = value.$date;
+    }
+
+    const date =
+      new Date(dateValue);
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return "N/A";
+    }
+
+    return date.toLocaleDateString();
+
+  } catch (error) {
+
+    return "N/A";
+  }
+}
+
+
+/* ==========================================
+   MONEY
+========================================== */
+
+function formatMoney(value) {
+
+  const amount =
+    Number(value || 0);
+
+  return "₹" +
+    (Number.isFinite(amount)
+      ? amount.toFixed(2)
+      : "0.00");
+}
+
+
+/* ==========================================
+   HTML ESCAPE
+========================================== */
+
+function escapeHtml(value) {
+
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+
+/* ==========================================
+   SHOW ERROR
+========================================== */
+
+function showError(message) {
+
+  const element =
+    document.getElementById("loginError");
+
+  element.textContent = message;
+  element.style.display = "block";
+}
+
+
+function hideError() {
+
+  const element =
+    document.getElementById("loginError");
+
+  element.textContent = "";
+  element.style.display = "none";
+}
+
+
+/* ==========================================
+   SHOW DASHBOARD
+========================================== */
+
+function showDashboard(
+  telegramId,
+  username
+) {
+
+  document.getElementById(
+    "loginScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "dashboardScreen"
+  ).style.display = "block";
+
+  document.getElementById(
+    "welcomeName"
+  ).textContent =
+    username || "User";
+
+  loadDashboardData(
+    telegramId
+  );
+}
+
+
+/* ==========================================
+   LOGOUT
+========================================== */
+
+function handleLogout() {
+
+  localStorage.removeItem(
+    "tga_telegram_id"
+  );
+
+  localStorage.removeItem(
+    "tga_username"
+  );
+
+  document.getElementById(
+    "dashboardScreen"
+  ).style.display = "none";
+
+  document.getElementById(
+    "loginScreen"
+  ).style.display = "flex";
+
+  document.getElementById(
+    "telegramIdInput"
+  ).value = "";
+
+  document.getElementById(
+    "passwordInput"
+  ).value = "";
+
+  hideError();
+}
+
+
+/* ==========================================
+   AUTO LOGIN
+========================================== */
+
+window.addEventListener(
+  "DOMContentLoaded",
+  function() {
+
+    const savedId =
+      localStorage.getItem(
+        "tga_telegram_id"
+      );
+
+    const savedUsername =
+      localStorage.getItem(
+        "tga_username"
+      );
+
+    if (savedId) {
+
+      showDashboard(
+        savedId,
+        savedUsername || "User"
+      );
+
+    }
+
+  }
+);
+
+
+/* ==========================================
+   ENTER TO LOGIN
+========================================== */
+
+document.getElementById(
+  "passwordInput"
+).addEventListener(
+  "keydown",
+  function(event) {
+
+    if (event.key === "Enter") {
+      handleLogin();
+    }
+
+  }
+);
+
+</script>
+
+</body>
+      </html>
