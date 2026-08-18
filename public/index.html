@@ -1,0 +1,4248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="color-scheme" content="dark light">
+
+<title>TGA Store</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+:root{
+  --bg:#000;
+  --surface:#0d0d0d;
+  --surface2:#121212;
+  --border:#242424;
+  --text:#fff;
+  --muted:#8d8d8d;
+  --soft:#666;
+  --green:#42e889;
+  --red:#ff5656;
+  --yellow:#ffc857;
+}
+
+html{
+  scroll-behavior:smooth;
+}
+
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  transition:
+    background .25s ease,
+    color .25s ease;
+}
+
+body.light{
+  --bg:#f5f5f7;
+  --surface:#fff;
+  --surface2:#f0f0f2;
+  --border:#dedee3;
+  --text:#111;
+  --muted:#666;
+  --soft:#888;
+}
+
+button,
+input,
+select{
+  font:inherit;
+}
+
+button{
+  cursor:pointer;
+}
+
+button:disabled{
+  cursor:not-allowed;
+}
+
+.hidden{
+  display:none!important;
+}
+
+/* ==================================================
+   LOGIN
+================================================== */
+
+#loginScreen{
+  min-height:100vh;
+  min-height:100dvh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:22px;
+}
+
+.login-card{
+  width:100%;
+  max-width:390px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:25px;
+  padding:34px 27px;
+  text-align:center;
+  box-shadow:0 25px 80px rgba(0,0,0,.35);
+}
+
+.login-logo{
+  width:90px;
+  height:90px;
+  object-fit:contain;
+  margin-bottom:12px;
+}
+
+.brand-title{
+  font-size:27px;
+  font-weight:850;
+  letter-spacing:1px;
+}
+
+.brand-sub{
+  color:var(--muted);
+  font-size:11px;
+  letter-spacing:2px;
+  margin-top:4px;
+  text-transform:uppercase;
+}
+
+.welcome-text{
+  text-align:left;
+  font-size:20px;
+  font-weight:800;
+  margin-top:30px;
+}
+
+.welcome-sub{
+  text-align:left;
+  color:var(--muted);
+  font-size:13px;
+  margin:5px 0 22px;
+}
+
+.field-label{
+  text-align:left;
+  color:var(--muted);
+  font-size:12px;
+  margin:14px 0 7px;
+}
+
+.field-input{
+  width:100%;
+  background:var(--surface2);
+  color:var(--text);
+  border:1px solid var(--border);
+  border-radius:13px;
+  padding:14px;
+  outline:none;
+}
+
+.field-input::placeholder{
+  color:var(--soft);
+}
+
+.field-input:focus{
+  border-color:#777;
+}
+
+.login-btn,
+.primary-btn{
+  width:100%;
+  border:0;
+  border-radius:14px;
+  padding:15px;
+  margin-top:22px;
+  background:#fff;
+  color:#000;
+  font-weight:800;
+  transition:.2s;
+}
+
+.login-btn:hover,
+.primary-btn:hover{
+  transform:translateY(-1px);
+}
+
+body.light .login-btn,
+body.light .primary-btn{
+  background:#111;
+  color:#fff;
+}
+
+.login-btn:disabled{
+  opacity:.55;
+}
+
+.login-error{
+  display:none;
+  color:var(--red);
+  font-size:13px;
+  margin-top:12px;
+}
+
+/* ==================================================
+   APP
+================================================== */
+
+#dashboardScreen{
+  display:none;
+  min-height:100vh;
+  padding-bottom:105px;
+}
+
+.app-header{
+  height:78px;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 26px;
+  position:sticky;
+  top:0;
+  z-index:20;
+  background:rgba(0,0,0,.88);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+}
+
+body.light .app-header{
+  background:rgba(245,245,247,.9);
+}
+
+.header-brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.header-logo{
+  width:43px;
+  height:43px;
+  object-fit:contain;
+}
+
+.header-title{
+  font-size:20px;
+  font-weight:850;
+}
+
+.header-refresh{
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  border:1px solid var(--border);
+  background:var(--surface);
+  color:var(--text);
+  font-size:22px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:.2s;
+}
+
+.header-refresh:hover{
+  transform:scale(1.04);
+}
+
+.header-refresh:disabled{
+  opacity:.6;
+}
+
+.header-refresh.refreshing{
+  animation:refreshRotate .75s linear infinite;
+}
+
+@keyframes refreshRotate{
+  from{
+    transform:rotate(0deg);
+  }
+  to{
+    transform:rotate(360deg);
+  }
+}
+
+.container{
+  width:min(1280px,100%);
+  margin:auto;
+  padding:28px 24px;
+}
+
+/* ==================================================
+   PAGES
+================================================== */
+
+.page{
+  display:none;
+}
+
+.page.active{
+  display:block;
+}
+
+.welcome-line{
+  color:var(--muted);
+  font-size:15px;
+}
+
+.welcome-name{
+  font-size:38px;
+  font-weight:900;
+  margin-top:2px;
+  margin-bottom:28px;
+  word-break:break-word;
+}
+
+.announcement{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:22px;
+  margin-bottom:22px;
+}
+
+.announcement-title{
+  font-size:18px;
+  font-weight:800;
+  margin-bottom:8px;
+}
+
+.announcement-text{
+  color:var(--muted);
+  line-height:1.6;
+}
+
+/* ==================================================
+   BALANCE
+================================================== */
+
+.balance-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:22px;
+  padding:25px;
+  margin-bottom:18px;
+}
+
+.balance-label{
+  color:var(--muted);
+  font-size:14px;
+  margin-bottom:8px;
+}
+
+.balance-value{
+  font-size:44px;
+  font-weight:900;
+  line-height:1.1;
+}
+
+.balance-secondary{
+  color:var(--muted);
+  font-size:16px;
+  margin-left:8px;
+}
+
+.add-balance{
+  width:100%;
+  background:#fff;
+  color:#000;
+  border:0;
+  border-radius:14px;
+  padding:16px;
+  font-weight:800;
+  margin-top:20px;
+}
+
+body.light .add-balance{
+  background:#111;
+  color:#fff;
+}
+
+.stats-row{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:16px;
+  margin-bottom:30px;
+}
+
+.stat-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:21px;
+}
+
+.stat-label{
+  color:var(--muted);
+  font-size:14px;
+  margin-bottom:8px;
+}
+
+.stat-value{
+  font-size:29px;
+  font-weight:900;
+}
+
+/* ==================================================
+   SECTION
+================================================== */
+
+.section-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:15px;
+  gap:15px;
+}
+
+.section-title{
+  font-size:22px;
+  font-weight:850;
+}
+
+.view-all{
+  color:var(--muted);
+  cursor:pointer;
+  white-space:nowrap;
+}
+
+.view-all:hover{
+  color:var(--text);
+}
+
+/* ==================================================
+   COUNTRY
+================================================== */
+
+.search-box{
+  width:100%;
+  background:var(--surface);
+  color:var(--text);
+  border:1px solid var(--border);
+  border-radius:15px;
+  padding:15px 17px;
+  margin-bottom:20px;
+  outline:none;
+}
+
+.search-box::placeholder{
+  color:var(--muted);
+}
+
+.search-box:focus{
+  border-color:#666;
+}
+
+/*
+  Desktop:
+  5 countries per row
+*/
+.country-grid{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:16px;
+  width:100%;
+}
+
+.country-card{
+  min-width:0;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:21px;
+  padding:22px 17px;
+  text-align:center;
+  transition:
+    transform .2s ease,
+    border-color .2s ease,
+    box-shadow .2s ease;
+}
+
+.country-card:hover{
+  transform:translateY(-2px);
+  border-color:#444;
+  box-shadow:0 10px 35px rgba(0,0,0,.18);
+}
+
+.country-flag{
+  font-size:43px;
+  line-height:1;
+  margin-bottom:12px;
+}
+
+.country-name{
+  font-weight:800;
+  font-size:16px;
+  min-height:20px;
+}
+
+.country-code{
+  color:var(--muted);
+  font-size:12px;
+  margin-top:3px;
+}
+
+.country-price{
+  margin-top:9px;
+  color:var(--muted);
+  font-size:14px;
+  font-weight:700;
+}
+
+.stock{
+  color:var(--green);
+  font-size:13px;
+  margin-top:7px;
+  font-weight:650;
+}
+
+.quality{
+  color:var(--green);
+  font-size:12px;
+  margin-top:8px;
+  font-weight:700;
+}
+
+.buy-now{
+  width:100%;
+  background:#fff;
+  color:#000;
+  border:0;
+  border-radius:12px;
+  padding:12px;
+  margin-top:15px;
+  font-weight:800;
+  transition:.2s;
+}
+
+.buy-now:hover:not(:disabled){
+  transform:translateY(-1px);
+}
+
+body.light .buy-now{
+  background:#111;
+  color:#fff;
+}
+
+.out-stock{
+  color:var(--red);
+}
+
+.buy-now:disabled{
+  opacity:.45;
+}
+
+.loading{
+  color:var(--muted);
+  padding:35px;
+  text-align:center;
+  grid-column:1/-1;
+}
+
+.spinner{
+  width:28px;
+  height:28px;
+  border:3px solid #333;
+  border-top-color:#fff;
+  border-radius:50%;
+  animation:spin .8s linear infinite;
+  margin:0 auto 12px;
+}
+
+body.light .spinner{
+  border-color:#ddd;
+  border-top-color:#111;
+}
+
+@keyframes spin{
+  to{
+    transform:rotate(360deg);
+  }
+}
+
+/* ==================================================
+   ORDERS
+================================================== */
+
+.order-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:19px;
+  padding:18px;
+  margin-bottom:12px;
+  display:flex;
+  justify-content:space-between;
+  gap:15px;
+}
+
+.order-country{
+  font-weight:800;
+  margin-bottom:7px;
+}
+
+.order-detail{
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.7;
+}
+
+.order-detail b{
+  color:var(--text);
+}
+
+.order-right{
+  text-align:right;
+}
+
+.order-price{
+  font-weight:800;
+  margin-bottom:7px;
+}
+
+.status-pill{
+  display:inline-block;
+  border-radius:20px;
+  padding:5px 11px;
+  font-size:11px;
+  font-weight:800;
+}
+
+.status-completed{
+  color:var(--green);
+  background:rgba(66,232,137,.12);
+}
+
+.status-waiting{
+  color:var(--yellow);
+  background:rgba(255,200,87,.12);
+}
+
+.status-cancelled{
+  color:var(--red);
+  background:rgba(255,86,86,.12);
+}
+
+/* ==================================================
+   SETTINGS
+================================================== */
+
+.settings-list{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:20px;
+  overflow:hidden;
+}
+
+.setting-item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px;
+  padding:18px;
+  border-bottom:1px solid var(--border);
+}
+
+.setting-item:last-child{
+  border-bottom:0;
+}
+
+.setting-left{
+  display:flex;
+  align-items:center;
+  gap:13px;
+  min-width:0;
+}
+
+.setting-icon{
+  width:40px;
+  height:40px;
+  flex:0 0 40px;
+  border-radius:12px;
+  background:var(--surface2);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.setting-title{
+  font-weight:750;
+}
+
+.setting-sub{
+  color:var(--muted);
+  font-size:12px;
+  margin-top:3px;
+}
+
+.setting-arrow{
+  color:var(--muted);
+  font-size:20px;
+}
+
+.select{
+  background:var(--surface2);
+  color:var(--text);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:9px 12px;
+  outline:none;
+}
+
+.switch{
+  width:50px;
+  height:29px;
+  border-radius:20px;
+  background:#333;
+  padding:3px;
+  border:0;
+  flex:0 0 50px;
+}
+
+.switch span{
+  display:block;
+  width:23px;
+  height:23px;
+  background:#fff;
+  border-radius:50%;
+  transition:.2s;
+}
+
+.switch.on{
+  background:var(--green);
+}
+
+.switch.on span{
+  transform:translateX(21px);
+}
+
+/* ==================================================
+   BOTTOM NAV
+================================================== */
+
+.bottom-nav{
+  position:fixed;
+  z-index:100;
+  bottom:14px;
+  left:50%;
+  transform:translateX(-50%);
+  width:min(720px,calc(100% - 28px));
+  background:rgba(14,14,14,.94);
+  border:1px solid #2b2b2b;
+  border-radius:28px;
+  padding:9px;
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  box-shadow:0 15px 45px rgba(0,0,0,.5);
+}
+
+body.light .bottom-nav{
+  background:rgba(255,255,255,.94);
+  border-color:#ddd;
+}
+
+.nav-btn{
+  border:0;
+  background:transparent;
+  color:#777;
+  border-radius:20px;
+  min-height:66px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:4px;
+  font-size:11px;
+  font-weight:700;
+}
+
+.nav-icon{
+  font-size:22px;
+  line-height:1;
+}
+
+.nav-btn.active{
+  color:var(--text);
+  background:var(--surface2);
+}
+
+/* ==================================================
+   MODALS
+================================================== */
+
+.modal-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.75);
+  backdrop-filter:blur(9px);
+  -webkit-backdrop-filter:blur(9px);
+  z-index:500;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+
+.modal-overlay.show{
+  display:flex;
+}
+
+.modal{
+  width:min(480px,100%);
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:24px;
+  padding:24px;
+  max-height:85vh;
+  overflow:auto;
+}
+
+.modal-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px;
+  margin-bottom:20px;
+}
+
+.modal-title{
+  font-size:21px;
+  font-weight:850;
+}
+
+.close-btn{
+  width:38px;
+  height:38px;
+  flex:0 0 38px;
+  border-radius:50%;
+  border:1px solid var(--border);
+  background:var(--surface2);
+  color:var(--text);
+  font-size:22px;
+}
+
+.terms{
+  color:var(--muted);
+  line-height:1.7;
+  font-size:14px;
+}
+
+.terms strong{
+  color:var(--text);
+}
+
+.terms li{
+  margin:8px 0 8px 18px;
+}
+
+.modal-price{
+  background:var(--surface2);
+  border-radius:13px;
+  padding:15px;
+  text-align:center;
+  margin:20px 0;
+  font-weight:800;
+}
+
+.modal-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+.secondary-btn{
+  border:1px solid var(--border);
+  background:transparent;
+  color:var(--text);
+  border-radius:13px;
+  padding:14px;
+  font-weight:800;
+}
+
+.modal-actions .primary-btn{
+  margin:0;
+}
+
+/* ==================================================
+   SUCCESS
+================================================== */
+
+.success-icon{
+  width:90px;
+  height:90px;
+  border-radius:50%;
+  background:var(--green);
+  color:#000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:48px;
+  margin:0 auto 20px;
+}
+
+.account-info{
+  background:var(--surface2);
+  border-radius:18px;
+  padding:17px;
+}
+
+.info-row{
+  display:flex;
+  justify-content:space-between;
+  gap:15px;
+  padding:13px 0;
+  border-bottom:1px solid var(--border);
+}
+
+.info-row:last-child{
+  border-bottom:0;
+}
+
+.info-label{
+  color:var(--muted);
+}
+
+.info-value{
+  text-align:right;
+  font-weight:750;
+  word-break:break-all;
+}
+
+.success-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-top:18px;
+}
+
+.success-actions .primary-btn{
+  margin:0;
+}
+
+/* ==================================================
+   RESPONSIVE
+================================================== */
+
+/* Tablet */
+@media(max-width:1100px){
+  .country-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+}
+
+/* Small tablet */
+@media(max-width:850px){
+  .container{
+    padding-left:20px;
+    padding-right:20px;
+  }
+}
+
+/* Mobile */
+@media(max-width:600px){
+
+  .app-header{
+    height:70px;
+    padding:0 17px;
+  }
+
+  .header-logo{
+    width:39px;
+    height:39px;
+  }
+
+  .header-title{
+    font-size:18px;
+  }
+
+  .header-refresh{
+    width:46px;
+    height:46px;
+  }
+
+  .container{
+    padding:22px 16px;
+  }
+
+  .welcome-name{
+    font-size:32px;
+  }
+
+  .balance-value{
+    font-size:36px;
+  }
+
+  .balance-secondary{
+    font-size:14px;
+  }
+
+  .stats-row{
+    gap:10px;
+  }
+
+  .stat-card{
+    padding:17px 14px;
+  }
+
+  .stat-label{
+    font-size:12px;
+  }
+
+  .stat-value{
+    font-size:25px;
+  }
+
+  /*
+    IMPORTANT:
+    Mobile = 2 country cards per row
+  */
+  .country-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
+  }
+
+  .country-card{
+    padding:17px 8px;
+    border-radius:17px;
+  }
+
+  .country-flag{
+    font-size:32px;
+    margin-bottom:9px;
+  }
+
+  .country-name{
+    font-size:13px;
+    line-height:1.25;
+  }
+
+  .country-code{
+    font-size:10px;
+  }
+
+  .country-price{
+    font-size:12px;
+    margin-top:8px;
+  }
+
+  .stock{
+    font-size:11px;
+  }
+
+  .quality{
+    font-size:10px;
+  }
+
+  .buy-now{
+    padding:10px 5px;
+    font-size:11px;
+    margin-top:12px;
+  }
+
+  .order-card{
+    flex-direction:column;
+  }
+
+  .order-right{
+    text-align:left;
+  }
+
+  .bottom-nav{
+    bottom:9px;
+    width:calc(100% - 18px);
+    border-radius:24px;
+  }
+
+  .nav-btn{
+    min-height:60px;
+  }
+
+  .nav-icon{
+    font-size:20px;
+  }
+
+  .nav-btn{
+    font-size:10px;
+  }
+
+  .setting-item{
+    padding:15px;
+  }
+}
+
+/* Very small phones */
+@media(max-width:370px){
+
+  .country-grid{
+    gap:7px;
+  }
+
+  .country-card{
+    padding:14px 5px;
+  }
+
+  .country-flag{
+    font-size:28px;
+  }
+
+  .country-name{
+    font-size:12px;
+  }
+
+  .country-price{
+    font-size:11px;
+  }
+
+  .buy-now{
+    font-size:10px;
+  }
+
+  .nav-btn{
+    font-size:9px;
+  }
+
+  .nav-icon{
+    font-size:18px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ==================================================
+     LOGIN
+================================================== -->
+
+<div id="loginScreen">
+
+  <div class="login-card">
+
+    <img
+      class="login-logo"
+      src="https://files.catbox.moe/zsgsqb.png"
+      alt="TGA Store"
+    >
+
+    <div class="brand-title">
+      TGA STORE
+    </div>
+
+    <div class="brand-sub">
+      Telegram Account Store
+    </div>
+
+    <div class="welcome-text">
+      Welcome Back
+    </div>
+
+    <div class="welcome-sub">
+      Login with your Telegram ID
+    </div>
+
+    <div class="field-label">
+      Telegram User ID
+    </div>
+
+    <input
+      id="telegramIdInput"
+      class="field-input"
+      type="text"
+      inputmode="numeric"
+      autocomplete="username"
+      placeholder="e.g. 7888066934"
+    >
+
+    <div class="field-label">
+      Password
+    </div>
+
+    <input
+      id="passwordInput"
+      class="field-input"
+      type="password"
+      autocomplete="current-password"
+      placeholder="Enter password"
+    >
+
+    <button
+      id="loginBtn"
+      class="login-btn"
+      type="button"
+      onclick="handleLogin()"
+    >
+      Login Now
+    </button>
+
+    <div
+      id="loginError"
+      class="login-error"
+    ></div>
+
+  </div>
+
+</div>
+
+
+<!-- ==================================================
+     DASHBOARD
+================================================== -->
+
+<div id="dashboardScreen">
+
+<header class="app-header">
+
+  <div class="header-brand">
+
+    <img
+      class="header-logo"
+      src="https://files.catbox.moe/zsgsqb.png"
+      alt="TGA"
+    >
+
+    <span class="header-title">
+      TGA Store
+    </span>
+
+  </div>
+
+  <button
+    id="refreshButton"
+    class="header-refresh"
+    type="button"
+    onclick="refreshCurrentPage()"
+    title="Refresh"
+    aria-label="Refresh"
+  >
+    ↻
+  </button>
+
+</header>
+
+
+<main class="container">
+
+<!-- ==================================================
+     HOME
+================================================== -->
+
+<section
+  id="homePage"
+  class="page active"
+>
+
+  <div class="welcome-line">
+    Welcome back,
+  </div>
+
+  <div
+    id="welcomeName"
+    class="welcome-name"
+  >
+    User
+  </div>
+
+  <div class="announcement">
+
+    <div class="announcement-title">
+      📢 TGA Store
+    </div>
+
+    <div class="announcement-text">
+      Fast and secure account purchasing.
+      Select a country below to view live
+      stock and pricing.
+    </div>
+
+  </div>
+
+
+  <div class="balance-card">
+
+    <div class="balance-label">
+      💳 Total Balance
+    </div>
+
+    <span
+      id="balanceValue"
+      class="balance-value"
+    >
+      $0.00
+    </span>
+
+    <span
+      id="balanceSecondary"
+      class="balance-secondary"
+    >
+      ₹0.00
+    </span>
+
+    <button
+      class="add-balance"
+      type="button"
+      onclick="openPage('recharge')"
+    >
+      ＋ Add Balance
+    </button>
+
+  </div>
+
+
+  <div class="stats-row">
+
+    <div class="stat-card">
+
+      <div class="stat-label">
+        ⚡ Total Recharge
+      </div>
+
+      <div
+        id="totalRecharge"
+        class="stat-value"
+      >
+        0
+      </div>
+
+    </div>
+
+
+    <div class="stat-card">
+
+      <div class="stat-label">
+        🔑 Total Orders
+      </div>
+
+      <div
+        id="totalOrders"
+        class="stat-value"
+      >
+        0
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div class="section-head">
+
+    <div class="section-title">
+      Available Countries
+    </div>
+
+    <div
+      class="view-all"
+      onclick="openPage('buy')"
+    >
+      View All →
+    </div>
+
+  </div>
+
+
+  <div
+    id="homeCountries"
+    class="country-grid"
+  >
+
+    <div class="loading">
+      <div class="spinner"></div>
+      Loading countries...
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- ==================================================
+     BUY
+================================================== -->
+
+<section
+  id="buyPage"
+  class="page"
+>
+
+  <div
+    class="section-title"
+    style="margin-bottom:18px"
+  >
+    Buy Accounts
+  </div>
+
+  <input
+    id="countrySearch"
+    class="search-box"
+    type="search"
+    autocomplete="off"
+    placeholder="🔍 Search countries..."
+    oninput="filterCountries()"
+  >
+
+  <div
+    id="countriesGrid"
+    class="country-grid"
+  >
+
+    <div class="loading">
+      <div class="spinner"></div>
+      Loading countries...
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- ==================================================
+     RECHARGE
+================================================== -->
+
+<section
+  id="rechargePage"
+  class="page"
+>
+
+  <div class="section-title">
+    Recharge
+  </div>
+
+  <div
+    class="balance-card"
+    style="margin-top:18px"
+  >
+
+    <div class="balance-label">
+      💳 Current Balance
+    </div>
+
+    <span
+      id="rechargeBalance"
+      class="balance-value"
+    >
+      $0.00
+    </span>
+
+    <div
+      style="color:var(--muted);margin-top:12px"
+    >
+      Recharge system will be available here.
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- ==================================================
+     ORDERS
+================================================== -->
+
+<section
+  id="ordersPage"
+  class="page"
+>
+
+  <div
+    class="section-title"
+    style="margin-bottom:18px"
+  >
+    Order History
+  </div>
+
+  <div id="ordersList">
+
+    <div class="loading">
+      Loading orders...
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- ==================================================
+     SETTINGS
+================================================== -->
+
+<section
+  id="settingsPage"
+  class="page"
+>
+
+  <div
+    class="section-title"
+    style="margin-bottom:18px"
+  >
+    Settings
+  </div>
+
+  <div class="settings-list">
+
+    <div
+      class="setting-item"
+      onclick="showComingSoon('Change Username')"
+    >
+
+      <div class="setting-left">
+
+        <div class="setting-icon">
+          👤
+        </div>
+
+        <div>
+
+          <div class="setting-title">
+            Change Username
+          </div>
+
+          <div class="setting-sub">
+            Update your username
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="setting-arrow">
+        ›
+      </div>
+
+    </div>
+
+
+    <div
+      class="setting-item"
+      onclick="showComingSoon('Change Password')"
+    >
+
+      <div class="setting-left">
+
+        <div class="setting-icon">
+          🔒
+        </div>
+
+        <div>
+
+          <div class="setting-title">
+            Change Password
+          </div>
+
+          <div class="setting-sub">
+            Update your password
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="setting-arrow">
+        ›
+      </div>
+
+    </div>
+
+
+    <div class="setting-item">
+
+      <div class="setting-left">
+
+        <div class="setting-icon">
+          💱
+        </div>
+
+        <div>
+
+          <div class="setting-title">
+            Currency
+          </div>
+
+          <div class="setting-sub">
+            Choose display currency
+          </div>
+
+        </div>
+
+      </div>
+
+      <select
+        id="currencySelect"
+        class="select"
+        onchange="changeCurrency(this.value)"
+      >
+        <option value="USD">
+          $ USD
+        </option>
+
+        <option value="INR">
+          ₹ INR
+        </option>
+
+        <option value="USDT">
+          ₮ USDT
+        </option>
+      </select>
+
+    </div>
+
+
+    <div class="setting-item">
+
+      <div class="setting-left">
+
+        <div class="setting-icon">
+          🌙
+        </div>
+
+        <div>
+
+          <div class="setting-title">
+            Dark Mode
+          </div>
+
+          <div class="setting-sub">
+            Toggle dark/light theme
+          </div>
+
+        </div>
+
+      </div>
+
+      <button
+        id="themeSwitch"
+        class="switch on"
+        type="button"
+        onclick="toggleTheme()"
+        aria-label="Toggle theme"
+      >
+        <span></span>
+      </button>
+
+    </div>
+
+
+    <div
+      class="setting-item"
+      onclick="openTerms()"
+    >
+
+      <div class="setting-left">
+
+        <div class="setting-icon">
+          📄
+        </div>
+
+        <div>
+
+          <div class="setting-title">
+            Terms & Conditions
+          </div>
+
+          <div class="setting-sub">
+            Read store terms
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="setting-arrow">
+        ›
+      </div>
+
+    </div>
+
+
+    <div
+      class="setting-item"
+      onclick="showComingSoon('Support')"
+    >
+
+      <div class="setting-left">
+
+        <div class="setting-icon">
+          🎧
+        </div>
+
+        <div>
+
+          <div class="setting-title">
+            Support
+          </div>
+
+          <div class="setting-sub">
+            Get help from support
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="setting-arrow">
+        ›
+      </div>
+
+    </div>
+
+
+    <div
+      class="setting-item"
+      onclick="handleLogout()"
+    >
+
+      <div class="setting-left">
+
+        <div class="setting-icon">
+          🚪
+        </div>
+
+        <div>
+
+          <div class="setting-title">
+            Logout
+          </div>
+
+          <div class="setting-sub">
+            Sign out from this device
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="setting-arrow">
+        ›
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+</main>
+
+
+<!-- ==================================================
+     BOTTOM NAV
+================================================== -->
+
+<nav class="bottom-nav">
+
+  <button
+    class="nav-btn active"
+    data-page="home"
+    type="button"
+    onclick="openPage('home')"
+  >
+    <span class="nav-icon">⌂</span>
+    Home
+  </button>
+
+  <button
+    class="nav-btn"
+    data-page="buy"
+    type="button"
+    onclick="openPage('buy')"
+  >
+    <span class="nav-icon">🛒</span>
+    Buy
+  </button>
+
+  <button
+    class="nav-btn"
+    data-page="recharge"
+    type="button"
+    onclick="openPage('recharge')"
+  >
+    <span class="nav-icon">▣</span>
+    Recharge
+  </button>
+
+  <button
+    class="nav-btn"
+    data-page="orders"
+    type="button"
+    onclick="openPage('orders')"
+  >
+    <span class="nav-icon">▤</span>
+    Orders
+  </button>
+
+  <button
+    class="nav-btn"
+    data-page="settings"
+    type="button"
+    onclick="openPage('settings')"
+  >
+    <span class="nav-icon">⚙</span>
+    Settings
+  </button>
+
+</nav>
+
+</div>
+
+
+<!-- ==================================================
+     TERMS MODAL
+================================================== -->
+
+<div
+  id="termsModal"
+  class="modal-overlay"
+>
+
+  <div class="modal">
+
+    <div class="modal-head">
+
+      <div class="modal-title">
+        📄 Terms & Conditions
+      </div>
+
+      <button
+        class="close-btn"
+        type="button"
+        onclick="closeModal('termsModal')"
+      >
+        ×
+      </button>
+
+    </div>
+
+    <div class="terms">
+
+      <strong>
+        Account Buying Terms
+      </strong>
+
+      <ul>
+
+        <li>
+          <strong>No Refunds:</strong>
+          All sales are final once an account has been delivered.
+        </li>
+
+        <li>
+          <strong>OTP Policy:</strong>
+          Once OTP/code has been received, the order is considered used.
+        </li>
+
+        <li>
+          <strong>Account Quality:</strong>
+          Accounts are supplied according to available stock.
+        </li>
+
+        <li>
+          <strong>Warranty:</strong>
+          Any applicable warranty must be claimed within the specified
+          warranty period.
+        </li>
+
+        <li>
+          <strong>Responsible Use:</strong>
+          Users are responsible for complying with applicable
+          Telegram and local laws.
+        </li>
+
+        <li>
+          <strong>Balance:</strong>
+          Store balance is used for purchases and approved recharge
+          transactions.
+        </li>
+
+      </ul>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ==================================================
+     PURCHASE MODAL
+================================================== -->
+
+<div
+  id="purchaseModal"
+  class="modal-overlay"
+>
+
+  <div class="modal">
+
+    <div class="modal-head">
+
+      <div class="modal-title">
+        ⚠️ Purchase Terms
+      </div>
+
+      <button
+        class="close-btn"
+        type="button"
+        onclick="closeModal('purchaseModal')"
+      >
+        ×
+      </button>
+
+    </div>
+
+    <div class="terms">
+
+      <strong>
+        Account Buying Terms
+      </strong>
+
+      <ul>
+
+        <li>
+          <strong>No Refunds:</strong>
+          All sales are final.
+        </li>
+
+        <li>
+          <strong>OTP Policy:</strong>
+          Once OTP is received, no return is allowed.
+        </li>
+
+        <li>
+          <strong>Account Quality:</strong>
+          Accounts are provided according to available stock.
+        </li>
+
+        <li>
+          <strong>Warranty:</strong>
+          Check the account within the applicable warranty period.
+        </li>
+
+      </ul>
+
+    </div>
+
+    <div
+      id="purchasePrice"
+      class="modal-price"
+    >
+      Price: $0.00
+    </div>
+
+    <div class="modal-actions">
+
+      <button
+        class="secondary-btn"
+        type="button"
+        onclick="closeModal('purchaseModal')"
+      >
+        Decline
+      </button>
+
+      <button
+        id="confirmPurchaseButton"
+        class="primary-btn"
+        type="button"
+        onclick="confirmPurchase()"
+      >
+        Accept
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ==================================================
+     SUCCESS MODAL
+================================================== -->
+
+<div
+  id="successModal"
+  class="modal-overlay"
+>
+
+  <div class="modal">
+
+    <div class="success-icon">
+      ✓
+    </div>
+
+    <div
+      style="
+        text-align:center;
+        font-size:26px;
+        font-weight:900;
+      "
+    >
+      Account Purchased!
+    </div>
+
+    <div
+      style="
+        text-align:center;
+        color:var(--muted);
+        margin:8px 0 22px;
+      "
+    >
+      Your order has been placed successfully.
+    </div>
+
+    <div
+      id="accountInfo"
+      class="account-info"
+    ></div>
+
+    <div class="success-actions">
+
+      <button
+        class="primary-btn"
+        type="button"
+        onclick="getOTP()"
+      >
+        📩 Get OTP
+      </button>
+
+      <button
+        class="secondary-btn"
+        type="button"
+        onclick="closeModal('successModal');openPage('buy')"
+      >
+        Buy Again
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ==================================================
+     MESSAGE MODAL
+================================================== -->
+
+<div
+  id="messageModal"
+  class="modal-overlay"
+>
+
+  <div class="modal">
+
+    <div class="modal-head">
+
+      <div
+        id="messageTitle"
+        class="modal-title"
+      >
+        TGA Store
+      </div>
+
+      <button
+        class="close-btn"
+        type="button"
+        onclick="closeModal('messageModal')"
+      >
+        ×
+      </button>
+
+    </div>
+
+    <div
+      id="messageText"
+      class="terms"
+    ></div>
+
+  </div>
+
+</div>
+
+
+<script>
+/* ==================================================
+   CONFIG
+================================================== */
+
+/*
+  Balance is assumed to be stored in INR.
+
+  Example:
+  ₹4700 = $47 at ₹100/USD
+*/
+
+const INR_PER_USDT = 100;
+
+/*
+  Display selling price markup.
+  20% = price × 1.20
+*/
+const SELLING_MARKUP = 1.20;
+
+const LOGO_URL =
+  "https://files.catbox.moe/zsgsqb.png";
+
+
+/* ==================================================
+   GLOBAL STATE
+================================================== */
+
+let currentTelegramId = null;
+
+let dashboardData = null;
+
+let countriesData = {};
+
+let selectedCountry = null;
+
+let currentAccount = null;
+
+let currentCurrency =
+  localStorage.getItem("tga_currency") || "USD";
+
+
+/* ==================================================
+   COUNTRY MASTER MAPPING
+================================================== */
+
+const COUNTRIES = [
+
+  ["Afghanistan","🇦🇫","AF","+93"],
+  ["Albania","🇦🇱","AL","+355"],
+  ["Algeria","🇩🇿","DZ","+213"],
+  ["Andorra","🇦🇩","AD","+376"],
+  ["Angola","🇦🇴","AO","+244"],
+  ["Antigua and Barbuda","🇦🇬","AG","+1"],
+  ["Argentina","🇦🇷","AR","+54"],
+  ["Armenia","🇦🇲","AM","+374"],
+  ["Australia","🇦🇺","AU","+61"],
+  ["Austria","🇦🇹","AT","+43"],
+  ["Azerbaijan","🇦🇿","AZ","+994"],
+  ["Bahamas","🇧🇸","BS","+1"],
+  ["Bahrain","🇧🇭","BH","+973"],
+  ["Bangladesh","🇧🇩","BD","+880"],
+  ["Barbados","🇧🇧","BB","+1"],
+  ["Belarus","🇧🇾","BY","+375"],
+  ["Belgium","🇧🇪","BE","+32"],
+  ["Belize","🇧🇿","BZ","+501"],
+  ["Benin","🇧🇯","BJ","+229"],
+  ["Bhutan","🇧🇹","BT","+975"],
+  ["Bolivia","🇧🇴","BO","+591"],
+  ["Bosnia and Herzegovina","🇧🇦","BA","+387"],
+  ["Botswana","🇧🇼","BW","+267"],
+  ["Brazil","🇧🇷","BR","+55"],
+  ["Brunei","🇧🇳","BN","+673"],
+  ["Bulgaria","🇧🇬","BG","+359"],
+  ["Burkina Faso","🇧🇫","BF","+226"],
+  ["Burundi","🇧🇮","BI","+257"],
+  ["Cabo Verde","🇨🇻","CV","+238"],
+  ["Cambodia","🇰🇭","KH","+855"],
+  ["Cameroon","🇨🇲","CM","+237"],
+  ["Canada","🇨🇦","CA","+1"],
+  ["Central African Republic","🇨🇫","CF","+236"],
+  ["Chad","🇹🇩","TD","+235"],
+  ["Chile","🇨🇱","CL","+56"],
+  ["China","🇨🇳","CN","+86"],
+  ["Colombia","🇨🇴","CO","+57"],
+  ["Comoros","🇰🇲","KM","+269"],
+  ["Congo","🇨🇬","CG","+242"],
+  ["Costa Rica","🇨🇷","CR","+506"],
+  ["Croatia","🇭🇷","HR","+385"],
+  ["Cuba","🇨🇺","CU","+53"],
+  ["Cyprus","🇨🇾","CY","+357"],
+  ["Czechia","🇨🇿","CZ","+420"],
+  ["Denmark","🇩🇰","DK","+45"],
+  ["Djibouti","🇩🇯","DJ","+253"],
+  ["Dominica","🇩🇲","DM","+1"],
+  ["Dominican Republic","🇩🇴","DO","+1"],
+  ["Ecuador","🇪🇨","EC","+593"],
+  ["Egypt","🇪🇬","EG","+20"],
+  ["El Salvador","🇸🇻","SV","+503"],
+  ["Equatorial Guinea","🇬🇶","GQ","+240"],
+  ["Eritrea","🇪🇷","ER","+291"],
+  ["Estonia","🇪🇪","EE","+372"],
+  ["Eswatini","🇸🇿","SZ","+268"],
+  ["Ethiopia","🇪🇹","ET","+251"],
+  ["Fiji","🇫🇯","FJ","+679"],
+  ["Finland","🇫🇮","FI","+358"],
+  ["France","🇫🇷","FR","+33"],
+  ["Gabon","🇬🇦","GA","+241"],
+  ["Gambia","🇬🇲","GM","+220"],
+  ["Georgia","🇬🇪","GE","+995"],
+  ["Germany","🇩🇪","DE","+49"],
+  ["Ghana","🇬🇭","GH","+233"],
+  ["Greece","🇬🇷","GR","+30"],
+  ["Grenada","🇬🇩","GD","+1"],
+  ["Guatemala","🇬🇹","GT","+502"],
+  ["Guinea","🇬🇳","GN","+224"],
+  ["Guinea-Bissau","🇬🇼","GW","+245"],
+  ["Guyana","🇬🇾","GY","+592"],
+  ["Haiti","🇭🇹","HT","+509"],
+  ["Honduras","🇭🇳","HN","+504"],
+  ["Hungary","🇭🇺","HU","+36"],
+  ["Iceland","🇮🇸","IS","+354"],
+  ["India","🇮🇳","IN","+91"],
+  ["Indonesia","🇮🇩","ID","+62"],
+  ["Iran","🇮🇷","IR","+98"],
+  ["Iraq","🇮🇶","IQ","+964"],
+  ["Ireland","🇮🇪","IE","+353"],
+  ["Israel","🇮🇱","IL","+972"],
+  ["Italy","🇮🇹","IT","+39"],
+  ["Jamaica","🇯🇲","JM","+1"],
+  ["Japan","🇯🇵","JP","+81"],
+  ["Jordan","🇯🇴","JO","+962"],
+  ["Kazakhstan","🇰🇿","KZ","+7"],
+  ["Kenya","🇰🇪","KE","+254"],
+  ["Kiribati","🇰🇮","KI","+686"],
+  ["Kuwait","🇰🇼","KW","+965"],
+  ["Kyrgyzstan","🇰🇬","KG","+996"],
+  ["Laos","🇱🇦","LA","+856"],
+  ["Latvia","🇱🇻","LV","+371"],
+  ["Lebanon","🇱🇧","LB","+961"],
+  ["Lesotho","🇱🇸","LS","+266"],
+  ["Liberia","🇱🇷","LR","+231"],
+  ["Libya","🇱🇾","LY","+218"],
+  ["Liechtenstein","🇱🇮","LI","+423"],
+  ["Lithuania","🇱🇹","LT","+370"],
+  ["Luxembourg","🇱🇺","LU","+352"],
+  ["Madagascar","🇲🇬","MG","+261"],
+  ["Malawi","🇲🇼","MW","+265"],
+  ["Malaysia","🇲🇾","MY","+60"],
+  ["Maldives","🇲🇻","MV","+960"],
+  ["Mali","🇲🇱","ML","+223"],
+  ["Malta","🇲🇹","MT","+356"],
+  ["Marshall Islands","🇲🇭","MH","+692"],
+  ["Mauritania","🇲🇷","MR","+222"],
+  ["Mauritius","🇲🇺","MU","+230"],
+  ["Mexico","🇲🇽","MX","+52"],
+  ["Micronesia","🇫🇲","FM","+691"],
+  ["Moldova","🇲🇩","MD","+373"],
+  ["Monaco","🇲🇨","MC","+377"],
+  ["Mongolia","🇲🇳","MN","+976"],
+  ["Montenegro","🇲🇪","ME","+382"],
+  ["Morocco","🇲🇦","MA","+212"],
+  ["Mozambique","🇲🇿","MZ","+258"],
+  ["Myanmar","🇲🇲","MM","+95"],
+  ["Namibia","🇳🇦","NA","+264"],
+  ["Nauru","🇳🇷","NR","+674"],
+  ["Nepal","🇳🇵","NP","+977"],
+  ["Netherlands","🇳🇱","NL","+31"],
+  ["New Zealand","🇳🇿","NZ","+64"],
+  ["Nicaragua","🇳🇮","NI","+505"],
+  ["Niger","🇳🇪","NE","+227"],
+  ["Nigeria","🇳🇬","NG","+234"],
+  ["North Korea","🇰🇵","KP","+850"],
+  ["North Macedonia","🇲🇰","MK","+389"],
+  ["Norway","🇳🇴","NO","+47"],
+  ["Oman","🇴🇲","OM","+968"],
+  ["Pakistan","🇵🇰","PK","+92"],
+  ["Palau","🇵🇼","PW","+680"],
+  ["Palestine","🇵🇸","PS","+970"],
+  ["Panama","🇵🇦","PA","+507"],
+  ["Papua New Guinea","🇵🇬","PG","+675"],
+  ["Paraguay","🇵🇾","PY","+595"],
+  ["Peru","🇵🇪","PE","+51"],
+  ["Philippines","🇵🇭","PH","+63"],
+  ["Poland","🇵🇱","PL","+48"],
+  ["Portugal","🇵🇹","PT","+351"],
+  ["Qatar","🇶🇦","QA","+974"],
+  ["Romania","🇷🇴","RO","+40"],
+  ["Russia","🇷🇺","RU","+7"],
+  ["Rwanda","🇷🇼","RW","+250"],
+  ["Saint Kitts and Nevis","🇰🇳","KN","+1"],
+  ["Saint Lucia","🇱🇨","LC","+1"],
+  ["Saint Vincent and the Grenadines","🇻🇨","VC","+1"],
+  ["Samoa","🇼🇸","WS","+685"],
+  ["San Marino","🇸🇲","SM","+378"],
+  ["Sao Tome and Principe","🇸🇹","ST","+239"],
+  ["Saudi Arabia","🇸🇦","SA","+966"],
+  ["Senegal","🇸🇳","SN","+221"],
+  ["Serbia","🇷🇸","RS","+381"],
+  ["Seychelles","🇸🇨","SC","+248"],
+  ["Sierra Leone","🇸🇱","SL","+232"],
+  ["Singapore","🇸🇬","SG","+65"],
+  ["Slovakia","🇸🇰","SK","+421"],
+  ["Slovenia","🇸🇮","SI","+386"],
+  ["Solomon Islands","🇸🇧","SB","+677"],
+  ["Somalia","🇸🇴","SO","+252"],
+  ["South Africa","🇿🇦","ZA","+27"],
+  ["South Korea","🇰🇷","KR","+82"],
+  ["South Sudan","🇸🇸","SS","+211"],
+  ["Spain","🇪🇸","ES","+34"],
+  ["Sri Lanka","🇱🇰","LK","+94"],
+  ["Sudan","🇸🇩","SD","+249"],
+  ["Suriname","🇸🇷","SR","+597"],
+  ["Sweden","🇸🇪","SE","+46"],
+  ["Switzerland","🇨🇭","CH","+41"],
+  ["Syria","🇸🇾","SY","+963"],
+  ["Taiwan","🇹🇼","TW","+886"],
+  ["Tajikistan","🇹🇯","TJ","+992"],
+  ["Tanzania","🇹🇿","TZ","+255"],
+  ["Thailand","🇹🇭","TH","+66"],
+  ["Timor-Leste","🇹🇱","TL","+670"],
+  ["Togo","🇹🇬","TG","+228"],
+  ["Tonga","🇹🇴","TO","+676"],
+  ["Trinidad and Tobago","🇹🇹","TT","+1"],
+  ["Tunisia","🇹🇳","TN","+216"],
+  ["Türkiye","🇹🇷","TR","+90"],
+  ["Turkmenistan","🇹🇲","TM","+993"],
+  ["Tuvalu","🇹🇻","TV","+688"],
+  ["Uganda","🇺🇬","UG","+256"],
+  ["Ukraine","🇺🇦","UA","+380"],
+  ["United Arab Emirates","🇦🇪","AE","+971"],
+  ["United Kingdom","🇬🇧","GB","+44"],
+  ["United States","🇺🇸","US","+1"],
+  ["Uruguay","🇺🇾","UY","+598"],
+  ["Uzbekistan","🇺🇿","UZ","+998"],
+  ["Vanuatu","🇻🇺","VU","+678"],
+  ["Vatican City","🇻🇦","VA","+379"],
+  ["Venezuela","🇻🇪","VE","+58"],
+  ["Vietnam","🇻🇳","VN","+84"],
+  ["Yemen","🇾🇪","YE","+967"],
+  ["Zambia","🇿🇲","ZM","+260"],
+  ["Zimbabwe","🇿🇼","ZW","+263"],
+  ["Kosovo","🇽🇰","XK","+383"],
+  ["Hong Kong","🇭🇰","HK","+852"],
+  ["Macau","🇲🇴","MO","+853"],
+  ["Puerto Rico","🇵🇷","PR","+1"],
+  ["Curaçao","🇨🇼","CW","+599"],
+  ["Aruba","🇦🇼","AW","+297"],
+  ["Bermuda","🇧🇲","BM","+1"],
+  ["Cayman Islands","🇰🇾","KY","+1"],
+  ["Gibraltar","🇬🇮","GI","+350"],
+  ["Isle of Man","🇮🇲","IM","+44"],
+  ["Jersey","🇯🇪","JE","+44"],
+  ["Guernsey","🇬🇬","GG","+44"],
+  ["Faroe Islands","🇫🇴","FO","+298"],
+  ["Greenland","🇬🇱","GL","+299"],
+  ["New Caledonia","🇳🇨","NC","+687"],
+  ["French Polynesia","🇵🇫","PF","+689"],
+  ["Guam","🇬🇺","GU","+1"],
+  ["Northern Mariana Islands","🇲🇵","MP","+1"],
+  ["American Samoa","🇦🇸","AS","+1"],
+  ["British Virgin Islands","🇻🇬","VG","+1"],
+  ["US Virgin Islands","🇻🇮","VI","+1"],
+  ["Martinique","🇲🇶","MQ","+596"],
+  ["Reunion","🇷🇪","RE","+262"],
+  ["Mayotte","🇾🇹","YT","+262"],
+  ["Western Sahara","🇪🇭","EH","+212"],
+  ["Åland Islands","🇦🇽","AX","+358"],
+  ["Christmas Island","🇨🇽","CX","+61"],
+  ["Cocos Islands","🇨🇨","CC","+61"],
+  ["Falkland Islands","🇫🇰","FK","+500"],
+  ["Montserrat","🇲🇸","MS","+1"],
+  ["Saint Helena","🇸🇭","SH","+290"],
+  ["Turks and Caicos Islands","🇹🇨","TC","+1"],
+  ["Wallis and Futuna","🇼🇫","WF","+681"],
+  ["Cook Islands","🇨🇰","CK","+682"],
+  ["Niue","🇳🇺","NU","+683"],
+  ["Tokelau","🇹🇰","TK","+690"],
+  ["Saint Pierre and Miquelon","🇵🇲","PM","+508"],
+  ["British Indian Ocean Territory","🇮🇴","IO","+246"],
+  ["Pitcairn Islands","🇵🇳","PN","+64"],
+  ["South Georgia","🇬🇸","GS","+500"],
+  ["Antarctica","🇦🇶","AQ","+672"]
+];
+
+
+/* ==================================================
+   LOGIN
+================================================== */
+
+async function handleLogin(){
+
+  const telegramId =
+    document
+      .getElementById("telegramIdInput")
+      .value
+      .trim();
+
+  const password =
+    document
+      .getElementById("passwordInput")
+      .value;
+
+  const btn =
+    document.getElementById("loginBtn");
+
+  hideLoginError();
+
+  if(!/^\d+$/.test(telegramId)){
+
+    showLoginError(
+      "Enter a valid numeric Telegram ID."
+    );
+
+    return;
+  }
+
+  if(!password){
+
+    showLoginError(
+      "Enter your password."
+    );
+
+    return;
+  }
+
+  btn.disabled=true;
+  btn.textContent="Logging in...";
+
+  try{
+
+    const response =
+      await fetch("/api/login",{
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json"
+        },
+        cache:"no-store",
+        body:JSON.stringify({
+          telegramId,
+          password
+        })
+      });
+
+    const result =
+      await response.json();
+
+    if(
+      !response.ok ||
+      !result.success
+    ){
+
+      showLoginError(
+        result.message ||
+        "Login failed."
+      );
+
+      return;
+    }
+
+    currentTelegramId =
+      String(result.user.telegramId);
+
+    localStorage.setItem(
+      "tga_telegram_id",
+      currentTelegramId
+    );
+
+    localStorage.setItem(
+      "tga_username",
+      result.user.username || "User"
+    );
+
+    showDashboard();
+
+  }catch(error){
+
+    console.error(
+      "Login:",
+      error
+    );
+
+    showLoginError(
+      "Unable to connect to server."
+    );
+
+  }finally{
+
+    btn.disabled=false;
+    btn.textContent="Login Now";
+
+  }
+}
+
+
+/* ==================================================
+   DASHBOARD API
+================================================== */
+
+async function loadDashboardData(){
+
+  if(!currentTelegramId){
+    return;
+  }
+
+  try{
+
+    const response =
+      await fetch(
+        "/api/dashboard?telegramId="+
+        encodeURIComponent(currentTelegramId)+
+        "&t="+Date.now(),
+        {
+          method:"GET",
+          cache:"no-store"
+        }
+      );
+
+    const result =
+      await response.json();
+
+    if(
+      !response.ok ||
+      !result.success
+    ){
+
+      throw new Error(
+        result.message ||
+        "Could not load dashboard."
+      );
+    }
+
+    dashboardData=result;
+
+    document.getElementById(
+      "welcomeName"
+    ).textContent =
+      result.user?.username ||
+      "User";
+
+    document.getElementById(
+      "totalOrders"
+    ).textContent =
+      result.totalOrders || 0;
+
+    document.getElementById(
+      "totalRecharge"
+    ).textContent =
+      result.totalRecharge || 0;
+
+    updateBalance();
+
+    renderOrders(
+      result.orders || []
+    );
+
+  }catch(error){
+
+    console.error(
+      "Dashboard:",
+      error
+    );
+
+  }
+}
+
+
+/* ==================================================
+   CURRENCY
+================================================== */
+
+function changeCurrency(currency){
+
+  if(
+    !["USD","INR","USDT"]
+      .includes(currency)
+  ){
+    currency="USD";
+  }
+
+  currentCurrency=currency;
+
+  localStorage.setItem(
+    "tga_currency",
+    currency
+  );
+
+  updateBalance();
+
+  renderAllCountries();
+
+  updatePurchasePrice();
+}
+
+
+/*
+  Balance stored in INR.
+
+  INR -> USD:
+  ₹4700 / 100 = $47
+
+  INR -> USDT:
+  ₹4700 / 100 = 47 USDT
+*/
+
+function formatMoney(inr){
+
+  const amount =
+    Number(inr || 0);
+
+  if(!Number.isFinite(amount)){
+    return "$0.00";
+  }
+
+  if(currentCurrency==="INR"){
+    return "₹"+amount.toFixed(2);
+  }
+
+  if(currentCurrency==="USDT"){
+    return (
+      amount / INR_PER_USDT
+    ).toFixed(2)+" USDT";
+  }
+
+  return (
+    "$"+
+    (amount / INR_PER_USDT)
+      .toFixed(2)
+  );
+}
+
+
+/*
+  API price is treated as USD/USDT base price.
+
+  20% markup:
+  $0.45 × 1.20 = $0.54
+*/
+
+function getSellingPrice(price){
+
+  const base =
+    Number(price || 0);
+
+  if(
+    !Number.isFinite(base) ||
+    base < 0
+  ){
+    return 0;
+  }
+
+  return base * SELLING_MARKUP;
+}
+
+
+function formatPrice(price){
+
+  const base =
+    Number(price || 0);
+
+  const sellingPrice =
+    getSellingPrice(base);
+
+  if(
+    !Number.isFinite(sellingPrice)
+  ){
+    return "$0.00";
+  }
+
+  if(currentCurrency==="INR"){
+
+    return (
+      "₹"+
+      (
+        sellingPrice *
+        INR_PER_USDT
+      ).toFixed(2)
+    );
+  }
+
+  if(currentCurrency==="USDT"){
+
+    return (
+      sellingPrice.toFixed(2)+
+      " USDT"
+    );
+  }
+
+  return (
+    "$"+
+    sellingPrice.toFixed(2)
+  );
+}
+
+
+function updateBalance(){
+
+  if(!dashboardData){
+    return;
+  }
+
+  const balance =
+    Number(
+      dashboardData.user?.balance || 0
+    );
+
+  document.getElementById(
+    "balanceValue"
+  ).textContent =
+    formatMoney(balance);
+
+  /*
+    Secondary value always shows
+    another useful currency.
+  */
+
+  if(currentCurrency==="INR"){
+
+    document.getElementById(
+      "balanceSecondary"
+    ).textContent =
+      "$"+
+      (balance / INR_PER_USDT)
+        .toFixed(2);
+
+  }else{
+
+    document.getElementById(
+      "balanceSecondary"
+    ).textContent =
+      "₹"+
+      balance.toFixed(2);
+  }
+
+  document.getElementById(
+    "rechargeBalance"
+  ).textContent =
+    formatMoney(balance);
+
+  const selector =
+    document.getElementById(
+      "currencySelect"
+    );
+
+  if(selector){
+    selector.value=
+      currentCurrency;
+  }
+}
+
+
+/* ==================================================
+   COUNTRY API
+================================================== */
+
+async function loadCountries(){
+
+  try{
+
+    const response =
+      await fetch(
+        "/api/countries?t="+Date.now(),
+        {
+          method:"GET",
+          cache:"no-store",
+          headers:{
+            "Accept":"application/json",
+            "Cache-Control":"no-cache"
+          }
+        }
+      );
+
+    const result =
+      await response.json();
+
+    if(
+      !response.ok ||
+      !result.success
+    ){
+
+      throw new Error(
+        result.message ||
+        "Country API failed."
+      );
+    }
+
+    countriesData =
+      normalizeCountries(
+        result.countries || {}
+      );
+
+  }catch(error){
+
+    console.error(
+      "Countries:",
+      error
+    );
+
+    /*
+      Keep old data if refresh fails.
+      This prevents the UI from becoming
+      completely empty because of a
+      temporary API failure.
+    */
+
+    if(
+      !countriesData ||
+      Object.keys(countriesData).length===0
+    ){
+      countriesData={};
+    }
+  }
+
+  renderAllCountries();
+}
+
+
+/* ==================================================
+   NORMALIZE COUNTRY DATA
+================================================== */
+
+function normalizeCountries(data){
+
+  const output={};
+
+  if(
+    !data ||
+    typeof data!=="object"
+  ){
+    return output;
+  }
+
+  /*
+    Expected normal structure:
+
+    {
+      "AF":{
+        qty:478,
+        price:0.45
+      }
+    }
+  */
+
+  Object.entries(data)
+    .forEach(([key,value])=>{
+
+      if(
+        value === null ||
+        value === undefined
+      ){
+        return;
+      }
+
+      const upperKey =
+        String(key)
+          .trim()
+          .toUpperCase();
+
+      /*
+        If API directly returns an object
+        for country code.
+      */
+
+      if(
+        typeof value==="object" &&
+        !Array.isArray(value)
+      ){
+
+        output[upperKey]=value;
+
+        return;
+      }
+
+      /*
+        If API returns a simple number,
+        treat it as stock quantity.
+      */
+
+      if(
+        typeof value==="number"
+      ){
+
+        output[upperKey]={
+          qty:value,
+          price:0
+        };
+
+      }
+
+    });
+
+  return output;
+}
+
+
+/* ==================================================
+   COUNTRY HELPERS
+================================================== */
+
+function getCountry(code){
+
+  const target =
+    String(code || "")
+      .toUpperCase();
+
+  return COUNTRIES.find(
+    country =>
+      country[2].toUpperCase()===target
+  );
+}
+
+
+function getCountryApiData(code){
+
+  const key =
+    String(code || "")
+      .trim()
+      .toUpperCase();
+
+  return (
+    countriesData[key] ||
+    countriesData[
+      String(code || "")
+        .trim()
+        .toLowerCase()
+    ] ||
+    null
+  );
+}
+
+
+function getCountryQuantity(api){
+
+  if(!api){
+    return 0;
+  }
+
+  const possible =
+    api.qty ??
+    api.quantity ??
+    api.stock ??
+    api.available ??
+    0;
+
+  const qty =
+    Number(possible);
+
+  return Number.isFinite(qty)
+    ? Math.max(0,qty)
+    : 0;
+}
+
+
+function getCountryBasePrice(api){
+
+  if(!api){
+    return 0;
+  }
+
+  const possible =
+    api.price ??
+    api.cost ??
+    api.amount ??
+    0;
+
+  const price =
+    Number(possible);
+
+  return Number.isFinite(price)
+    ? Math.max(0,price)
+    : 0;
+}
+
+
+/* ==================================================
+   COUNTRY CARD
+================================================== */
+
+function countryCard(country){
+
+  const name=country[0];
+  const flag=country[1];
+  const code=country[2];
+  const dial=country[3];
+
+  const api =
+    getCountryApiData(code);
+
+  const qty =
+    getCountryQuantity(api);
+
+  const basePrice =
+    getCountryBasePrice(api);
+
+  const available =
+    Boolean(api) && qty>0;
+
+  /*
+    IMPORTANT:
+    The displayed price includes 20%
+    selling markup.
+  */
+
+  const displayPrice =
+    getSellingPrice(basePrice);
+
+  const purchaseData={
+    name,
+    flag,
+    code,
+    dial,
+    qty,
+    price:basePrice
+  };
+
+  return `
+    <div class="country-card">
+
+      <div class="country-flag">
+        ${flag}
+      </div>
+
+      <div class="country-name">
+        ${escapeHtml(name)}
+      </div>
+
+      <div class="country-code">
+        ${escapeHtml(code)}
+        ·
+        ${escapeHtml(dial)}
+      </div>
+
+      <div class="country-price">
+
+        ${
+          available
+            ? formatPrice(basePrice)
+            : "Currently unavailable"
+        }
+
+      </div>
+
+      <div class="${
+        available
+          ? "stock"
+          : "stock out-stock"
+      }">
+
+        ${
+          available
+            ? qty.toLocaleString()+" in stock"
+            : "Out of stock"
+        }
+
+      </div>
+
+      <div class="quality">
+
+        ${
+          available
+            ? "● Good Quality"
+            : "● Unavailable"
+        }
+
+      </div>
+
+      <button
+        class="buy-now"
+        type="button"
+        ${
+          available
+            ? ""
+            : "disabled"
+        }
+        onclick='openPurchase(${JSON.stringify(purchaseData).replace(/'/g,"&#39;")})'
+      >
+        Buy Now
+      </button>
+
+    </div>
+  `;
+}
+
+
+/* ==================================================
+   RENDER COUNTRIES
+================================================== */
+
+function getUniqueCountries(){
+
+  const seen=new Set();
+
+  return COUNTRIES.filter(country=>{
+
+    const code =
+      country[2].toUpperCase();
+
+    if(seen.has(code)){
+      return false;
+    }
+
+    seen.add(code);
+
+    return true;
+  });
+}
+
+
+function renderAllCountries(){
+
+  const uniqueCountries =
+    getUniqueCountries();
+
+  const grid =
+    document.getElementById(
+      "countriesGrid"
+    );
+
+  const homeGrid =
+    document.getElementById(
+      "homeCountries"
+    );
+
+  /*
+    BUY PAGE:
+    Show all mapped countries.
+  */
+
+  const all =
+    uniqueCountries
+      .map(countryCard)
+      .join("");
+
+  if(grid){
+
+    grid.innerHTML =
+      all ||
+      `
+        <div class="loading">
+          No countries available.
+        </div>
+      `;
+  }
+
+
+  /*
+    HOME PAGE:
+    Show first 6 countries which
+    actually exist in live API data.
+  */
+
+  const liveCountries =
+    uniqueCountries
+      .filter(country =>
+        getCountryApiData(country[2])
+      )
+      .slice(0,6);
+
+  const home =
+    liveCountries
+      .map(countryCard)
+      .join("");
+
+  if(homeGrid){
+
+    homeGrid.innerHTML =
+      home ||
+      `
+        <div class="loading">
+          No live countries available.
+        </div>
+      `;
+  }
+}
+
+
+/* ==================================================
+   COUNTRY SEARCH
+================================================== */
+
+function filterCountries(){
+
+  const input =
+    document.getElementById(
+      "countrySearch"
+    );
+
+  if(!input){
+    return;
+  }
+
+  const query =
+    input.value
+      .trim()
+      .toLowerCase();
+
+  const countries =
+    getUniqueCountries();
+
+  if(!query){
+
+    document.getElementById(
+      "countriesGrid"
+    ).innerHTML =
+      countries
+        .map(countryCard)
+        .join("");
+
+    return;
+  }
+
+  const filtered =
+    countries.filter(country=>{
+
+      const name =
+        String(country[0] || "")
+          .toLowerCase();
+
+      const code =
+        String(country[2] || "")
+          .toLowerCase();
+
+      const dial =
+        String(country[3] || "")
+          .toLowerCase();
+
+      return (
+        name.includes(query) ||
+        code.includes(query) ||
+        dial.includes(query)
+      );
+    });
+
+  document.getElementById(
+    "countriesGrid"
+  ).innerHTML =
+    filtered.length
+      ? filtered.map(countryCard).join("")
+      :
+      `
+        <div class="loading">
+          No country found.
+        </div>
+      `;
+}
+
+
+/* ==================================================
+   PURCHASE
+================================================== */
+
+function openPurchase(country){
+
+  if(!country){
+    return;
+  }
+
+  selectedCountry=country;
+
+  document.getElementById(
+    "purchasePrice"
+  ).textContent =
+    "Price: "+
+    formatPrice(country.price)+
+    " ("+
+    country.name+
+    " "+
+    country.flag+
+    ")";
+
+  document.getElementById(
+    "purchaseModal"
+  ).classList.add("show");
+}
+
+
+function updatePurchasePrice(){
+
+  if(!selectedCountry){
+    return;
+  }
+
+  document.getElementById(
+    "purchasePrice"
+  ).textContent =
+    "Price: "+
+    formatPrice(
+      selectedCountry.price
+    )+
+    " ("+
+    selectedCountry.name+
+    " "+
+    selectedCountry.flag+
+    ")";
+}
+
+
+async function confirmPurchase(){
+
+  if(!selectedCountry){
+    return;
+  }
+
+  if(!currentTelegramId){
+
+    showMessage(
+      "Login Required",
+      "Please login again before purchasing."
+    );
+
+    return;
+  }
+
+  const button =
+    document.getElementById(
+      "confirmPurchaseButton"
+    );
+
+  button.disabled=true;
+  button.textContent="Processing...";
+
+  try{
+
+    /*
+      Backend:
+      POST /api/buy
+
+      {
+        telegramId,
+        country_code
+      }
+
+      Price is NOT sent from frontend.
+      Backend should calculate/charge the
+      real configured selling price.
+    */
+
+    const response =
+      await fetch(
+        "/api/buy",
+        {
+          method:"POST",
+          headers:{
+            "Content-Type":"application/json"
+          },
+          cache:"no-store",
+          body:JSON.stringify({
+            telegramId:
+              currentTelegramId,
+
+            country_code:
+              selectedCountry.code
+          })
+        }
+      );
+
+    const result =
+      await response.json();
+
+    if(
+      !response.ok ||
+      !result.success
+    ){
+
+      throw new Error(
+        result.message ||
+        "Purchase failed."
+      );
+    }
+
+    currentAccount=result;
+
+    closeModal(
+      "purchaseModal"
+    );
+
+    showAccountResult(
+      result
+    );
+
+    await loadDashboardData();
+
+    /*
+      Refresh stock after purchase.
+    */
+
+    await loadCountries();
+
+  }catch(error){
+
+    console.error(
+      "Purchase:",
+      error
+    );
+
+    showMessage(
+      "Purchase Failed",
+      error.message ||
+      "Unable to complete purchase."
+    );
+
+  }finally{
+
+    button.disabled=false;
+    button.textContent="Accept";
+
+  }
+}
+
+
+/* ==================================================
+   ACCOUNT RESULT
+================================================== */
+
+function showAccountResult(result){
+
+  const number =
+    result.Number ||
+    result.number ||
+    "Not received";
+
+  const name =
+    result.name ||
+    selectedCountry?.name ||
+    "Unknown";
+
+  const price =
+    result.price ??
+    selectedCountry?.price ??
+    0;
+
+  currentAccount={
+    ...result,
+    Number:number
+  };
+
+  document.getElementById(
+    "accountInfo"
+  ).innerHTML=`
+
+    <div class="info-row">
+
+      <div class="info-label">
+        Country
+      </div>
+
+      <div class="info-value">
+        ${escapeHtml(name)}
+      </div>
+
+    </div>
+
+    <div class="info-row">
+
+      <div class="info-label">
+        Number
+      </div>
+
+      <div class="info-value">
+        ${escapeHtml(number)}
+      </div>
+
+    </div>
+
+    <div class="info-row">
+
+      <div class="info-label">
+        Code
+      </div>
+
+      <div
+        id="accountCode"
+        class="info-value"
+      >
+        Not received
+      </div>
+
+    </div>
+
+    <div class="info-row">
+
+      <div class="info-label">
+        Password
+      </div>
+
+      <div
+        id="accountPassword"
+        class="info-value"
+      >
+        Get OTP first
+      </div>
+
+    </div>
+
+    <div class="info-row">
+
+      <div class="info-label">
+        Price
+      </div>
+
+      <div class="info-value">
+        ${formatPrice(price)}
+      </div>
+
+    </div>
+  `;
+
+  document.getElementById(
+    "successModal"
+  ).classList.add("show");
+}
+
+
+/* ==================================================
+   GET OTP
+================================================== */
+
+async function getOTP(){
+
+  if(!currentAccount){
+    return;
+  }
+
+  const number =
+    currentAccount.Number ||
+    currentAccount.number;
+
+  if(!number){
+
+    showMessage(
+      "OTP",
+      "Number not found."
+    );
+
+    return;
+  }
+
+  try{
+
+    const response =
+      await fetch(
+        "/api/code",
+        {
+          method:"POST",
+          headers:{
+            "Content-Type":"application/json"
+          },
+          cache:"no-store",
+          body:JSON.stringify({
+            telegramId:
+              currentTelegramId,
+
+            number:number
+          })
+        }
+      );
+
+    const result =
+      await response.json();
+
+    if(
+      !response.ok ||
+      !result.success
+    ){
+
+      throw new Error(
+        result.message ||
+        "OTP not received."
+      );
+    }
+
+    const codeEl =
+      document.getElementById(
+        "accountCode"
+      );
+
+    const passwordEl =
+      document.getElementById(
+        "accountPassword"
+      );
+
+    if(codeEl){
+
+      codeEl.textContent =
+        result.code ||
+        "Not received";
+    }
+
+    if(passwordEl){
+
+      passwordEl.textContent =
+        result.pass ||
+        "Not received";
+    }
+
+    currentAccount={
+      ...currentAccount,
+      ...result
+    };
+
+  }catch(error){
+
+    console.error(
+      "OTP:",
+      error
+    );
+
+    showMessage(
+      "OTP Failed",
+      error.message ||
+      "OTP could not be received."
+    );
+
+  }
+}
+
+
+/* ==================================================
+   ORDERS
+================================================== */
+
+function renderOrders(orders){
+
+  const container =
+    document.getElementById(
+      "ordersList"
+    );
+
+  if(!container){
+    return;
+  }
+
+  if(
+    !Array.isArray(orders) ||
+    !orders.length
+  ){
+
+    container.innerHTML=
+      `
+        <div class="loading">
+          No orders yet.
+        </div>
+      `;
+
+    return;
+  }
+
+  container.innerHTML =
+    orders.map(order=>{
+
+      const status =
+        String(
+          order.status ||
+          "waiting"
+        );
+
+      return `
+
+        <div class="order-card">
+
+          <div>
+
+            <div class="order-country">
+              🌍
+              ${escapeHtml(
+                order.country ||
+                "Unknown"
+              )}
+            </div>
+
+            <div class="order-detail">
+
+              <b>Number:</b>
+              ${escapeHtml(
+                order.number ||
+                "N/A"
+              )}
+
+              <br>
+
+              <b>OTP:</b>
+              ${escapeHtml(
+                order.otp ||
+                "Not received"
+              )}
+
+              <br>
+
+              <b>Date:</b>
+              ${formatDate(
+                order.created_at
+              )}
+
+            </div>
+
+          </div>
+
+          <div class="order-right">
+
+            <div class="order-price">
+              ${formatPrice(
+                order.price ||
+                0
+              )}
+            </div>
+
+            <span
+              class="
+                status-pill
+                ${getStatusClass(status)}
+              "
+            >
+              ${escapeHtml(status)}
+            </span>
+
+          </div>
+
+        </div>
+
+      `;
+
+    }).join("");
+}
+
+
+function getStatusClass(status){
+
+  const value =
+    String(status)
+      .toLowerCase();
+
+  if(
+    value.includes("complet")
+  ){
+    return "status-completed";
+  }
+
+  if(
+    value.includes("cancel")
+  ){
+    return "status-cancelled";
+  }
+
+  return "status-waiting";
+}
+
+
+/* ==================================================
+   NAVIGATION
+================================================== */
+
+function openPage(page){
+
+  document.querySelectorAll(
+    ".page"
+  ).forEach(element=>{
+    element.classList.remove(
+      "active"
+    );
+  });
+
+  const target =
+    document.getElementById(
+      page+"Page"
+    );
+
+  if(target){
+
+    target.classList.add(
+      "active"
+    );
+  }
+
+  document.querySelectorAll(
+    ".nav-btn"
+  ).forEach(button=>{
+
+    button.classList.toggle(
+      "active",
+      button.dataset.page===page
+    );
+
+  });
+
+  window.scrollTo({
+    top:0,
+    behavior:"smooth"
+  });
+
+  if(page==="buy"){
+
+    loadCountries();
+  }
+
+  if(page==="orders"){
+
+    loadDashboardData();
+  }
+}
+
+
+/* ==================================================
+   THEME
+================================================== */
+
+function toggleTheme(){
+
+  document.body.classList.toggle(
+    "light"
+  );
+
+  const light =
+    document.body.classList.contains(
+      "light"
+    );
+
+  localStorage.setItem(
+    "tga_theme",
+    light
+      ? "light"
+      : "dark"
+  );
+
+  updateThemeSwitch();
+}
+
+
+function updateThemeSwitch(){
+
+  const switcher =
+    document.getElementById(
+      "themeSwitch"
+    );
+
+  if(!switcher){
+    return;
+  }
+
+  const light =
+    document.body.classList.contains(
+      "light"
+    );
+
+  switcher.classList.toggle(
+    "on",
+    !light
+  );
+}
+
+
+function loadTheme(){
+
+  const theme =
+    localStorage.getItem(
+      "tga_theme"
+    ) || "dark";
+
+  if(theme==="light"){
+
+    document.body.classList.add(
+      "light"
+    );
+
+  }else{
+
+    document.body.classList.remove(
+      "light"
+    );
+  }
+
+  updateThemeSwitch();
+}
+
+
+/* ==================================================
+   TERMS / MESSAGE
+================================================== */
+
+function openTerms(){
+
+  document.getElementById(
+    "termsModal"
+  ).classList.add("show");
+}
+
+
+function showComingSoon(title){
+
+  showMessage(
+    title,
+    "This setting is ready in the UI but the backend functionality will be added later."
+  );
+}
+
+
+function showMessage(title,text){
+
+  document.getElementById(
+    "messageTitle"
+  ).textContent =
+    title;
+
+  document.getElementById(
+    "messageText"
+  ).textContent =
+    text;
+
+  document.getElementById(
+    "messageModal"
+  ).classList.add("show");
+}
+
+
+function closeModal(id){
+
+  const modal =
+    document.getElementById(id);
+
+  if(modal){
+
+    modal.classList.remove(
+      "show"
+    );
+  }
+}
+
+
+/* ==================================================
+   REFRESH
+================================================== */
+
+async function refreshCurrentPage(){
+
+  const button =
+    document.getElementById(
+      "refreshButton"
+    );
+
+  if(!button){
+    return;
+  }
+
+  if(button.disabled){
+    return;
+  }
+
+  button.disabled=true;
+
+  button.classList.add(
+    "refreshing"
+  );
+
+  try{
+
+    /*
+      Refresh dashboard and live stock
+      independently so one API failure
+      doesn't stop the other.
+    */
+
+    await Promise.all([
+      loadDashboardData(),
+      loadCountries()
+    ]);
+
+  }catch(error){
+
+    console.error(
+      "Refresh:",
+      error
+    );
+
+  }finally{
+
+    button.disabled=false;
+
+    button.classList.remove(
+      "refreshing"
+    );
+  }
+}
+
+
+/* ==================================================
+   LOGOUT
+================================================== */
+
+function handleLogout(){
+
+  localStorage.removeItem(
+    "tga_telegram_id"
+  );
+
+  localStorage.removeItem(
+    "tga_username"
+  );
+
+  currentTelegramId=null;
+
+  dashboardData=null;
+
+  countriesData={};
+
+  selectedCountry=null;
+
+  currentAccount=null;
+
+  closeAllModals();
+
+  document.getElementById(
+    "dashboardScreen"
+  ).style.display="none";
+
+  document.getElementById(
+    "loginScreen"
+  ).style.display="flex";
+
+  document.getElementById(
+    "telegramIdInput"
+  ).value="";
+
+  document.getElementById(
+    "passwordInput"
+  ).value="";
+}
+
+
+function closeAllModals(){
+
+  document.querySelectorAll(
+    ".modal-overlay"
+  ).forEach(modal=>{
+    modal.classList.remove(
+      "show"
+    );
+  });
+}
+
+
+/* ==================================================
+   SHOW DASHBOARD
+================================================== */
+
+function showDashboard(){
+
+  document.getElementById(
+    "loginScreen"
+  ).style.display="none";
+
+  document.getElementById(
+    "dashboardScreen"
+  ).style.display="block";
+
+  document.getElementById(
+    "welcomeName"
+  ).textContent =
+    localStorage.getItem(
+      "tga_username"
+    ) || "User";
+
+  loadDashboardData();
+
+  loadCountries();
+}
+
+
+/* ==================================================
+   LOGIN ERROR
+================================================== */
+
+function showLoginError(message){
+
+  const element =
+    document.getElementById(
+      "loginError"
+    );
+
+  element.textContent =
+    message;
+
+  element.style.display =
+    "block";
+}
+
+
+function hideLoginError(){
+
+  const element =
+    document.getElementById(
+      "loginError"
+    );
+
+  element.textContent="";
+  element.style.display="none";
+}
+
+
+/* ==================================================
+   DATE
+================================================== */
+
+function formatDate(value){
+
+  if(!value){
+    return "N/A";
+  }
+
+  try{
+
+    const raw =
+      typeof value==="object" &&
+      value.$date
+        ? value.$date
+        : value;
+
+    const date =
+      new Date(raw);
+
+    if(
+      Number.isNaN(
+        date.getTime()
+      )
+    ){
+      return "N/A";
+    }
+
+    return date.toLocaleDateString();
+
+  }catch{
+
+    return "N/A";
+  }
+}
+
+
+/* ==================================================
+   HTML ESCAPE
+================================================== */
+
+function escapeHtml(value){
+
+  return String(
+    value ?? ""
+  )
+    .replaceAll(
+      "&",
+      "&amp;"
+    )
+    .replaceAll(
+      "<",
+      "&lt;"
+    )
+    .replaceAll(
+      ">",
+      "&gt;"
+    )
+    .replaceAll(
+      '"',
+      "&quot;"
+    )
+    .replaceAll(
+      "'",
+      "&#039;"
+    );
+}
+
+
+/* ==================================================
+   CLOSE MODAL ON BACKDROP
+================================================== */
+
+document.addEventListener(
+  "click",
+  event=>{
+
+    if(
+      event.target.classList.contains(
+        "modal-overlay"
+      )
+    ){
+
+      event.target.classList.remove(
+        "show"
+      );
+    }
+
+  }
+);
+
+
+/* ==================================================
+   KEYBOARD ESC
+================================================== */
+
+document.addEventListener(
+  "keydown",
+  event=>{
+
+    if(event.key!=="Escape"){
+      return;
+    }
+
+    closeAllModals();
+
+  }
+);
+
+
+/* ==================================================
+   STARTUP
+================================================== */
+
+window.addEventListener(
+  "DOMContentLoaded",
+  ()=>{
+
+    loadTheme();
+
+    const currencySelect =
+      document.getElementById(
+        "currencySelect"
+      );
+
+    if(currencySelect){
+
+      currencySelect.value =
+        currentCurrency;
+    }
+
+    const savedId =
+      localStorage.getItem(
+        "tga_telegram_id"
+      );
+
+    if(savedId){
+
+      currentTelegramId =
+        savedId;
+
+      showDashboard();
+
+    }else{
+
+      document.getElementById(
+        "loginScreen"
+      ).style.display="flex";
+
+      document.getElementById(
+        "dashboardScreen"
+      ).style.display="none";
+    }
+
+
+    /*
+      Enter key on password.
+    */
+
+    document.getElementById(
+      "passwordInput"
+    ).addEventListener(
+      "keydown",
+      event=>{
+
+        if(event.key==="Enter"){
+
+          handleLogin();
+
+        }
+
+      }
+    );
+
+  }
+);
+
+</script>
+
+</body>
+  </html>
