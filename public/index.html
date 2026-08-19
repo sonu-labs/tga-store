@@ -2139,16 +2139,33 @@ body.light .nav-btn.active{
 ================================================== -->
 
 <style>
+/* The maintenance screen is a true full-screen gate: no store UI is visible
+   or interactive while it is enabled. */
 .maintenance-overlay{
   position:fixed;
   inset:0;
-  z-index:900;
-  background:var(--bg);
+  z-index:9999;
+  background:#000;
   display:none;
   align-items:center;
   justify-content:center;
   padding:22px;
   text-align:center;
+  isolation:isolate;
+}
+
+body.light .maintenance-overlay{
+  background:#f5f5f7;
+}
+
+body.maintenance-active{
+  overflow:hidden;
+}
+
+body.maintenance-active #loginScreen,
+body.maintenance-active #dashboardScreen{
+  visibility:hidden;
+  pointer-events:none;
 }
 
 .maintenance-overlay.show{
@@ -2158,19 +2175,31 @@ body.light .nav-btn.active{
 .maintenance-card{
   width:100%;
   max-width:430px;
+  padding:32px 26px;
+  border:1px solid var(--border);
+  border-radius:26px;
+  background:var(--surface);
+  box-shadow:0 28px 90px rgba(0,0,0,.5);
 }
 
 .maintenance-logo{
-  width:90px;
-  height:90px;
+  width:76px;
+  height:76px;
   object-fit:contain;
-  margin-bottom:8px;
+  margin-bottom:16px;
 }
 
 .maintenance-icon{
-  font-size:54px;
-  line-height:1;
-  margin-bottom:14px;
+  width:64px;
+  height:64px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:0 auto 16px;
+  border-radius:20px;
+  font-size:31px;
+  background:rgba(255,200,87,.12);
+  border:1px solid rgba(255,200,87,.28);
 }
 
 .maintenance-title{
@@ -2195,6 +2224,8 @@ body.light .nav-btn.active{
 <div
   id="maintenanceOverlay"
   class="maintenance-overlay"
+  aria-live="assertive"
+  aria-hidden="true"
 >
 
   <div class="maintenance-card">
@@ -4478,9 +4509,11 @@ function showMaintenance(message){
 
   }
 
-  overlay.classList.add(
-    "show"
-  );
+  /* Hide both login and dashboard beneath the gate. This prevents the
+     application from peeking through while a user waits for the update. */
+  document.body.classList.add("maintenance-active");
+  overlay.setAttribute("aria-hidden", "false");
+  overlay.classList.add("show");
 }
 
 
@@ -4492,12 +4525,11 @@ function hideMaintenance(){
     );
 
   if(overlay){
-
-    overlay.classList.remove(
-      "show"
-    );
-
+    overlay.classList.remove("show");
+    overlay.setAttribute("aria-hidden", "true");
   }
+
+  document.body.classList.remove("maintenance-active");
 }
 
 
