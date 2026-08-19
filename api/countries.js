@@ -20,7 +20,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    // Try Server 2 logic (bot parity: supports both TGPVA and TG-Lion via server_config)
+    // Try Server 2 logic (website uses TG-Lion only)
     try {
       const db = await getDatabase();
       const { countries, activeApi, config, fallback } = await fetchServer2Countries(db);

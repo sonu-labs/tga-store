@@ -7,7 +7,7 @@ const {
 const { getCountryInfo: getTgLionCountryInfo, getNumber: getTgLionNumber } = require("../lib/tglion");
 const { sellingPriceInr } = require("../lib/money");
 const { getMaintenance, logEvent } = require("../lib/site");
-const { getServerConfig, fetchServer2Countries, checkS2ApiBalance, getCountryDisplayName } = require("../lib/server2");
+const { fetchServer2Countries, checkS2ApiBalance } = require("../lib/server2");
 
 function getCountryCode(value) {
   const code = String(value ?? "").trim().toUpperCase();
@@ -76,12 +76,9 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    // Server2 parity: fetch unified country info based on active provider (TGPVA / TG-Lion) with profit margin
+    // TG-Lion is the only provider used by the website
     let country = null;
-    let activeProvider = "tglion";
     try {
-      const cfg = await getServerConfig(db);
-      activeProvider = (cfg.s2_api || "tgpva").toLowerCase();
       // Try unified fetch via server2 (like bot's fetch_server2_countries)
       const { countries } = await fetchServer2Countries(db);
       const found = countries.find(c => c.code.toUpperCase() === countryCode.toUpperCase());
@@ -186,41 +183,14 @@ module.exports = async function handler(req, res) {
     chargedUserId = telegramId;
     chargedAmount = chargeInr;
 
-    // Purchase via active provider (TGPVA or TG-Lion) — bot parity
+    // Purchase via TG-Lion (only provider used by the website)
     let purchased = null;
     try {
-      const cfg2 = await getServerConfig(db);
-      const api = (cfg2.s2_api || "tgpva").toLowerCase();
-      if (api === "tgpva" && process.env.TGPVA_API_KEY) {
-        // TGPVA getNumber
-        const url = `https://tgpva.com/api/user/getNumber?apiKey=${encodeURIComponent(process.env.TGPVA_API_KEY)}&country=${encodeURIComponent(countryCode)}`;
-        const resp = await fetch(url, { method: "GET", headers: { Accept: "application/json" } });
-        const text = await resp.text();
-        let data;
-        try { data = JSON.parse(text); } catch { throw new Error("Invalid response from TGPVA"); }
-        if (!data || !data.ok || !data.result || !data.result.phone) {
-          const msg = data && data.error ? String(data.error) : "TGPVA could not provide a number for this country.";
-          const err = new Error(msg);
-          err.statusCode = 502;
-          throw err;
-        }
-        purchased = {
-          name: getCountryDisplayName(countryCode),
-          Number: String(data.result.phone).trim(),
-          number: String(data.result.phone).trim(),
-          price: country.price,
-          hash: String(data.result.hash || "")
-        };
-        // Store hash for later OTP retrieval (TGPVA needs hash)
-        purchased._tgpvaHash = String(data.result.hash || "");
-      } else {
-        purchased = await getTgLionNumber(countryCode, country.price);
-      }
+      purchased = await getTgLionNumber(countryCode, country.price);
     } catch (e) {
       if (e && e.statusCode) throw e;
-      // fallback to TG-Lion if TGPVA failed
-      console.error("Primary provider failed, trying TG-Lion fallback:", e);
-      purchased = await getTgLionNumber(countryCode, country.price);
+      console.error("TG-Lion purchase failed:", e);
+      throw e;
     }
 
     const order = {
@@ -234,8 +204,8 @@ module.exports = async function handler(req, res) {
       provider_price: country.price,
       status: "purchased",
       created_at: new Date(),
-      provider: purchased._tgpvaHash ? "tgpva" : "tglion",
-      provider_hash: purchased._tgpvaHash || null
+      provider: "tglion",
+      provider_hash: null
     };
 
     try {
