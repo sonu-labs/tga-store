@@ -1471,7 +1471,7 @@ body.light .nav-btn.active{
 
 
 <!-- ==================================================
-     RECHARGE
+     RECHARGE (Full — UPI/FamPay/Binance/Crypto as in Bot)
 ================================================== -->
 
 <section
@@ -1480,7 +1480,7 @@ body.light .nav-btn.active{
 >
 
   <div class="section-title">
-    Recharge
+    Recharge Balance
   </div>
 
   <div
@@ -1500,14 +1500,254 @@ body.light .nav-btn.active{
     </span>
 
     <div
-      style="color:var(--muted);margin-top:12px"
+      style="color:var(--muted);font-size:13px;margin-top:8px"
+      id="rechargeBalanceSub"
     >
-      Recharge system will be available here.
+      Select a method below to add funds
+    </div>
+
+  </div>
+
+  <div
+    id="rechargeMethods"
+    class="recharge-methods"
+  >
+    <div class="loading">
+      <div class="spinner"></div>
+      Loading payment methods...
+    </div>
+  </div>
+
+  <div
+    id="rechargeFormArea"
+    class="recharge-form-area hidden"
+  ></div>
+
+  <div
+    id="rechargeInvoiceArea"
+    class="recharge-invoice-area hidden"
+  ></div>
+
+  <div
+    class="recharge-history-card"
+  >
+
+    <div class="recharge-history-head">
+      <div class="section-title" style="font-size:18px;margin:0">
+        📜 Recharge History
+      </div>
+      <button
+        class="secondary-btn"
+        style="padding:9px 14px;font-size:13px"
+        type="button"
+        onclick="loadRechargeHistory()"
+      >
+        ↻ Refresh
+      </button>
+    </div>
+
+    <div
+      id="rechargeHistoryList"
+      class="recharge-history-list"
+    >
+      <div class="loading">
+        No history yet
+      </div>
     </div>
 
   </div>
 
 </section>
+
+<style>
+.recharge-methods{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+  margin-top:14px;
+}
+
+@media(max-width:700px){
+  .recharge-methods{
+    grid-template-columns:1fr;
+  }
+}
+
+.recharge-method-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:18px;
+  text-align:center;
+  cursor:pointer;
+  transition:.18s;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+}
+
+.recharge-method-card:hover{
+  border-color:#444;
+  transform:translateY(-2px);
+}
+
+.recharge-method-card.disabled{
+  opacity:.45;
+  cursor:not-allowed;
+  transform:none;
+}
+
+.recharge-method-icon{
+  font-size:32px;
+  line-height:1;
+}
+
+.recharge-method-title{
+  font-weight:850;
+  font-size:15px;
+}
+
+.recharge-method-sub{
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.4;
+}
+
+.recharge-method-badge{
+  display:inline-block;
+  font-size:11px;
+  font-weight:800;
+  padding:4px 10px;
+  border-radius:99px;
+  background:rgba(66,232,137,.14);
+  color:var(--green);
+  border:1px solid rgba(66,232,137,.28);
+}
+
+.recharge-method-badge.off{
+  background:rgba(255,86,86,.12);
+  color:var(--red);
+  border-color:rgba(255,86,86,.28);
+}
+
+.recharge-form-area,
+.recharge-invoice-area,
+.recharge-history-card{
+  margin-top:16px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:20px;
+}
+
+.recharge-form-area.hidden,
+.recharge-invoice-area.hidden{
+  display:none;
+}
+
+.recharge-history-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:14px;
+}
+
+.recharge-history-list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.recharge-history-item{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  padding:13px 14px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:13px;
+}
+
+.recharge-history-item b{
+  color:var(--text);
+}
+
+.recharge-history-item .muted{
+  color:var(--muted);
+  font-size:12px;
+}
+
+.recharge-input{
+  width:100%;
+  background:var(--surface2);
+  color:var(--text);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:13px 14px;
+  outline:none;
+  margin-top:10px;
+}
+
+.recharge-input:focus{
+  border-color:#666;
+}
+
+.recharge-qr{
+  width:min(260px,100%);
+  height:auto;
+  border-radius:14px;
+  border:1px solid var(--border);
+  display:block;
+  margin:14px auto;
+  background:#fff;
+  padding:8px;
+}
+
+.recharge-meta{
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:13px;
+  font-size:13px;
+  line-height:1.6;
+  color:var(--muted);
+  word-break:break-all;
+}
+
+.recharge-meta b{
+  color:var(--text);
+}
+
+.recharge-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:14px;
+}
+
+@media(max-width:500px){
+  .recharge-actions{
+    grid-template-columns:1fr;
+  }
+}
+
+.recharge-note{
+  margin-top:12px;
+  padding:12px;
+  border-radius:12px;
+  background:rgba(255,200,87,.08);
+  border:1px solid rgba(255,200,87,.18);
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.6;
+}
+
+.recharge-note b{
+  color:var(--text);
+}
+</style>
 
 
 <!-- ==================================================
@@ -3980,6 +4220,448 @@ function getStatusClass(status){
 
 
 /* ==================================================
+   RECHARGE (Bot-like flow — UPI/FamPay/Binance/Crypto)
+================================================== */
+
+let rechargeSettings = null;
+let rechargeMeta = null;
+const RECHARGE_USDT_TO_INR = 90;
+const RECHARGE_MIN_USDT = 0.1;
+
+async function loadRechargeSettings(){
+  try{
+    const res = await fetch("/api/recharge?action=settings&t="+Date.now(), { cache:"no-store" });
+    const data = await res.json();
+    if(data && data.success){
+      rechargeSettings = data.settings;
+      rechargeMeta = data;
+      return data;
+    }
+  }catch(e){
+    console.error("Recharge settings:",e);
+  }
+  // fallback disabled
+  rechargeSettings = { active_inr_gateway:null, binance_enabled:false, crypto_enabled:false };
+  rechargeMeta = { binance:{pay_id:"",qr_url:""}, usdt_to_inr:90, min_usdt:0.1 };
+  return null;
+}
+
+function renderRechargeMethods(){
+  const box = document.getElementById("rechargeMethods");
+  if(!box) return;
+
+  if(!rechargeSettings){
+    box.innerHTML = `<div class="loading"><div class="spinner"></div>Loading...</div>`;
+    return;
+  }
+
+  const gateway = rechargeSettings.active_inr_gateway;
+  const binanceOn = Boolean(rechargeSettings.binance_enabled);
+  const cryptoOn = Boolean(rechargeSettings.crypto_enabled);
+
+  const upiEnabled = gateway === "upi";
+  const fampayEnabled = gateway === "fampay";
+  const upiAutoEnabled = upiEnabled || fampayEnabled;
+
+  // Determine which UPI card to show — bot merges UPI/FamPay into single "UPI (Auto)" button depending on active gateway
+  let upiCard = "";
+  if(gateway === "upi"){
+    upiCard = cardRecharge("upi","💳","UPI (Auto)","Enter amount & get QR<br>Auto verification","UPI","upi");
+  }else if(gateway === "fampay"){
+    upiCard = cardRecharge("fampay","📲","UPI (Auto)","Scan & pay any amount<br>Via FamPay","FamPay","fampay");
+  }else{
+    upiCard = cardRecharge("upi","💳","UPI (Auto)","Currently disabled<br>Contact support","Disabled",null,true);
+  }
+
+  const binanceCard = binanceOn
+    ? cardRecharge("binance","🅱️","Binance Pay (Auto)","Send to Pay ID & verify","ON","binance")
+    : cardRecharge("binance","🅱️","Binance Pay","Currently disabled","OFF",null,true);
+
+  const cryptoCard = cryptoOn
+    ? cardRecharge("crypto","🪙","Crypto (Auto)","USDT via OxaPay<br>Min 0.1 USDT","ON","crypto")
+    : cardRecharge("crypto","🪙","Crypto","Currently disabled","OFF",null,true);
+
+  box.innerHTML = upiCard + binanceCard + cryptoCard;
+
+  if(!upiAutoEnabled && !binanceOn && !cryptoOn){
+    box.innerHTML += `<div class="recharge-note" style="grid-column:1/-1">⚠️ <b>All payment methods are currently disabled.</b> Please contact support or try again later. Admin can enable them from Payment Settings.</div>`;
+  }
+}
+
+function cardRecharge(id,icon,title,sub,badge,method,disabled){
+  const isDisabled = Boolean(disabled);
+  const badgeClass = (badge==="ON"||badge==="UPI"||badge==="FamPay") ? "recharge-method-badge" : "recharge-method-badge off";
+  const click = isDisabled ? "" : `onclick="openRechargeForm('${method||id}')"`;
+  const cls = isDisabled ? "recharge-method-card disabled" : "recharge-method-card";
+  return `
+    <div class="${cls}" ${click}>
+      <div class="recharge-method-icon">${icon}</div>
+      <div class="recharge-method-title">${title}</div>
+      <div class="recharge-method-sub">${sub}</div>
+      <span class="${badgeClass}">${badge}</span>
+    </div>
+  `;
+}
+
+function openRechargeForm(method){
+  const formArea = document.getElementById("rechargeFormArea");
+  const invoiceArea = document.getElementById("rechargeInvoiceArea");
+  if(!formArea || !invoiceArea) return;
+
+  invoiceArea.classList.add("hidden");
+  invoiceArea.innerHTML = "";
+  formArea.classList.remove("hidden");
+
+  if(method==="upi"){
+    formArea.innerHTML = `
+      <div style="font-weight:850;font-size:18px;margin-bottom:6px">💳 UPI (Auto) — Enter Amount</div>
+      <div style="color:var(--muted);font-size:13px">Enter amount in INR. You will get a QR to scan with any UPI app.</div>
+      <input id="upiAmountInput" class="recharge-input" type="number" inputmode="numeric" placeholder="Amount in INR (e.g. 100)" min="1" step="1">
+      <div class="recharge-actions">
+        <button class="primary-btn" type="button" onclick="createUPIInvoice()" style="margin-top:0">Generate QR</button>
+        <button class="secondary-btn" type="button" onclick="closeRechargeForm()">Cancel</button>
+      </div>
+      <div class="recharge-note">⏳ <b>Expires in 60 minutes.</b> Pay via any UPI app, then tap <b>Verify Payment</b>. We also auto-check.</div>
+    `;
+  }else if(method==="fampay"){
+    formArea.innerHTML = `
+      <div style="font-weight:850;font-size:18px;margin-bottom:6px">📲 UPI (Auto) — FamPay QR</div>
+      <div style="color:var(--muted);font-size:13px">Tap Generate to get a QR. You can pay <b>any amount</b> and verify.</div>
+      <div class="recharge-actions">
+        <button class="primary-btn" type="button" onclick="createFamPayInvoice()" style="margin-top:0">Generate QR</button>
+        <button class="secondary-btn" type="button" onclick="closeRechargeForm()">Cancel</button>
+      </div>
+      <div class="recharge-note">📲 <b>No amount needed upfront.</b> Scan QR, pay any amount, then tap Verify. Duplicate transactions are blocked.</div>
+    `;
+  }else if(method==="crypto"){
+    formArea.innerHTML = `
+      <div style="font-weight:850;font-size:18px;margin-bottom:6px">🪙 Crypto (Auto) — USDT</div>
+      <div style="color:var(--muted);font-size:13px">Enter USDT amount (Min ${RECHARGE_MIN_USDT}). You will receive INR at ₹${RECHARGE_USDT_TO_INR}/USDT.</div>
+      <input id="cryptoAmountInput" class="recharge-input" type="number" inputmode="decimal" placeholder="Amount in USDT (e.g. 5)" min="0.1" step="0.1">
+      <div class="recharge-actions">
+        <button class="primary-btn" type="button" onclick="createCryptoInvoice()" style="margin-top:0">Generate Invoice</button>
+        <button class="secondary-btn" type="button" onclick="closeRechargeForm()">Cancel</button>
+      </div>
+      <div class="recharge-note">⚠️ <b>Send EXACT amount</b> shown on the payment link. Expires in 30 minutes.</div>
+    `;
+  }else if(method==="binance"){
+    const payId = rechargeMeta && rechargeMeta.binance ? rechargeMeta.binance.pay_id : "";
+    const qrUrl = rechargeMeta && rechargeMeta.binance ? rechargeMeta.binance.qr_url : "";
+    formArea.innerHTML = `
+      <div style="font-weight:850;font-size:18px;margin-bottom:6px">🅱️ Binance Pay (Auto)</div>
+      <div class="recharge-meta">
+        <b>Pay ID:</b> <code style="user-select:all">${escapeHtml(payId||"Not configured")}</code><br>
+        ${qrUrl ? `<img src="${escapeHtml(qrUrl)}" class="recharge-qr" alt="Binance QR">` : ``}
+        <div style="margin-top:8px">Send payment via Binance app to this Pay ID, then enter your <b>Order ID / Transaction ID</b> below and verify.</div>
+      </div>
+      <input id="binanceOrderInput" class="recharge-input" type="text" placeholder="Enter Binance Order ID / Transaction ID">
+      <div class="recharge-actions">
+        <button class="primary-btn" type="button" onclick="verifyBinanceFromInput()" style="margin-top:0">Verify Payment</button>
+        <button class="secondary-btn" type="button" onclick="closeRechargeForm()">Back</button>
+      </div>
+      ${payId ? `<div class="recharge-note">📋 <b>Tip:</b> Long-press Pay ID to copy. After paying in Binance, paste Order ID here.</div>` : ``}
+    `;
+  }
+}
+
+function closeRechargeForm(){
+  const f = document.getElementById("rechargeFormArea");
+  if(f){ f.classList.add("hidden"); f.innerHTML=""; }
+}
+
+function closeRechargeInvoice(){
+  const a = document.getElementById("rechargeInvoiceArea");
+  if(a){ a.classList.add("hidden"); a.innerHTML=""; }
+}
+
+async function createUPIInvoice(){
+  const input = document.getElementById("upiAmountInput");
+  const amount = input ? input.value.trim() : "";
+  if(!amount || isNaN(Number(amount)) || Number(amount)<=0 || !/^\d+(\.\d+)?$/.test(amount)){
+    showMessage("Invalid Amount","Please enter a valid numeric amount.");
+    return;
+  }
+  const btn = document.querySelector('#rechargeFormArea .primary-btn');
+  if(btn){ btn.disabled=true; btn.textContent="Generating..."; }
+  try{
+    const res = await fetch("/api/recharge?action=create",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      cache:"no-store",
+      body:JSON.stringify({ telegramId: currentTelegramId, method:"upi", amount: amount })
+    });
+    const data = await res.json();
+    if(!res.ok || !data.success) throw new Error(data.message||"Failed to generate QR.");
+    showUPIInvoice(data);
+    closeRechargeForm();
+  }catch(e){
+    showMessage("UPI Error", e.message||"Could not generate QR.");
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent="Generate QR"; }
+  }
+}
+
+function showUPIInvoice(data){
+  const area = document.getElementById("rechargeInvoiceArea");
+  area.classList.remove("hidden");
+  area.innerHTML = `
+    <div style="font-weight:850;font-size:18px">📲 UPI Payment (Auto)</div>
+    <img src="${escapeHtml(data.qr_url)}" class="recharge-qr" alt="UPI QR">
+    <div class="recharge-meta">
+      <b>Amount:</b> ₹${escapeHtml(String(data.amount))}<br>
+      <b>Order ID:</b> <code>${escapeHtml(data.order_id)}</code><br>
+      <b>Expires:</b> ${data.expires_in_min||60} minutes
+    </div>
+    <div class="recharge-note">Scan with any UPI app and pay exactly ₹${escapeHtml(String(data.amount))}. Then tap Verify.</div>
+    <div class="recharge-actions">
+      <button class="primary-btn" type="button" onclick="verifyUPI('${escapeHtml(data.order_id)}')" style="margin-top:0">✅ Verify Payment</button>
+      <button class="secondary-btn" type="button" onclick="closeRechargeInvoice()">Close</button>
+    </div>
+  `;
+}
+
+async function createFamPayInvoice(){
+  const btn = document.querySelector('#rechargeFormArea .primary-btn');
+  if(btn){ btn.disabled=true; btn.textContent="Generating..."; }
+  try{
+    const res = await fetch("/api/recharge?action=create",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      cache:"no-store",
+      body:JSON.stringify({ telegramId: currentTelegramId, method:"fampay" })
+    });
+    const data = await res.json();
+    if(!res.ok || !data.success) throw new Error(data.message||"Failed to generate QR.");
+    const area = document.getElementById("rechargeInvoiceArea");
+    area.classList.remove("hidden");
+    area.innerHTML = `
+      <div style="font-weight:850;font-size:18px">📲 FamPay — Pay Any Amount</div>
+      <img src="${escapeHtml(data.qr_url)}" class="recharge-qr" alt="FamPay QR">
+      <div class="recharge-meta">
+        <b>Order ID:</b> <code>${escapeHtml(data.order_id)}</code><br>
+        ${data.expire ? `<b>Expires:</b> ${escapeHtml(data.expire)}<br>` : ``}
+        <b>Note:</b> Pay any amount you wish, then verify.
+      </div>
+      <div class="recharge-actions">
+        <button class="primary-btn" type="button" onclick="verifyFamPay('${escapeHtml(data.order_id)}')" style="margin-top:0">✅ Verify Payment</button>
+        <button class="secondary-btn" type="button" onclick="closeRechargeInvoice()">Close</button>
+      </div>
+    `;
+    closeRechargeForm();
+  }catch(e){
+    showMessage("FamPay Error", e.message||"Could not generate QR.");
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent="Generate QR"; }
+  }
+}
+
+async function createCryptoInvoice(){
+  const input = document.getElementById("cryptoAmountInput");
+  const amount = input ? input.value.trim() : "";
+  const usdt = Number(amount);
+  if(!amount || !Number.isFinite(usdt) || usdt < RECHARGE_MIN_USDT){
+    showMessage("Invalid Amount",`Minimum is ${RECHARGE_MIN_USDT} USDT.`);
+    return;
+  }
+  const btn = document.querySelector('#rechargeFormArea .primary-btn');
+  if(btn){ btn.disabled=true; btn.textContent="Generating..."; }
+  try{
+    const res = await fetch("/api/recharge?action=create",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      cache:"no-store",
+      body:JSON.stringify({ telegramId: currentTelegramId, method:"crypto", amount: usdt })
+    });
+    const data = await res.json();
+    if(!res.ok || !data.success) throw new Error(data.message||"Failed to generate invoice.");
+    const area = document.getElementById("rechargeInvoiceArea");
+    area.classList.remove("hidden");
+    const inr = data.amount_inr;
+    area.innerHTML = `
+      <div style="font-weight:850;font-size:18px">🪙 Crypto Invoice</div>
+      <div class="recharge-meta">
+        <b>Amount:</b> ${escapeHtml(String(data.amount_usdt))} USDT<br>
+        <b>INR Value:</b> ₹${escapeHtml(String(inr))}<br>
+        <b>Track ID:</b> <code>${escapeHtml(data.track_id)}</code><br>
+        <b>Pay URL:</b> <a href="${escapeHtml(data.pay_url)}" target="_blank" rel="noopener" style="color:var(--green);word-break:break-all">${escapeHtml(data.pay_url)}</a>
+      </div>
+      <div class="recharge-actions">
+        <a class="primary-btn" href="${escapeHtml(data.pay_url)}" target="_blank" rel="noopener" style="text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center">💳 Pay Now</a>
+        <button class="secondary-btn" type="button" onclick="verifyCrypto('${escapeHtml(data.track_id)}')">✅ I Have Paid</button>
+      </div>
+      <div class="recharge-note">⏳ Expires in 30 minutes. Send exact amount.</div>
+    `;
+    closeRechargeForm();
+  }catch(e){
+    showMessage("Crypto Error", e.message||"Could not generate invoice.");
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent="Generate Invoice"; }
+  }
+}
+
+async function verifyUPI(orderId){
+  if(!orderId) return;
+  const area = document.getElementById("rechargeInvoiceArea");
+  const btn = area ? area.querySelector(".primary-btn") : null;
+  if(btn){ btn.disabled=true; btn.textContent="Verifying..."; }
+  try{
+    const res = await fetch("/api/recharge?action=verify",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      cache:"no-store",
+      body:JSON.stringify({ telegramId: currentTelegramId, method:"upi", order_id: orderId })
+    });
+    const data = await res.json();
+    if(data.success){
+      showMessage("✅ Payment Verified", data.message || `₹${data.amount} credited. New balance: ₹${(data.balance||0).toFixed(2)}`);
+      closeRechargeInvoice();
+      await loadDashboardData();
+      await loadRechargeHistory();
+    }else{
+      showMessage("⏳ Not yet", data.message||"Payment not received yet. Try again.");
+    }
+  }catch(e){
+    showMessage("Verify Failed", e.message||"Could not verify.");
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent="✅ Verify Payment"; }
+  }
+}
+
+async function verifyFamPay(orderId){
+  if(!orderId) return;
+  const area = document.getElementById("rechargeInvoiceArea");
+  const btn = area ? area.querySelector(".primary-btn") : null;
+  if(btn){ btn.disabled=true; btn.textContent="Verifying..."; }
+  try{
+    const res = await fetch("/api/recharge?action=verify",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      cache:"no-store",
+      body:JSON.stringify({ telegramId: currentTelegramId, method:"fampay", order_id: orderId })
+    });
+    const data = await res.json();
+    if(data.success){
+      showMessage("✅ Payment Verified", data.message || `₹${data.amount} credited. New balance: ₹${(data.balance||0).toFixed(2)}`);
+      closeRechargeInvoice();
+      await loadDashboardData();
+      await loadRechargeHistory();
+    }else{
+      showMessage("⏳ Not yet", data.message||"Payment not received yet.");
+    }
+  }catch(e){
+    showMessage("Verify Failed", e.message||"Could not verify.");
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent="✅ Verify Payment"; }
+  }
+}
+
+async function verifyCrypto(trackId){
+  if(!trackId) return;
+  const area = document.getElementById("rechargeInvoiceArea");
+  const btn = area ? area.querySelector(".secondary-btn") : null;
+  if(btn){ btn.disabled=true; btn.textContent="Checking..."; }
+  try{
+    const res = await fetch("/api/recharge?action=verify",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      cache:"no-store",
+      body:JSON.stringify({ telegramId: currentTelegramId, method:"crypto", track_id: trackId, order_id: trackId })
+    });
+    const data = await res.json();
+    if(data.success){
+      showMessage("✅ Crypto Verified", data.message || `${data.amount_usdt||""} USDT (₹${data.amount}) credited.`);
+      closeRechargeInvoice();
+      await loadDashboardData();
+      await loadRechargeHistory();
+    }else{
+      showMessage("Crypto Status", data.message||"Not confirmed yet.");
+    }
+  }catch(e){
+    showMessage("Verify Failed", e.message||"Could not verify.");
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent="✅ I Have Paid"; }
+  }
+}
+
+async function verifyBinanceFromInput(){
+  const input = document.getElementById("binanceOrderInput");
+  const orderId = input ? input.value.trim() : "";
+  if(!orderId){
+    showMessage("Order ID Required","Please enter your Binance Order ID / Transaction ID.");
+    return;
+  }
+  const btn = document.querySelector('#rechargeFormArea .primary-btn');
+  if(btn){ btn.disabled=true; btn.textContent="Verifying..."; }
+  try{
+    const res = await fetch("/api/recharge?action=verify",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      cache:"no-store",
+      body:JSON.stringify({ telegramId: currentTelegramId, method:"binance", order_id: orderId })
+    });
+    const data = await res.json();
+    if(data.success){
+      showMessage("✅ Binance Verified", data.message || `₹${data.amount} credited.`);
+      closeRechargeForm();
+      await loadDashboardData();
+      await loadRechargeHistory();
+    }else{
+      showMessage("Binance", data.message||"Not found. Try again after a minute.");
+    }
+  }catch(e){
+    showMessage("Verify Failed", e.message||"Could not verify.");
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent="Verify Payment"; }
+  }
+}
+
+async function loadRechargeHistory(){
+  if(!currentTelegramId) return;
+  const box = document.getElementById("rechargeHistoryList");
+  if(!box) return;
+  box.innerHTML = `<div class="loading"><div class="spinner"></div>Loading history...</div>`;
+  try{
+    const res = await fetch("/api/recharge?action=history&telegramId="+encodeURIComponent(currentTelegramId)+"&t="+Date.now(),{ cache:"no-store" });
+    const data = await res.json();
+    if(!res.ok || !data.success) throw new Error(data.message||"Failed");
+    const list = data.history || [];
+    if(!list.length){
+      box.innerHTML = `<div class="loading">No successful recharges yet.</div>`;
+      return;
+    }
+    box.innerHTML = list.map(tx=>{
+      const d = tx.date ? formatDate(tx.date) : "—";
+      const method = escapeHtml(tx.method||"");
+      const amount = Number(tx.amount||0).toFixed(2);
+      const sub = tx.amount_usdt ? `${tx.amount_usdt} USDT` : `₹${amount}`;
+      return `
+        <div class="recharge-history-item">
+          <div>
+            <div><b>${method}</b> — ${sub}</div>
+            <div class="muted">${escapeHtml(d)} • <code>${escapeHtml(tx.order_id||"")}</code></div>
+          </div>
+          <div style="text-align:right"><b style="color:var(--green)">✓ Paid</b></div>
+        </div>
+      `;
+    }).join("");
+  }catch(e){
+    box.innerHTML = `<div class="loading">Could not load history.</div>`;
+  }
+}
+
+async function initRechargePage(){
+  if(!currentTelegramId) return;
+  await loadRechargeSettings();
+  renderRechargeMethods();
+  await loadRechargeHistory();
+  const sub = document.getElementById("rechargeBalanceSub");
+  if(sub && dashboardData){
+    const bal = Number(dashboardData.user?.balance||0);
+    sub.textContent = "Current: "+formatMoney(bal)+" — Choose method to add funds (auto verification)";
+  }
+}
+
+/* ==================================================
    NAVIGATION
 ================================================== */
 
@@ -4029,6 +4711,17 @@ function openPage(page){
   if(page==="orders"){
 
     loadDashboardData();
+  }
+
+  if(page==="recharge"){
+
+    initRechargePage();
+  }
+
+  if(page==="home"){
+
+    loadDashboardData();
+    loadCountries();
   }
 }
 
@@ -4330,40 +5023,75 @@ function hideLoginError(){
 
 
 /* ==================================================
-   DATE
+   DATE (Fixed — shows date + time in IST, handles Mongo dates)
 ================================================== */
 
 function formatDate(value){
 
-  if(!value){
+  if(
+    value === null ||
+    value === undefined ||
+    value === ""
+  ){
     return "N/A";
   }
 
   try{
 
-    const raw =
-      typeof value==="object" &&
-      value.$date
-        ? value.$date
-        : value;
-
-    const date =
-      new Date(raw);
+    let raw = value;
 
     if(
-      Number.isNaN(
-        date.getTime()
-      )
+      typeof value === "object" &&
+      value !== null
     ){
+
+      if(value.$date !== undefined){
+
+        if(
+          typeof value.$date === "object" &&
+          value.$date !== null &&
+          value.$date.$numberLong !== undefined
+        ){
+          raw = Number(value.$date.$numberLong);
+        }else{
+          raw = value.$date;
+        }
+
+      }else if(value.$oid){
+        return "N/A";
+      }
+
+    }
+
+    const date = new Date(raw);
+
+    if(Number.isNaN(date.getTime())){
       return "N/A";
     }
 
-    return date.toLocaleDateString();
+    return date.toLocaleString(
+      "en-IN",
+      {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+        timeZone: "Asia/Kolkata"
+      }
+    ) + " IST";
 
   }catch{
 
     return "N/A";
   }
+}
+
+
+function formatDateTime(value){
+  return formatDate(value);
 }
 
 

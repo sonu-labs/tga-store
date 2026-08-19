@@ -602,6 +602,14 @@ tbody tr:hover{
 .maint-switch.on span{
   transform:translateX(42px);
 }
+#binanceSwitchWrap.on span,
+#cryptoSwitchWrap.on span{
+  transform:translateX(28px) !important;
+}
+#binanceSwitchWrap.maint-switch.on,
+#cryptoSwitchWrap.maint-switch.on{
+  background:linear-gradient(90deg,var(--green),var(--green2)) !important;
+}
 
 .maint-form{
   background:linear-gradient(180deg,var(--panel2),var(--panel));
@@ -751,12 +759,12 @@ tbody tr:hover{
     position:fixed;
     z-index:100;
     display:grid;
-    grid-template-columns:repeat(5,1fr);
+    grid-template-columns:repeat(7,1fr);
     gap:3px;
     bottom:12px;
     left:50%;
     transform:translateX(-50%);
-    width:min(720px,calc(100% - 24px));
+    width:min(780px,calc(100% - 16px));
     padding:8px;
     border:1px solid rgba(61,240,146,.22);
     border-radius:25px;
@@ -764,6 +772,7 @@ tbody tr:hover{
     backdrop-filter:blur(18px);
     -webkit-backdrop-filter:blur(18px);
     box-shadow:0 15px 45px rgba(0,0,0,.45),0 0 26px rgba(61,240,146,.12);
+    overflow-x:auto;
   }
   .admin-nav-btn{
     min-width:0;
@@ -777,10 +786,11 @@ tbody tr:hover{
     align-items:center;
     justify-content:center;
     gap:4px;
-    font-size:10px;
+    font-size:9px;
     font-weight:800;
+    white-space:nowrap;
   }
-  .admin-nav-btn span{ font-size:19px; line-height:1; }
+  .admin-nav-btn span{ font-size:17px; line-height:1; }
   .admin-nav-btn.active{
     color:var(--text);
     background:linear-gradient(180deg,rgba(61,240,146,.18),rgba(15,22,34,.98));
@@ -859,6 +869,14 @@ tbody tr:hover{
 
     <button class="nav-item" data-tab="orders" type="button" onclick="switchTab('orders')">
       <span class="ic">🛒</span> Orders
+    </button>
+
+    <button class="nav-item" data-tab="payments" type="button" onclick="switchTab('payments')">
+      <span class="ic">💳</span> Payments
+    </button>
+
+    <button class="nav-item" data-tab="recharges" type="button" onclick="switchTab('recharges')">
+      <span class="ic">🧾</span> Recharges
     </button>
 
     <button class="nav-item" data-tab="maintenance" type="button" onclick="switchTab('maintenance')">
@@ -1034,6 +1052,123 @@ tbody tr:hover{
       </div>
     </section>
 
+    <!-- ============ PAYMENTS (Recharge Control — Bot parity) ============ -->
+    <section id="page-payments" class="page">
+      <div class="page-title">Payment Gateways</div>
+      <div class="page-sub">Control recharge methods exactly like <code>/paymentsettings</code> in the bot. Changes apply instantly to the website's Recharge page.</div>
+
+      <div class="panel" style="margin-bottom:18px">
+        <div class="panel-head">
+          <div class="panel-title">💳 INR Gateway (UPI Auto button)</div>
+          <div class="muted" style="font-size:12px">Only ONE can be active at a time — this powers the "UPI (Auto)" card.</div>
+        </div>
+        <div style="padding:18px;display:grid;gap:12px">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+            <input type="radio" name="inrGateway" value="upi" onchange="savePayments()"> 
+            <span><b>UPI Gateway</b> <span class="muted">— user enters amount, gets QR, auto-verify</span></span>
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+            <input type="radio" name="inrGateway" value="fampay" onchange="savePayments()">
+            <span><b>FamPay</b> <span class="muted">— any amount QR, verifies sender/amount</span></span>
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+            <input type="radio" name="inrGateway" value="" onchange="savePayments()">
+            <span><b>Disabled</b> <span class="muted">— hide UPI (Auto) card completely</span></span>
+          </label>
+          <div id="paymentsINRHint" class="muted" style="font-size:12px;margin-top:4px"></div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-bottom:18px">
+        <div class="panel-head">
+          <div class="panel-title">🅱️ Binance Pay</div>
+          <label class="maint-switch" style="width:64px;height:36px" id="binanceSwitchWrap">
+            <input type="checkbox" id="binanceEnabled" style="display:none" onchange="savePayments()">
+            <span style="width:28px;height:28px"></span>
+          </label>
+        </div>
+        <div style="padding:16px 18px">
+          <div style="font-size:13px;color:var(--muted)">When ON, users see 🅱️ Binance (Auto) with Pay ID & QR and can verify via Order ID. Uses <code>BINANCE_PAY_ID</code>/<code>BINANCE_API_KEY</code> env.</div>
+          <div id="binanceInfo" style="margin-top:12px;font-size:12px" class="mono muted"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">🪙 Crypto (OxaPay)</div>
+          <label class="maint-switch" style="width:64px;height:36px" id="cryptoSwitchWrap">
+            <input type="checkbox" id="cryptoEnabled" style="display:none" onchange="savePayments()">
+            <span style="width:28px;height:28px"></span>
+          </label>
+        </div>
+        <div style="padding:16px 18px">
+          <div style="font-size:13px;color:var(--muted)">When ON, users see 🪙 Crypto (Auto) — enter USDT, get OxaPay invoice, tap "I Have Paid". Uses <code>OXAPAY_API_KEY</code> (default from bot).</div>
+          <div style="margin-top:12px;font-size:12px;color:var(--muted)">Rate: <b style="color:var(--text)">₹90 / USDT</b> &nbsp;•&nbsp; Min: <b style="color:var(--text)">0.1 USDT</b> &nbsp;•&nbsp; Expiry 30 min • Auto sweep every 60s in bot (website verifies on demand).</div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:18px">
+        <div class="panel-head">
+          <div class="panel-title">📡 Server 2 — Country Provider (Bot parity)</div>
+          <div class="muted" style="font-size:12px">Switch between TGPVA & TG-Lion, set profit % like <code>/manageserver</code></div>
+        </div>
+        <div style="padding:18px;display:grid;gap:16px">
+          <div>
+            <div style="font-weight:700;font-size:13px;margin-bottom:8px">Active API</div>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:8px">
+              <input type="radio" name="s2api" value="tgpva" onchange="saveServer2()">
+              <span><b>TGPVA</b> <span class="muted">— https://tgpva.com (uses TGPVA_API_KEY)</span></span>
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+              <input type="radio" name="s2api" value="tglion" onchange="saveServer2()">
+              <span><b>TG-Lion</b> <span class="muted">— https://TG-Lion.net (uses TG_LION_API_KEY / YOUR_ID)</span></span>
+            </label>
+            <div id="s2apiHint" class="muted" style="font-size:12px;margin-top:8px"></div>
+          </div>
+          <div>
+            <div style="font-weight:700;font-size:13px;margin-bottom:8px">Profit Margin (%)</div>
+            <div style="display:flex;gap:10px;align-items:center">
+              <input id="s2profitInput" type="number" class="tool-input" style="max-width:140px" placeholder="0" min="0" max="100" step="0.5">
+              <button class="tool-btn" type="button" onclick="saveServer2()">Save %</button>
+              <span class="muted" style="font-size:12px">Added on top of provider price. Example: 20 = +20% markup.</span>
+            </div>
+          </div>
+          <div id="server2Toast" class="muted" style="font-size:12px"></div>
+        </div>
+      </div>
+
+      <div id="paymentsToast" style="margin-top:16px;font-size:13px" class="muted"></div>
+    </section>
+
+    <!-- ============ RECHARGES (Recent Transactions) ============ -->
+    <section id="page-recharges" class="page">
+      <div class="page-title">Recharge Transactions</div>
+      <div class="page-sub">All wallet top-ups from UPI / FamPay / Binance / Crypto — latest first.</div>
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Recent Recharges</div>
+          <div class="panel-tools">
+            <button class="tool-btn" type="button" onclick="loadRecharges()">↻ Reload</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Time (IST)</th>
+                <th>User</th>
+                <th>Method</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Order ID</th>
+              </tr>
+            </thead>
+            <tbody id="rechargesBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
   </main>
 </div>
 
@@ -1042,6 +1177,8 @@ tbody tr:hover{
   <button class="admin-nav-btn" data-tab="logs" type="button" onclick="switchTab('logs')"><span>≡</span>Logs</button>
   <button class="admin-nav-btn" data-tab="users" type="button" onclick="switchTab('users')"><span>👥</span>Users</button>
   <button class="admin-nav-btn" data-tab="orders" type="button" onclick="switchTab('orders')"><span>🛒</span>Orders</button>
+  <button class="admin-nav-btn" data-tab="payments" type="button" onclick="switchTab('payments')"><span>💳</span>Pay</button>
+  <button class="admin-nav-btn" data-tab="recharges" type="button" onclick="switchTab('recharges')"><span>🧾</span>Rechg</button>
   <button class="admin-nav-btn" data-tab="maintenance" type="button" onclick="switchTab('maintenance')"><span>⚙</span>Settings</button>
 </nav>
 
@@ -1134,32 +1271,59 @@ function inr(value){
 
 function timeAgo(value){
   if(!value){ return "—"; }
-  var date = new Date(value);
-  if(isNaN(date.getTime())){ return "—"; }
-  var diff = Date.now() - date.getTime();
-  var sec = Math.floor(diff / 1000);
-  if(sec < 5){ return "just now"; }
-  if(sec < 60){ return sec + "s ago"; }
-  var min = Math.floor(sec / 60);
-  if(min < 60){ return min + "m ago"; }
-  var hr = Math.floor(min / 60);
-  if(hr < 24){ return hr + "h ago"; }
-  var day = Math.floor(hr / 24);
-  if(day < 30){ return day + "d ago"; }
-  return date.toLocaleDateString();
+  try{
+    var raw = value;
+    if(value && typeof value==="object" && value.$date !== undefined){
+      if(value.$date && typeof value.$date==="object" && value.$date.$numberLong !== undefined){
+        raw = Number(value.$date.$numberLong);
+      }else{
+        raw = value.$date;
+      }
+    }
+    var date = new Date(raw);
+    if(isNaN(date.getTime())){ return "—"; }
+    var diff = Date.now() - date.getTime();
+    var sec = Math.floor(diff / 1000);
+    if(sec < 5){ return "just now"; }
+    if(sec < 60){ return sec + "s ago"; }
+    var min = Math.floor(sec / 60);
+    if(min < 60){ return min + "m ago"; }
+    var hr = Math.floor(min / 60);
+    if(hr < 24){ return hr + "h ago"; }
+    var day = Math.floor(hr / 24);
+    if(day < 30){ return day + "d ago"; }
+    return date.toLocaleString("en-IN", {
+      day: "2-digit", month: "short", year: "numeric",
+      hour: "2-digit", minute: "2-digit",
+      timeZone: "Asia/Kolkata"
+    }) + " IST";
+  }catch(e){ return "—"; }
 }
 
 function fmtDate(value){
   if(!value){ return "—"; }
-  var date = new Date(value);
-  if(isNaN(date.getTime())){ return "—"; }
-  return date.toLocaleString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit"
-  });
+  try{
+    var raw = value;
+    if(value && typeof value==="object" && value.$date !== undefined){
+      if(value.$date && typeof value.$date==="object" && value.$date.$numberLong !== undefined){
+        raw = Number(value.$date.$numberLong);
+      }else{
+        raw = value.$date;
+      }
+    }
+    var date = new Date(raw);
+    if(isNaN(date.getTime())){ return "—"; }
+    return date.toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+      timeZone: "Asia/Kolkata"
+    }) + " IST";
+  }catch(e){ return "—"; }
 }
 
 function showToast(message, isError){
@@ -1195,6 +1359,8 @@ function switchTab(tab){
   else if(tab === "logs"){ loadLogs(); }
   else if(tab === "users"){ loadUsers(); }
   else if(tab === "orders"){ loadOrders(); }
+  else if(tab === "payments"){ loadPayments(); }
+  else if(tab === "recharges"){ loadRecharges(); }
   else if(tab === "maintenance"){ loadMaintenance(); }
 }
 
@@ -1505,6 +1671,180 @@ async function saveMaintenanceMessage(){
     showToast(error.message || "Could not save message.", true);
   }finally{
     btn.disabled = false;
+  }
+}
+
+/* ================= PAYMENTS (Recharge control) ================= */
+
+var paymentsState = null;
+
+async function loadPayments(){
+  try{
+    var result = await api("payments");
+    paymentsState = result.settings || {};
+    var binance = result.binance || {};
+    // radios
+    var gw = paymentsState.active_inr_gateway || "";
+    document.querySelectorAll('input[name="inrGateway"]').forEach(function(r){
+      r.checked = (r.value === gw);
+    });
+    document.getElementById("paymentsINRHint").textContent = gw ? "Active: " + gw.toUpperCase() + " — powers the UPI (Auto) card" : "No INR gateway active — UPI (Auto) will show as disabled";
+    var be = document.getElementById("binanceEnabled");
+    var ce = document.getElementById("cryptoEnabled");
+    if(be){
+      be.checked = Boolean(paymentsState.binance_enabled);
+      var wrap = document.getElementById("binanceSwitchWrap");
+      if(wrap) wrap.classList.toggle("on", be.checked);
+      // visual toggle class on the switch element itself
+      var sw = wrap ? wrap.parentElement.querySelector(".maint-switch") : null;
+      // we use the label as switch; toggle class on it
+      if(be.checked) wrap.classList.add("on"); else wrap.classList.remove("on");
+    }
+    if(ce){
+      ce.checked = Boolean(paymentsState.crypto_enabled);
+      var cwrap = document.getElementById("cryptoSwitchWrap");
+      if(cwrap){
+        if(ce.checked) cwrap.classList.add("on"); else cwrap.classList.remove("on");
+      }
+    }
+    var bi = document.getElementById("binanceInfo");
+    if(bi){
+      bi.textContent = binance.pay_id ? "Pay ID: " + binance.pay_id + (binance.qr_url ? " • QR configured" : " • No QR") : "Binance env not set (PAY_ID / QR_URL)";
+    }
+    document.getElementById("paymentsToast").textContent = "Loaded at " + fmtDate(new Date());
+  }catch(error){
+    console.error("Payments load:", error);
+    document.getElementById("paymentsToast").textContent = "Failed to load: " + (error.message||"");
+  }
+}
+
+async function savePayments(){
+  var gwEl = document.querySelector('input[name="inrGateway"]:checked');
+  var gw = gwEl ? gwEl.value : "";
+  // empty string means null (disabled)
+  var binanceOn = document.getElementById("binanceEnabled") ? document.getElementById("binanceEnabled").checked : true;
+  var cryptoOn = document.getElementById("cryptoEnabled") ? document.getElementById("cryptoEnabled").checked : true;
+
+  // If user clicked the switch wrapper itself, the checkbox state is already toggled via label? We handle click on wrapper differently.
+  // For radio, gw is already set; for switches we toggle via checkbox click.
+
+  // update visual
+  var bw = document.getElementById("binanceSwitchWrap");
+  var cw = document.getElementById("cryptoSwitchWrap");
+  if(bw) bw.classList.toggle("on", binanceOn);
+  if(cw) cw.classList.toggle("on", cryptoOn);
+
+  try{
+    var result = await api("payments", {
+      method: "POST",
+      body: {
+        active_inr_gateway: gw ? gw : null,
+        binance_enabled: binanceOn,
+        crypto_enabled: cryptoOn
+      }
+    });
+    paymentsState = result.settings || {};
+    showToast("✅ Payment settings saved.");
+    document.getElementById("paymentsToast").textContent = "Saved at " + fmtDate(new Date()) + " — Active gateway: " + (gw||"none");
+  }catch(error){
+    console.error("Save payments:", error);
+    showToast(error.message || "Could not save payments.", true);
+  }
+}
+
+// Make entire switch clickable (toggle checkbox)
+document.addEventListener("click", function(e){
+  var sw = e.target.closest("#binanceSwitchWrap, #cryptoSwitchWrap");
+  if(!sw) return;
+  // if click was directly on checkbox, let it handle; otherwise toggle
+  if(e.target.tagName.toLowerCase()==="input") return;
+  var cb = sw.querySelector('input[type="checkbox"]');
+  if(cb){
+    cb.checked = !cb.checked;
+    savePayments();
+  }
+});
+
+async function loadServer2(){
+  try{
+    var result = await api("server_config");
+    var cfg = result.config || {};
+    document.querySelectorAll('input[name="s2api"]').forEach(function(r){
+      r.checked = (r.value === (cfg.s2_api||"tgpva"));
+    });
+    var profitEl = document.getElementById("s2profitInput");
+    if(profitEl) profitEl.value = (cfg.s2_profit!=null ? cfg.s2_profit : 0);
+    var hint = document.getElementById("s2apiHint");
+    if(hint){
+      hint.textContent = "Active: " + String(cfg.s2_api||"tgpva").toUpperCase() + " • Profit " + (cfg.s2_profit||0) + "% — controls /api/countries and purchase pricing (like bot's /manageserver)";
+    }
+    var toast = document.getElementById("server2Toast");
+    if(toast) toast.textContent = "Loaded at " + fmtDate(new Date());
+  }catch(e){
+    console.error("loadServer2", e);
+    var toast = document.getElementById("server2Toast");
+    if(toast) toast.textContent = "Failed: " + (e.message||"");
+  }
+}
+
+async function saveServer2(){
+  var apiEl = document.querySelector('input[name="s2api"]:checked');
+  var apiVal = apiEl ? apiEl.value : "tgpva";
+  var profitEl = document.getElementById("s2profitInput");
+  var profitVal = profitEl ? parseFloat(profitEl.value) : 0;
+  if(!Number.isFinite(profitVal) || profitVal<0) profitVal = 0;
+  try{
+    var result = await api("server_config", { method: "POST", body: { s2_api: apiVal, s2_profit: profitVal } });
+    var cfg = result.config || {};
+    showToast("✅ Server 2 saved: " + String(cfg.s2_api||apiVal).toUpperCase() + " @ " + (cfg.s2_profit!=null?cfg.s2_profit:profitVal) + "%");
+    var hint = document.getElementById("s2apiHint");
+    if(hint) hint.textContent = "Saved: " + String(cfg.s2_api||apiVal).toUpperCase() + " • Profit " + (cfg.s2_profit!=null?cfg.s2_profit:profitVal) + "%";
+    var toast = document.getElementById("server2Toast");
+    if(toast) toast.textContent = "Saved at " + fmtDate(new Date());
+  }catch(e){
+    console.error("saveServer2", e);
+    showToast(e.message||"Could not save server config", true);
+  }
+}
+
+// Hook server2 load into payments page
+var _origLoadPayments = loadPayments;
+loadPayments = async function(){
+  await _origLoadPayments();
+  await loadServer2();
+};
+
+/* ================= RECHARGES ================= */
+
+async function loadRecharges(){
+  var body = document.getElementById("rechargesBody");
+  if(!body) return;
+  body.innerHTML = '<tr><td colspan="6"><div class="empty">Loading...</div></td></tr>';
+  try{
+    var result = await api("recharges");
+    var list = (result.data && result.data.recharges) || [];
+    if(!list.length){
+      body.innerHTML = '<tr><td colspan="6"><div class="empty"><span class="big">🧾</span>No recharges yet.</div></td></tr>';
+      return;
+    }
+    body.innerHTML = list.map(function(r){
+      var method = (r.method||"").toUpperCase();
+      var badge = method==="CRYPTO" ? "pill-otp" : method==="UPI" ? "pill-success" : method==="FAMPAY" ? "pill-buy" : method==="BINANCE" ? "pill-login" : "pill-waiting";
+      var amount = r.amount_usdt ? (r.amount_usdt + " USDT (₹" + Number(r.amount||0).toFixed(2)+")") : inr(r.amount);
+      var status = String(r.status||"pending");
+      var statusClass = status==="paid" ? "pill-success" : status==="pending" ? "pill-waiting" : "pill-failed";
+      return '<tr>' +
+        '<td class="muted">'+esc(fmtDate(r.created_at))+'</td>' +
+        '<td class="mono muted">'+esc(r.user_id)+'</td>' +
+        '<td><span class="pill '+badge+'">'+esc(method)+'</span></td>' +
+        '<td class="mono">'+esc(amount)+'</td>' +
+        '<td><span class="pill '+statusClass+'">'+esc(status)+'</span></td>' +
+        '<td class="mono">'+esc(r._id)+'</td>' +
+      '</tr>';
+    }).join("");
+  }catch(error){
+    console.error("Recharges:", error);
+    body.innerHTML = '<tr><td colspan="6"><div class="empty">Failed to load recharges.</div></td></tr>';
   }
 }
 

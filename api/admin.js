@@ -10,6 +10,11 @@ const {
   deleteSession
 } = require("../lib/site");
 
+const {
+  getPaymentSettings,
+  setPaymentSettings
+} = require("../lib/payments");
+
 function serialize(value) {
   if (value === null || value === undefined) {
     return value;
@@ -464,6 +469,107 @@ module.exports = async function handler(req, res) {
         success: false,
         message: "Method not allowed."
       });
+    }
+
+    if (action === "payments" || action === "recharge_settings" || action === "payment_settings") {
+      if (req.method === "GET") {
+        const settings = await getPaymentSettings(db);
+        return res.status(200).json({
+          success: true,
+          settings: serialize(settings),
+          binance: {
+            pay_id: process.env.BINANCE_PAY_ID || "",
+            qr_url: process.env.BINANCE_QR_URL || ""
+          }
+        });
+      }
+      if (req.method === "POST") {
+        const body = readJsonBody(req);
+        const payload = body.settings || body;
+        const updates = {};
+        if ("active_inr_gateway" in payload) updates.active_inr_gateway = payload.active_inr_gateway;
+        if ("binance_enabled" in payload) updates.binance_enabled = payload.binance_enabled;
+        if ("crypto_enabled" in payload) updates.crypto_enabled = payload.crypto_enabled;
+        const settings = await setPaymentSettings(db, updates);
+        return res.status(200).json({
+          success: true,
+          settings: serialize(settings)
+        });
+      }
+      return res.status(405).json({ success: false, message: "Method not allowed." });
+    }
+
+    if (action === "server_config" || action === "server2" || action === "servers") {
+      if (req.method === "GET") {
+        const doc = await db.collection("settings").findOne({ _id: "server_config" });
+        const fallback = { s1: "active", s2: "active", s3: "maintenance", s2_api: "tgpva", s2_profit: 0 };
+        const data = doc ? { ...fallback, ...doc } : fallback;
+        return res.status(200).json({ success: true, config: serialize(data) });
+      }
+      if (req.method === "POST") {
+        const body = readJsonBody(req);
+        const updates = {};
+        if ("s2_api" in body) {
+          const v = String(body.s2_api || "").toLowerCase();
+          if (v === "tgpva" || v === "tglion") updates.s2_api = v;
+        }
+        if ("s2_profit" in body) {
+          const v = parseFloat(String(body.s2_profit));
+          if (Number.isFinite(v) && v >= 0 && v <= 500) updates.s2_profit = v;
+        }
+        if ("s1" in body) updates.s1 = String(body.s1);
+        if ("s2" in body) updates.s2 = String(body.s2);
+        if ("s3" in body) updates.s3 = String(body.s3);
+        if (Object.keys(updates).length) {
+          await db.collection("settings").updateOne({ _id: "server_config" }, { $set: updates }, { upsert: true });
+        }
+        const doc = await db.collection("settings").findOne({ _id: "server_config" });
+        return res.status(200).json({ success: true, config: serialize(doc || {}) });
+      }
+      return res.status(405).json({ success: false, message: "Method not allowed." });
+    }
+
+    if (action === "recharges" || action === "transactions") {
+      if (req.method !== "GET") {
+        return res.status(405).json({ success: false, message: "Method not allowed." });
+      }
+      const limit = Math.min(toNumber(req.query.limit, 200), 500);
+      const txns = await db.collection("transactions").find({}).sort({ created_at: -1 }).limit(limit).toArray();
+      const cryptos = await db.collection("crypto_invoices").find({}).sort({ created_at: -1 }).limit(limit).toArray();
+      const combined = [];
+      for (const t of txns) {
+        combined.push({
+          _id: t._id,
+          user_id: t.user_id,
+          method: t.method || "unknown",
+          amount: Number(t.amount || 0),
+          status: t.status || "pending",
+          created_at: t.created_at,
+          settled_at: t.settled_at || null,
+          expires_at: t.expires_at || null,
+          type: "transaction"
+        });
+      }
+      for (const c of cryptos) {
+        combined.push({
+          _id: c.track_id || c._id,
+          user_id: c.user_id,
+          method: "crypto",
+          amount: Number(c.amount_inr || 0),
+          amount_usdt: Number(c.amount_usdt || 0),
+          status: c.status || "pending",
+          created_at: c.created_at,
+          settled_at: c.settled_at || null,
+          type: "crypto"
+        });
+      }
+      combined.sort((a,b)=>{
+        const da = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const dbb = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return dbb - da;
+      });
+      const sliced = combined.slice(0, limit);
+      return res.status(200).json({ success: true, data: { recharges: sliced.map(serialize), total: sliced.length } });
     }
 
     if (action === "logout") {

@@ -4,7 +4,7 @@ const {
   readJsonBody,
   setCors
 } = require("../lib/db");
-const { getCode } = require("../lib/tglion");
+const { getCode: getTgLionCode } = require("../lib/tglion");
 const { getMaintenance, logEvent } = require("../lib/site");
 
 function numberVariants(value) {
@@ -89,7 +89,38 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    const result = await getCode(order.number || number);
+    // Try TGPVA first if order has provider_hash (like bot's server2)
+    let result = null;
+    if (order.provider === "tgpva" && order.provider_hash && process.env.TGPVA_API_KEY) {
+      try {
+        const url = `https://tgpva.com/api/user/getCode?apiKey=${encodeURIComponent(process.env.TGPVA_API_KEY)}&number=${encodeURIComponent(order.number || number)}&hash=${encodeURIComponent(order.provider_hash)}`;
+        const resp = await fetch(url, { method: "GET", headers: { Accept: "application/json" } });
+        const data = await resp.json();
+        if (data && data.ok && data.result && data.result.status === "Received" && data.result.code) {
+          result = {
+            Number: order.number || number,
+            code: String(data.result.code).trim(),
+            pass: String(data.result.password || data.result.pass || "").trim()
+          };
+        } else if (data && data.ok && data.result && data.result.status !== "Received") {
+          // not yet received
+          result = { Number: order.number || number, code: "", pass: "" };
+        }
+      } catch (e) {
+        console.error("TGPVA getCode error:", e);
+      }
+    }
+    if (!result || !result.code) {
+      // fallback to TG-Lion (bot parity: try TG-Lion as fallback)
+      try {
+        result = await getTgLionCode(order.number || number);
+      } catch (e) {
+        // keep empty result to handle below
+        if (!result) result = { code: "", pass: "" };
+        // rethrow if it's a real error with statusCode and no TGPVA fallback succeeded
+        if (e && e.statusCode && e.statusCode >= 500) throw e;
+      }
+    }
 
     if (!result.code) {
       await logEvent(db, {

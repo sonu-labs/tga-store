@@ -126,14 +126,27 @@ module.exports = async function handler(req, res) {
       .limit(50)
       .toArray();
 
-    const transactions = await db
-      .collection("transactions")
-      .find({
-        user_id: telegramId,
-        status: "approved"
-      })
-      .limit(200)
-      .toArray();
+    // Count recharges from both transactions (paid/approved/success) and crypto_invoices (paid) — bot uses "paid", website used "approved"
+    const [transactions, cryptoTxns] = await Promise.all([
+      db
+        .collection("transactions")
+        .find({
+          user_id: telegramId,
+          status: { $in: ["paid", "approved", "success", "completed"] }
+        })
+        .limit(200)
+        .toArray(),
+      db
+        .collection("crypto_invoices")
+        .find({
+          user_id: telegramId,
+          status: { $in: ["paid", "approved", "success", "completed"] }
+        })
+        .limit(200)
+        .toArray()
+    ]);
+
+    const totalRecharge = transactions.length + cryptoTxns.length;
 
     const balance = Number(
       user.balance || 0
@@ -154,7 +167,7 @@ module.exports = async function handler(req, res) {
 
       totalOrders: orders.length,
 
-      totalRecharge: transactions.length
+      totalRecharge: totalRecharge
     });
 
   } catch (error) {
