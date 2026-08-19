@@ -2,12 +2,18 @@
 # Stored as a single document in the "settings" collection.
 # active_inr_gateway: "upi" or "fampay" (only ONE runs at a time for the merged "UPI (Auto)" button)
 # binance_enabled / crypto_enabled: independent toggles
+#
+# 🎛️ UPI/FamPay switch — the DEFAULT comes from the Bot Codes file (config.py:
+# DEFAULT_INR_GATEWAY). Admin can override at runtime (/paymentsettings or the
+# web admin panel), which is saved here in the DB.
+
+from config import DEFAULT_INR_GATEWAY
 
 SETTINGS_ID = "payment_gateways"
 
 DEFAULTS = {
     "_id": SETTINGS_ID,
-    "active_inr_gateway": "upi",   # "upi" | "fampay" | None (None = INR button hidden)
+    "active_inr_gateway": DEFAULT_INR_GATEWAY,  # "upi" | "fampay" | None (None = INR button hidden)
     "binance_enabled": True,
     "crypto_enabled": True,
 }

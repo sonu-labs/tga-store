@@ -493,7 +493,10 @@ module.exports = async function handler(req, res) {
           binance: {
             pay_id: process.env.BINANCE_PAY_ID || "",
             qr_url: process.env.BINANCE_QR_URL || ""
-          }
+          },
+          upi_id: process.env.UPI_ID || "",
+          fampay_upi: process.env.FAMPAY_UPI || "",
+          default_inr_gateway: process.env.DEFAULT_INR_GATEWAY || "upi"
         });
       }
       if (req.method === "POST") {
