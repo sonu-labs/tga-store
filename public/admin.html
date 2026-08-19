@@ -698,6 +698,36 @@ tbody tr:hover{
   border-left-color:var(--red);
 }
 
+
+/* ============ SETTINGS & MOBILE NAV ============ */
+.settings-shortcuts{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+  margin-top:20px;
+}
+
+.settings-shortcut{
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:var(--panel);
+  color:var(--text);
+  padding:16px;
+  text-align:left;
+  display:flex;
+  align-items:center;
+  gap:11px;
+  transition:.15s;
+}
+.settings-shortcut:hover{ border-color:rgba(61,240,146,.5); transform:translateY(-2px); }
+.settings-shortcut-icon{ font-size:20px; }
+.settings-shortcut span:nth-child(2){ min-width:0; flex:1; }
+.settings-shortcut strong{ display:block; font-size:13px; }
+.settings-shortcut small{ display:block; color:var(--muted); font-size:11px; line-height:1.4; margin-top:3px; }
+.settings-shortcut b{ color:var(--muted); font-size:21px; font-weight:400; }
+
+.admin-bottom-nav{ display:none; }
+
 /* ============ RESPONSIVE ============ */
 
 @media(max-width:1100px){
@@ -711,37 +741,54 @@ tbody tr:hover{
     flex-direction:column;
   }
 
-  .sidebar{
-    width:100%;
-    flex:0 0 auto;
-    position:static;
-    height:auto;
-    display:flex;
-    gap:6px;
-    overflow-x:auto;
-    border-right:0;
-    border-bottom:1px solid var(--border);
-    padding:12px;
-  }
-
-  .side-label{
-    display:none;
-  }
-
-  .nav-item{
-    white-space:nowrap;
-    width:auto;
-    margin-bottom:0;
-    flex:0 0 auto;
-  }
+  .sidebar{ display:none; }
 
   .main{
-    padding:20px 16px 60px;
+    padding:20px 16px 106px;
   }
 
-  .maint-card{
-    grid-template-columns:1fr;
+  .admin-bottom-nav{
+    position:fixed;
+    z-index:100;
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:3px;
+    bottom:12px;
+    left:50%;
+    transform:translateX(-50%);
+    width:min(720px,calc(100% - 24px));
+    padding:8px;
+    border:1px solid rgba(61,240,146,.22);
+    border-radius:25px;
+    background:rgba(11,16,24,.94);
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+    box-shadow:0 15px 45px rgba(0,0,0,.45),0 0 26px rgba(61,240,146,.12);
   }
+  .admin-nav-btn{
+    min-width:0;
+    min-height:58px;
+    border:0;
+    border-radius:18px;
+    background:transparent;
+    color:var(--muted);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:4px;
+    font-size:10px;
+    font-weight:800;
+  }
+  .admin-nav-btn span{ font-size:19px; line-height:1; }
+  .admin-nav-btn.active{
+    color:var(--text);
+    background:linear-gradient(180deg,rgba(61,240,146,.18),rgba(15,22,34,.98));
+    box-shadow:0 0 0 1px rgba(61,240,146,.28),0 0 15px rgba(61,240,146,.25);
+  }
+
+  .maint-card{ grid-template-columns:1fr; }
+  .settings-shortcuts{ grid-template-columns:1fr; }
 }
 
 @media(max-width:560px){
@@ -815,7 +862,7 @@ tbody tr:hover{
     </button>
 
     <button class="nav-item" data-tab="maintenance" type="button" onclick="switchTab('maintenance')">
-      <span class="ic">🛠️</span> Maintenance
+      <span class="ic">⚙️</span> Settings
     </button>
   </aside>
 
@@ -946,8 +993,8 @@ tbody tr:hover{
 
     <!-- ============ MAINTENANCE ============ -->
     <section id="page-maintenance" class="page">
-      <div class="page-title">Maintenance Mode</div>
-      <div class="page-sub">Take the entire store offline instantly. The admin panel stays live.</div>
+      <div class="page-title">Store Settings</div>
+      <div class="page-sub">Manage store-wide controls. Changes apply to every visitor while the admin panel stays live.</div>
 
       <div class="maint-card">
 
@@ -967,10 +1014,36 @@ tbody tr:hover{
         </div>
 
       </div>
+
+      <div class="settings-shortcuts" aria-label="Admin tools">
+        <button class="settings-shortcut" type="button" onclick="switchTab('orders')">
+          <span class="settings-shortcut-icon">🛒</span>
+          <span><strong>Order monitoring</strong><small>Review deliveries and OTP status</small></span>
+          <b>›</b>
+        </button>
+        <button class="settings-shortcut" type="button" onclick="switchTab('users')">
+          <span class="settings-shortcut-icon">👥</span>
+          <span><strong>User directory</strong><small>Search users, balances and activity</small></span>
+          <b>›</b>
+        </button>
+        <button class="settings-shortcut" type="button" onclick="switchTab('logs')">
+          <span class="settings-shortcut-icon">📋</span>
+          <span><strong>Activity logs</strong><small>View logins, purchases and failures</small></span>
+          <b>›</b>
+        </button>
+      </div>
     </section>
 
   </main>
 </div>
+
+<nav class="admin-bottom-nav" aria-label="Admin navigation">
+  <button class="admin-nav-btn active" data-tab="overview" type="button" onclick="switchTab('overview')"><span>◧</span>Overview</button>
+  <button class="admin-nav-btn" data-tab="logs" type="button" onclick="switchTab('logs')"><span>≡</span>Logs</button>
+  <button class="admin-nav-btn" data-tab="users" type="button" onclick="switchTab('users')"><span>👥</span>Users</button>
+  <button class="admin-nav-btn" data-tab="orders" type="button" onclick="switchTab('orders')"><span>🛒</span>Orders</button>
+  <button class="admin-nav-btn" data-tab="maintenance" type="button" onclick="switchTab('maintenance')"><span>⚙</span>Settings</button>
+</nav>
 
 <div id="toast" class="toast"></div>
 
@@ -1107,7 +1180,7 @@ var currentTab = "overview";
 function switchTab(tab){
   currentTab = tab;
 
-  document.querySelectorAll(".nav-item").forEach(function(btn){
+  document.querySelectorAll(".nav-item, .admin-nav-btn").forEach(function(btn){
     btn.classList.toggle("active", btn.dataset.tab === tab);
   });
 
