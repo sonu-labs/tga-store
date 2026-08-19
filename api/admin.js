@@ -368,7 +368,7 @@ module.exports = async function handler(req, res) {
     const db = await getDatabase();
     const session = await getSession(db, req);
 
-    if (!session) {
+    if (!session || session.role !== "admin") {
       return res.status(401).json({
         success: false,
         message: "Session expired. Please sign in again."

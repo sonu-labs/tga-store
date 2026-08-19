@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#05070b">
 <meta name="robots" content="noindex, nofollow">
-<title>TGA Nexus — Admin Panel</title>
+<title>TGA Store Admin Panel</title>
 
 <style>
 *{
@@ -776,7 +776,7 @@ tbody tr:hover{
 
   <div class="brand">
     <img src="https://files.catbox.moe/zsgsqb.png" alt="TGA">
-    <div class="brand-name">TGA <span>NEXUS</span> · Admin</div>
+    <div class="brand-name">TGA Store <span>Admin Panel</span></div>
   </div>
 
   <div class="top-actions">
@@ -981,9 +981,25 @@ function getToken(){
   return sessionStorage.getItem("tga_admin_token") || "";
 }
 
+function adminLoginUrl(){
+  return "/admin_login.html";
+}
+
 async function api(action, options){
   var opts = options || {};
-  var url = "/api/admin?action=" + encodeURIComponent(action);
+  var params = new URLSearchParams();
+  params.set("action", action);
+
+  if(opts.query){
+    Object.keys(opts.query).forEach(function(key){
+      var value = opts.query[key];
+      if(value !== undefined && value !== null && value !== ""){
+        params.set(key, value);
+      }
+    });
+  }
+
+  var url = "/api/admin?" + params.toString();
 
   var headers = {
     "Authorization": "Bearer " + getToken()
@@ -1004,7 +1020,7 @@ async function api(action, options){
 
   if(response.status === 401){
     sessionStorage.removeItem("tga_admin_token");
-    window.location.href = "/admin_login";
+    window.location.replace(adminLoginUrl());
     throw new Error("Session expired.");
   }
 
@@ -1020,7 +1036,7 @@ function handleLogout(){
     .catch(function(){})
     .finally(function(){
       sessionStorage.removeItem("tga_admin_token");
-      window.location.href = "/admin_login";
+      window.location.replace(adminLoginUrl());
     });
 }
 
@@ -1221,7 +1237,7 @@ async function loadLogs(){
   var q = document.getElementById("logSearch").value.trim();
 
   try{
-    var result = await api("logs&type=" + encodeURIComponent(type) + "&q=" + encodeURIComponent(q));
+    var result = await api("logs", { query: { type: type, q: q } });
     var logs = result.data.logs || [];
 
     var body = document.getElementById("logsBody");
@@ -1260,7 +1276,7 @@ async function loadUsers(){
   var q = document.getElementById("userSearch").value.trim();
 
   try{
-    var result = await api("users&q=" + encodeURIComponent(q));
+    var result = await api("users", { query: { q: q } });
     var users = result.data.users || [];
     var body = document.getElementById("usersBody");
 
@@ -1432,7 +1448,7 @@ function startAutoRefresh(){
 
 window.addEventListener("DOMContentLoaded", function(){
   if(!getToken()){
-    window.location.href = "/admin_login";
+    window.location.replace(adminLoginUrl());
     return;
   }
 
