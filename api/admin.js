@@ -73,19 +73,7 @@ function getToken(req) {
 }
 
 async function getOverview(db) {
-  const [
-    totalUsers,
-    totalOrders,
-    completedOrders,
-    inProgress,
-    failedBuys,
-    successfulLogins,
-    failedLogins,
-    otpReceived,
-    revenueRows,
-    recentLogs,
-    maintenance
-  ] = await Promise.all([
+  const [totalUsers, totalOrders, completedOrders, inProgress, failedBuys, successfulLogins, failedLogins, otpReceived, revenueRows, rechargeRows, recentLogs, maintenance] = await Promise.all([
     db.collection("users").countDocuments(),
     db.collection("orders").countDocuments(),
     db.collection("orders").countDocuments({ status: "completed" }),
@@ -114,12 +102,36 @@ async function getOverview(db) {
         }
       }
     ]).toArray(),
+    db.collection("transactions").aggregate([
+      {
+        $match: { status: { $in: ["paid", "success", "approved"] } }
+      },
+      {
+        $group: {
+          _id: null,
+          total: {
+            $sum: {
+              $convert: {
+                input: "$amount",
+                to: "double",
+                onError: 0,
+                onNull: 0
+              }
+            }
+          }
+        }
+      }
+    ]).toArray(),
     db.collection("logs").find().sort({ created_at: -1 }).limit(25).toArray(),
     getMaintenance(db)
   ]);
 
   const revenue = revenueRows.length
     ? Number(revenueRows[0].total || 0)
+    : 0;
+
+  const totalRecharge = rechargeRows.length
+    ? Number(rechargeRows[0].total || 0)
     : 0;
 
   return {
@@ -132,6 +144,7 @@ async function getOverview(db) {
     failedLogins,
     otpReceived,
     revenue,
+    totalRecharge,
     recentLogs: recentLogs.map(serialize),
     maintenance
   };
@@ -502,17 +515,15 @@ module.exports = async function handler(req, res) {
     if (action === "server_config" || action === "server2" || action === "servers") {
       if (req.method === "GET") {
         const doc = await db.collection("settings").findOne({ _id: "server_config" });
-        const fallback = { s1: "active", s2: "active", s3: "maintenance", s2_api: "tgpva", s2_profit: 0 };
-        const data = doc ? { ...fallback, ...doc } : fallback;
+        const fallback = { s1: "active", s2: "active", s3: "maintenance", s2_api: "tglion", s2_profit: 0 };
+        const data = doc ? { ...fallback, ...doc, s2_api: "tglion" } : fallback;
         return res.status(200).json({ success: true, config: serialize(data) });
       }
       if (req.method === "POST") {
         const body = readJsonBody(req);
         const updates = {};
-        if ("s2_api" in body) {
-          const v = String(body.s2_api || "").toLowerCase();
-          if (v === "tgpva" || v === "tglion") updates.s2_api = v;
-        }
+        // Website uses TG-Lion only — TGPVA is not supported anymore
+        updates.s2_api = "tglion";
         if ("s2_profit" in body) {
           const v = parseFloat(String(body.s2_profit));
           if (Number.isFinite(v) && v >= 0 && v <= 500) updates.s2_profit = v;
@@ -569,7 +580,26 @@ module.exports = async function handler(req, res) {
         return dbb - da;
       });
       const sliced = combined.slice(0, limit);
-      return res.status(200).json({ success: true, data: { recharges: sliced.map(serialize), total: sliced.length } });
+      // Attach usernames so the admin panel shows who recharged
+      const userIds = [...new Set(sliced.map(x => x.user_id).filter(v => v !== null && v !== undefined))];
+      const lookupIds = [];
+      for (const id of userIds) {
+        const num = Number(id);
+        if (Number.isFinite(num)) lookupIds.push(num);
+        lookupIds.push(String(id));
+      }
+      const userDocs = lookupIds.length
+        ? await db.collection("users").find({ _id: { $in: lookupIds } }).toArray()
+        : [];
+      const userMap = {};
+      for (const u of userDocs) {
+        userMap[u._id] = u.username || "";
+        const num = Number(u._id);
+        if (Number.isFinite(num)) userMap[num] = u.username || "";
+        userMap[String(u._id)] = u.username || "";
+      }
+      const rows = sliced.map(x => ({ ...x, username: userMap[x.user_id] || "" }));
+      return res.status(200).json({ success: true, data: { recharges: rows.map(serialize), total: rows.length } });
     }
 
     if (action === "logout") {

@@ -661,6 +661,14 @@ body.light .spinner{
   gap:15px;
   padding:18px;
   border-bottom:1px solid var(--border);
+  text-decoration:none;
+  color:inherit;
+  cursor:pointer;
+  transition:background .18s ease;
+}
+
+a.setting-item:hover{
+  background:var(--surface2);
 }
 
 .setting-item:last-child{
@@ -1471,7 +1479,7 @@ body.light .nav-btn.active{
 
 
 <!-- ==================================================
-     RECHARGE (Full — UPI/FamPay/Binance/Crypto as in Bot)
+     RECHARGE (Full — UPI/Binance/Crypto as in Bot)
 ================================================== -->
 
 <section
@@ -1592,9 +1600,19 @@ body.light .nav-btn.active{
   transform:translateY(-2px);
 }
 
+.recharge-method-card.selected{
+  border-color:var(--green);
+  box-shadow:0 0 0 1px rgba(66,232,137,.4), 0 10px 30px rgba(66,232,137,.12);
+}
+
 .recharge-method-card.disabled{
   opacity:.45;
   cursor:not-allowed;
+  transform:none;
+}
+
+.recharge-method-card.disabled:hover{
+  border-color:var(--border);
   transform:none;
 }
 
@@ -1639,6 +1657,16 @@ body.light .nav-btn.active{
   border:1px solid var(--border);
   border-radius:18px;
   padding:20px;
+}
+
+.recharge-form-area{
+  border-top:2px solid var(--green);
+  scroll-margin-top:90px;
+}
+
+.recharge-invoice-area{
+  border-top:2px solid var(--green);
+  scroll-margin-top:90px;
 }
 
 .recharge-form-area.hidden,
@@ -1969,9 +1997,45 @@ body.light .nav-btn.active{
     </div>
 
 
-    <div
+    <a
       class="setting-item"
-      onclick="showComingSoon('Support')"
+      href="https://t.me/tgaforu"
+      target="_blank"
+      rel="noopener"
+    >
+
+      <div class="setting-left">
+
+        <div class="setting-icon">
+          📢
+        </div>
+
+        <div>
+
+          <div class="setting-title">
+            Telegram Channel
+          </div>
+
+          <div class="setting-sub">
+            Join @tgaforu for updates & offers
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="setting-arrow">
+        ↗
+      </div>
+
+    </a>
+
+
+    <a
+      class="setting-item"
+      href="https://t.me/OfcCuteSmile"
+      target="_blank"
+      rel="noopener"
     >
 
       <div class="setting-left">
@@ -1983,11 +2047,11 @@ body.light .nav-btn.active{
         <div>
 
           <div class="setting-title">
-            Support
+            Contact Support
           </div>
 
           <div class="setting-sub">
-            Get help from support
+            Direct message @OfcCuteSmile on Telegram
           </div>
 
         </div>
@@ -1995,10 +2059,10 @@ body.light .nav-btn.active{
       </div>
 
       <div class="setting-arrow">
-        ›
+        ↗
       </div>
 
-    </div>
+    </a>
 
 
     <div
@@ -4220,7 +4284,7 @@ function getStatusClass(status){
 
 
 /* ==================================================
-   RECHARGE (Bot-like flow — UPI/FamPay/Binance/Crypto)
+   RECHARGE (Bot-like flow — UPI/Binance/Crypto)
 ================================================== */
 
 let rechargeSettings = null;
@@ -4263,14 +4327,12 @@ function renderRechargeMethods(){
   const fampayEnabled = gateway === "fampay";
   const upiAutoEnabled = upiEnabled || fampayEnabled;
 
-  // Determine which UPI card to show — bot merges UPI/FamPay into single "UPI (Auto)" button depending on active gateway
+  // UPI card is always branded "UPI Gateway" — whichever gateway powers it behind the scenes
   let upiCard = "";
-  if(gateway === "upi"){
-    upiCard = cardRecharge("upi","💳","UPI (Auto)","Enter amount & get QR<br>Auto verification","UPI","upi");
-  }else if(gateway === "fampay"){
-    upiCard = cardRecharge("fampay","📲","UPI (Auto)","Scan & pay any amount<br>Via FamPay","FamPay","fampay");
+  if(upiAutoEnabled){
+    upiCard = cardRecharge("upi","💳","UPI Gateway","Scan QR & pay — auto verification","ON","upi");
   }else{
-    upiCard = cardRecharge("upi","💳","UPI (Auto)","Currently disabled<br>Contact support","Disabled",null,true);
+    upiCard = cardRecharge("upi","💳","UPI Gateway","Currently disabled<br>Contact support","OFF",null,true);
   }
 
   const binanceCard = binanceOn
@@ -4290,7 +4352,7 @@ function renderRechargeMethods(){
 
 function cardRecharge(id,icon,title,sub,badge,method,disabled){
   const isDisabled = Boolean(disabled);
-  const badgeClass = (badge==="ON"||badge==="UPI"||badge==="FamPay") ? "recharge-method-badge" : "recharge-method-badge off";
+  const badgeClass = (badge==="ON"||badge==="UPI") ? "recharge-method-badge" : "recharge-method-badge off";
   const click = isDisabled ? "" : `onclick="openRechargeForm('${method||id}')"`;
   const cls = isDisabled ? "recharge-method-card disabled" : "recharge-method-card";
   return `
@@ -4304,9 +4366,22 @@ function cardRecharge(id,icon,title,sub,badge,method,disabled){
 }
 
 function openRechargeForm(method){
+  // The UPI card is always branded "UPI Gateway" — resolve which backend
+  // gateway actually powers it (fampay gateway still shows as UPI Gateway)
+  if(method === "upi" && rechargeSettings && rechargeSettings.active_inr_gateway === "fampay"){
+    method = "fampay";
+  }
+
   const formArea = document.getElementById("rechargeFormArea");
   const invoiceArea = document.getElementById("rechargeInvoiceArea");
   if(!formArea || !invoiceArea) return;
+
+  // Highlight the selected method card
+  document.querySelectorAll(".recharge-method-card").forEach(function(card){
+    card.classList.remove("selected");
+  });
+  var activeCard = document.querySelector('.recharge-method-card[onclick*="' + method + '"]');
+  if(activeCard) activeCard.classList.add("selected");
 
   invoiceArea.classList.add("hidden");
   invoiceArea.innerHTML = "";
@@ -4314,7 +4389,7 @@ function openRechargeForm(method){
 
   if(method==="upi"){
     formArea.innerHTML = `
-      <div style="font-weight:850;font-size:18px;margin-bottom:6px">💳 UPI (Auto) — Enter Amount</div>
+      <div style="font-weight:850;font-size:18px;margin-bottom:6px">💳 UPI Gateway — Enter Amount</div>
       <div style="color:var(--muted);font-size:13px">Enter amount in INR. You will get a QR to scan with any UPI app.</div>
       <input id="upiAmountInput" class="recharge-input" type="number" inputmode="numeric" placeholder="Amount in INR (e.g. 100)" min="1" step="1">
       <div class="recharge-actions">
@@ -4323,9 +4398,11 @@ function openRechargeForm(method){
       </div>
       <div class="recharge-note">⏳ <b>Expires in 60 minutes.</b> Pay via any UPI app, then tap <b>Verify Payment</b>. We also auto-check.</div>
     `;
+    const input = document.getElementById("upiAmountInput");
+    if(input){ input.focus(); input.scrollIntoView({ behavior:"smooth", block:"center" }); }
   }else if(method==="fampay"){
     formArea.innerHTML = `
-      <div style="font-weight:850;font-size:18px;margin-bottom:6px">📲 UPI (Auto) — FamPay QR</div>
+      <div style="font-weight:850;font-size:18px;margin-bottom:6px">💳 UPI Gateway — Scan & Pay</div>
       <div style="color:var(--muted);font-size:13px">Tap Generate to get a QR. You can pay <b>any amount</b> and verify.</div>
       <div class="recharge-actions">
         <button class="primary-btn" type="button" onclick="createFamPayInvoice()" style="margin-top:0">Generate QR</button>
@@ -4333,6 +4410,7 @@ function openRechargeForm(method){
       </div>
       <div class="recharge-note">📲 <b>No amount needed upfront.</b> Scan QR, pay any amount, then tap Verify. Duplicate transactions are blocked.</div>
     `;
+    formArea.scrollIntoView({ behavior:"smooth", block:"center" });
   }else if(method==="crypto"){
     formArea.innerHTML = `
       <div style="font-weight:850;font-size:18px;margin-bottom:6px">🪙 Crypto (Auto) — USDT</div>
@@ -4344,6 +4422,8 @@ function openRechargeForm(method){
       </div>
       <div class="recharge-note">⚠️ <b>Send EXACT amount</b> shown on the payment link. Expires in 30 minutes.</div>
     `;
+    const cinput = document.getElementById("cryptoAmountInput");
+    if(cinput){ cinput.focus(); cinput.scrollIntoView({ behavior:"smooth", block:"center" }); }
   }else if(method==="binance"){
     const payId = rechargeMeta && rechargeMeta.binance ? rechargeMeta.binance.pay_id : "";
     const qrUrl = rechargeMeta && rechargeMeta.binance ? rechargeMeta.binance.qr_url : "";
@@ -4361,6 +4441,8 @@ function openRechargeForm(method){
       </div>
       ${payId ? `<div class="recharge-note">📋 <b>Tip:</b> Long-press Pay ID to copy. After paying in Binance, paste Order ID here.</div>` : ``}
     `;
+    const binput = document.getElementById("binanceOrderInput");
+    if(binput){ binput.focus(); binput.scrollIntoView({ behavior:"smooth", block:"center" }); }
   }
 }
 
@@ -4435,8 +4517,8 @@ async function createFamPayInvoice(){
     const area = document.getElementById("rechargeInvoiceArea");
     area.classList.remove("hidden");
     area.innerHTML = `
-      <div style="font-weight:850;font-size:18px">📲 FamPay — Pay Any Amount</div>
-      <img src="${escapeHtml(data.qr_url)}" class="recharge-qr" alt="FamPay QR">
+      <div style="font-weight:850;font-size:18px">💳 UPI Gateway — Pay Any Amount</div>
+      <img src="${escapeHtml(data.qr_url)}" class="recharge-qr" alt="UPI QR">
       <div class="recharge-meta">
         <b>Order ID:</b> <code>${escapeHtml(data.order_id)}</code><br>
         ${data.expire ? `<b>Expires:</b> ${escapeHtml(data.expire)}<br>` : ``}
@@ -4449,7 +4531,7 @@ async function createFamPayInvoice(){
     `;
     closeRechargeForm();
   }catch(e){
-    showMessage("FamPay Error", e.message||"Could not generate QR.");
+    showMessage("UPI Error", e.message||"Could not generate QR.");
   }finally{
     if(btn){ btn.disabled=false; btn.textContent="Generate QR"; }
   }
@@ -4631,7 +4713,9 @@ async function loadRechargeHistory(){
     }
     box.innerHTML = list.map(tx=>{
       const d = tx.date ? formatDate(tx.date) : "—";
-      const method = escapeHtml(tx.method||"");
+      let method = String(tx.method||"").toUpperCase();
+      if(method === "FAMPAY") method = "UPI"; // unified UPI gateway branding
+      method = escapeHtml(method);
       const amount = Number(tx.amount||0).toFixed(2);
       const sub = tx.amount_usdt ? `${tx.amount_usdt} USDT` : `₹${amount}`;
       return `

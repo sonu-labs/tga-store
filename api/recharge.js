@@ -141,7 +141,7 @@ module.exports = async function handler(req, res) {
       if (method === "upi" || method === "upi_auto") {
         const gateway = settings.active_inr_gateway;
         if (gateway !== "upi") {
-          return res.status(400).json({ success: false, message: gateway === "fampay" ? "UPI is disabled. FamPay is active. Use UPI (Auto) which will use FamPay." : "UPI payment is currently disabled." });
+          return res.status(400).json({ success: false, message: "UPI Gateway is currently disabled." });
         }
         const amountRaw = body.amount ?? body.inr ?? body.price;
         const amount = parseFloat(String(amountRaw || "").trim());
@@ -184,11 +184,11 @@ module.exports = async function handler(req, res) {
       if (method === "fampay") {
         const gateway = settings.active_inr_gateway;
         if (gateway !== "fampay") {
-          return res.status(400).json({ success: false, message: gateway === "upi" ? "FamPay is not active. UPI is active." : "FamPay is currently disabled." });
+          return res.status(400).json({ success: false, message: "UPI Gateway is currently disabled." });
         }
         const result = await createFamPayInvoice();
         if (!result.success) {
-          return res.status(502).json({ success: false, message: result.error || "Could not generate FamPay QR." });
+          return res.status(502).json({ success: false, message: result.error || "Could not generate UPI QR." });
         }
         const orderId = result.order_id;
         const exists = await db.collection("transactions").findOne({ _id: orderId });
@@ -204,7 +204,7 @@ module.exports = async function handler(req, res) {
           created_at: new Date(),
           expires_at: new Date(Date.now() + UPI_INVOICE_EXPIRY_MIN * 60 * 1000),
         });
-        await logEvent(db, { type: "recharge", status: "pending", user_id: telegramId, message: `FamPay invoice created order ${orderId}` });
+        await logEvent(db, { type: "recharge", status: "pending", user_id: telegramId, message: `UPI invoice created order ${orderId}` });
         return res.status(200).json({
           success: true,
           method: "fampay",
@@ -339,7 +339,7 @@ module.exports = async function handler(req, res) {
         await db.collection("users").updateOne({ _id: telegramId }, { $inc: { balance: amount } }, { upsert: true });
         const userAfter = await db.collection("users").findOne({ _id: telegramId });
         const newBal = Number(userAfter?.balance || 0);
-        await logEvent(db, { type: "recharge", status: "success", user_id: telegramId, message: `FamPay verified ₹${amount} order ${orderId}, new balance ₹${newBal}` });
+        await logEvent(db, { type: "recharge", status: "success", user_id: telegramId, message: `UPI verified ₹${amount} order ${orderId}, new balance ₹${newBal}` });
         return res.status(200).json({ success: true, amount, balance: newBal, sender: resF.sender, txn: resF.txn, message: "Payment verified! Balance credited." });
       }
 

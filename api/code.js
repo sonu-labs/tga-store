@@ -89,7 +89,7 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    // Try TGPVA first if order has provider_hash (like bot's server2)
+    // Legacy: TGPVA only for older orders that were created before the switch to TG-Lion
     let result = null;
     if (order.provider === "tgpva" && order.provider_hash && process.env.TGPVA_API_KEY) {
       try {

@@ -110,44 +110,35 @@ input,select{
   gap:10px;
 }
 
-.status-pill{
+.status-dot{
+  width:14px;
+  height:14px;
+  border-radius:50%;
   display:inline-flex;
   align-items:center;
-  gap:7px;
-  font-size:12px;
-  font-weight:800;
-  padding:7px 13px;
-  border-radius:99px;
-  border:1px solid;
+  justify-content:center;
+  border:2px solid rgba(61,240,146,.25);
+  background:rgba(61,240,146,.1);
+  cursor:default;
 }
 
-.status-pill .dot{
+.status-dot .dot{
   width:8px;
   height:8px;
   border-radius:50%;
-}
-
-.status-live{
-  color:var(--green);
-  border-color:rgba(61,240,146,.35);
-  background:rgba(61,240,146,.1);
-}
-
-.status-live .dot{
   background:var(--green);
-  box-shadow:0 0 9px var(--green);
+  box-shadow:0 0 10px var(--green);
   animation:pulse 1.6s ease-in-out infinite;
 }
 
-.status-down{
-  color:var(--red);
-  border-color:rgba(255,92,114,.35);
+.status-dot.status-down{
+  border-color:rgba(255,92,114,.3);
   background:rgba(255,92,114,.1);
 }
 
-.status-down .dot{
+.status-dot.status-down .dot{
   background:var(--red);
-  box-shadow:0 0 9px var(--red);
+  box-shadow:0 0 10px var(--red);
   animation:pulse 1.2s ease-in-out infinite;
 }
 
@@ -183,19 +174,18 @@ input,select{
   to{ transform:rotate(360deg); }
 }
 
-.logout-btn{
-  border:1px solid rgba(255,92,114,.35);
-  background:rgba(255,92,114,.1);
-  color:var(--red);
-  font-size:12px;
-  font-weight:800;
-  padding:10px 15px;
-  border-radius:12px;
-  transition:.15s;
+.settings-shortcut.logout-shortcut{
+  border-color:rgba(255,92,114,.3);
+  background:rgba(255,92,114,.06);
 }
 
-.logout-btn:hover{
-  background:rgba(255,92,114,.18);
+.settings-shortcut.logout-shortcut:hover{
+  border-color:var(--red);
+  box-shadow:0 0 18px rgba(255,92,114,.15);
+}
+
+.settings-shortcut.logout-shortcut strong{
+  color:var(--red);
 }
 
 /* ============ LAYOUT ============ */
@@ -487,6 +477,7 @@ tbody tr:hover{
 .pill-success{ color:var(--green); background:rgba(61,240,146,.1); border-color:rgba(61,240,146,.3); }
 .pill-waiting{ color:var(--yellow); background:rgba(255,200,87,.1); border-color:rgba(255,200,87,.3); }
 .pill-purchased{ color:var(--blue); background:rgba(94,161,255,.1); border-color:rgba(94,161,255,.3); }
+.pill-recharge{ color:var(--yellow); background:rgba(255,200,87,.1); border-color:rgba(255,200,87,.3); }
 
 /* ============ FEED ============ */
 
@@ -818,11 +809,6 @@ tbody tr:hover{
   .brand-name{
     font-size:15px;
   }
-
-  .status-pill{
-    font-size:11px;
-    padding:6px 10px;
-  }
 }
 </style>
 </head>
@@ -837,14 +823,11 @@ tbody tr:hover{
   </div>
 
   <div class="top-actions">
-    <span id="topStatus" class="status-pill status-live">
+    <span id="topStatus" class="status-dot status-live" title="Store Live">
       <span class="dot"></span>
-      <span id="topStatusText">Store Live</span>
     </span>
 
     <button id="refreshBtn" class="icon-btn" type="button" title="Refresh" onclick="refreshCurrent()">↻</button>
-
-    <button class="logout-btn" type="button" onclick="handleLogout()">Logout</button>
   </div>
 
 </header>
@@ -924,6 +907,7 @@ tbody tr:hover{
               <option value="buy_success">Buy Success</option>
               <option value="buy_failed">Buy Failed</option>
               <option value="otp">OTP / Codes</option>
+              <option value="recharge">Recharges</option>
             </select>
             <input id="logSearch" class="tool-input" type="search" placeholder="Search user, number, country…" oninput="loadLogs()">
           </div>
@@ -1049,6 +1033,11 @@ tbody tr:hover{
           <span><strong>Activity logs</strong><small>View logins, purchases and failures</small></span>
           <b>›</b>
         </button>
+        <button class="settings-shortcut logout-shortcut" type="button" onclick="handleLogout()">
+          <span class="settings-shortcut-icon">🚪</span>
+          <span><strong>Logout</strong><small>End this session and return to the login page</small></span>
+          <b>›</b>
+        </button>
       </div>
     </section>
 
@@ -1059,23 +1048,15 @@ tbody tr:hover{
 
       <div class="panel" style="margin-bottom:18px">
         <div class="panel-head">
-          <div class="panel-title">💳 INR Gateway (UPI Auto button)</div>
-          <div class="muted" style="font-size:12px">Only ONE can be active at a time — this powers the "UPI (Auto)" card.</div>
+          <div class="panel-title">💳 UPI Gateway (Auto)</div>
+          <label class="maint-switch" style="width:64px;height:36px" id="upiSwitchWrap">
+            <input type="checkbox" id="upiEnabled" style="display:none" onchange="savePayments()">
+            <span style="width:28px;height:28px"></span>
+          </label>
         </div>
-        <div style="padding:18px;display:grid;gap:12px">
-          <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
-            <input type="radio" name="inrGateway" value="upi" onchange="savePayments()"> 
-            <span><b>UPI Gateway</b> <span class="muted">— user enters amount, gets QR, auto-verify</span></span>
-          </label>
-          <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
-            <input type="radio" name="inrGateway" value="fampay" onchange="savePayments()">
-            <span><b>FamPay</b> <span class="muted">— any amount QR, verifies sender/amount</span></span>
-          </label>
-          <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
-            <input type="radio" name="inrGateway" value="" onchange="savePayments()">
-            <span><b>Disabled</b> <span class="muted">— hide UPI (Auto) card completely</span></span>
-          </label>
-          <div id="paymentsINRHint" class="muted" style="font-size:12px;margin-top:4px"></div>
+        <div style="padding:16px 18px">
+          <div style="font-size:13px;color:var(--muted)">When ON, users see the <b>UPI (Auto)</b> recharge card — they enter an amount, get a QR and the payment auto-verifies.</div>
+          <div id="paymentsINRHint" class="mono muted" style="margin-top:12px;font-size:12px"></div>
         </div>
       </div>
 
@@ -1109,25 +1090,21 @@ tbody tr:hover{
 
       <div class="panel" style="margin-top:18px">
         <div class="panel-head">
-          <div class="panel-title">📡 Server 2 — Country Provider (Bot parity)</div>
-          <div class="muted" style="font-size:12px">Switch between TGPVA & TG-Lion, set profit % like <code>/manageserver</code></div>
+          <div class="panel-title">📡 TG-Lion — Country Provider</div>
+          <div class="muted" style="font-size:12px">TG-Lion is the only provider used by the website</div>
         </div>
         <div style="padding:18px;display:grid;gap:16px">
           <div>
-            <div style="font-weight:700;font-size:13px;margin-bottom:8px">Active API</div>
-            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:8px">
-              <input type="radio" name="s2api" value="tgpva" onchange="saveServer2()">
-              <span><b>TGPVA</b> <span class="muted">— https://tgpva.com (uses TGPVA_API_KEY)</span></span>
-            </label>
-            <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
-              <input type="radio" name="s2api" value="tglion" onchange="saveServer2()">
-              <span><b>TG-Lion</b> <span class="muted">— https://TG-Lion.net (uses TG_LION_API_KEY / YOUR_ID)</span></span>
-            </label>
+            <div style="font-weight:700;font-size:13px;margin-bottom:8px">Active Provider</div>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <span class="pill pill-success">● TG-Lion</span>
+              <span class="muted" style="font-size:12px">https://TG-Lion.net — uses <code>TG_LION_API_KEY</code> / <code>YOUR_ID</code></span>
+            </div>
             <div id="s2apiHint" class="muted" style="font-size:12px;margin-top:8px"></div>
           </div>
           <div>
             <div style="font-weight:700;font-size:13px;margin-bottom:8px">Profit Margin (%)</div>
-            <div style="display:flex;gap:10px;align-items:center">
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
               <input id="s2profitInput" type="number" class="tool-input" style="max-width:140px" placeholder="0" min="0" max="100" step="0.5">
               <button class="tool-btn" type="button" onclick="saveServer2()">Save %</button>
               <span class="muted" style="font-size:12px">Added on top of provider price. Example: 20 = +20% markup.</span>
@@ -1143,7 +1120,7 @@ tbody tr:hover{
     <!-- ============ RECHARGES (Recent Transactions) ============ -->
     <section id="page-recharges" class="page">
       <div class="page-title">Recharge Transactions</div>
-      <div class="page-sub">All wallet top-ups from UPI / FamPay / Binance / Crypto — latest first.</div>
+      <div class="page-sub">All wallet top-ups from UPI / Binance / Crypto — latest first.</div>
       <div class="panel">
         <div class="panel-head">
           <div class="panel-title">Recent Recharges</div>
@@ -1392,11 +1369,11 @@ async function loadOverview(){
 function renderTopStatus(m){
   var on = Boolean(m && m.enabled);
   var pill = document.getElementById("topStatus");
-  var text = document.getElementById("topStatusText");
+  if(!pill) return;
 
   pill.classList.toggle("status-live", !on);
   pill.classList.toggle("status-down", on);
-  text.textContent = on ? "Under Maintenance" : "Store Live";
+  pill.title = on ? "Under Maintenance" : "Store Live";
 }
 
 function statCard(icon, label, value, tone){
@@ -1412,6 +1389,7 @@ function renderOverviewStats(d){
     statCard("👥", "Total Users", d.totalUsers) +
     statCard("🛒", "Total Orders", d.totalOrders) +
     statCard("💰", "Revenue", inr(d.revenue), "revenue stat-tone-green") +
+    statCard("💸", "Total Recharged", inr(d.totalRecharge), "revenue stat-tone-blue") +
     statCard("⏳", "Buying Now", d.inProgress, "stat-tone-yellow") +
     statCard("✅", "Completed", d.completedOrders, "stat-tone-green") +
     statCard("🔑", "Successful Logins", d.successfulLogins, "stat-tone-blue") +
@@ -1426,6 +1404,7 @@ function eventIcon(type, status){
   if(type === "login"){ return "🔑"; }
   if(type === "buy"){ return "🛒"; }
   if(type === "otp"){ return "📩"; }
+  if(type === "recharge"){ return "💰"; }
   return "•";
 }
 
@@ -1434,6 +1413,7 @@ function eventTone(type, status){
   if(type === "login"){ return "pill-login"; }
   if(type === "buy"){ return "pill-buy"; }
   if(type === "otp"){ return "pill-otp"; }
+  if(type === "recharge"){ return "pill-recharge"; }
   return "pill-success";
 }
 
@@ -1443,6 +1423,9 @@ function eventLabel(type, status){
   if(type === "buy" && status === "success"){ return "Buy"; }
   if(type === "buy" && status === "failed"){ return "Buy Failed"; }
   if(type === "otp"){ return "OTP"; }
+  if(type === "recharge" && status === "success"){ return "Recharge"; }
+  if(type === "recharge" && status === "pending"){ return "Recharge Started"; }
+  if(type === "recharge"){ return "Recharge"; }
   return type;
 }
 
@@ -1683,22 +1666,29 @@ async function loadPayments(){
     var result = await api("payments");
     paymentsState = result.settings || {};
     var binance = result.binance || {};
-    // radios
+    // UPI gateway switch — fampay still powers the same UPI (Auto) card
     var gw = paymentsState.active_inr_gateway || "";
-    document.querySelectorAll('input[name="inrGateway"]').forEach(function(r){
-      r.checked = (r.value === gw);
-    });
-    document.getElementById("paymentsINRHint").textContent = gw ? "Active: " + gw.toUpperCase() + " — powers the UPI (Auto) card" : "No INR gateway active — UPI (Auto) will show as disabled";
+    var upiOn = (gw === "upi" || gw === "fampay");
+    var ue = document.getElementById("upiEnabled");
+    if(ue){
+      ue.checked = upiOn;
+      var uwrap = document.getElementById("upiSwitchWrap");
+      if(uwrap) uwrap.classList.toggle("on", upiOn);
+    }
+    var hint = document.getElementById("paymentsINRHint");
+    if(hint){
+      hint.textContent = upiOn
+        ? "ON — UPI (Auto) card is live on the website" + (gw === "fampay" ? " (auto gateway)" : "")
+        : "OFF — UPI (Auto) card is hidden on the website";
+    }
     var be = document.getElementById("binanceEnabled");
     var ce = document.getElementById("cryptoEnabled");
     if(be){
       be.checked = Boolean(paymentsState.binance_enabled);
       var wrap = document.getElementById("binanceSwitchWrap");
-      if(wrap) wrap.classList.toggle("on", be.checked);
-      // visual toggle class on the switch element itself
-      var sw = wrap ? wrap.parentElement.querySelector(".maint-switch") : null;
-      // we use the label as switch; toggle class on it
-      if(be.checked) wrap.classList.add("on"); else wrap.classList.remove("on");
+      if(wrap){
+        if(be.checked) wrap.classList.add("on"); else wrap.classList.remove("on");
+      }
     }
     if(ce){
       ce.checked = Boolean(paymentsState.crypto_enabled);
@@ -1719,18 +1709,23 @@ async function loadPayments(){
 }
 
 async function savePayments(){
-  var gwEl = document.querySelector('input[name="inrGateway"]:checked');
-  var gw = gwEl ? gwEl.value : "";
-  // empty string means null (disabled)
+  var upiOn = document.getElementById("upiEnabled") ? document.getElementById("upiEnabled").checked : false;
   var binanceOn = document.getElementById("binanceEnabled") ? document.getElementById("binanceEnabled").checked : true;
   var cryptoOn = document.getElementById("cryptoEnabled") ? document.getElementById("cryptoEnabled").checked : true;
 
-  // If user clicked the switch wrapper itself, the checkbox state is already toggled via label? We handle click on wrapper differently.
-  // For radio, gw is already set; for switches we toggle via checkbox click.
+  // Keep the working gateway untouched: if UPI is ON and the current gateway is
+  // fampay, keep fampay (it powers the same "UPI (Auto)" card) — otherwise "upi".
+  var currentGw = paymentsState && paymentsState.active_inr_gateway;
+  var gw = null;
+  if(upiOn){
+    gw = (currentGw === "fampay") ? "fampay" : "upi";
+  }
 
-  // update visual
+  // update visuals
+  var uw = document.getElementById("upiSwitchWrap");
   var bw = document.getElementById("binanceSwitchWrap");
   var cw = document.getElementById("cryptoSwitchWrap");
+  if(uw) uw.classList.toggle("on", upiOn);
   if(bw) bw.classList.toggle("on", binanceOn);
   if(cw) cw.classList.toggle("on", cryptoOn);
 
@@ -1738,14 +1733,14 @@ async function savePayments(){
     var result = await api("payments", {
       method: "POST",
       body: {
-        active_inr_gateway: gw ? gw : null,
+        active_inr_gateway: gw,
         binance_enabled: binanceOn,
         crypto_enabled: cryptoOn
       }
     });
     paymentsState = result.settings || {};
     showToast("✅ Payment settings saved.");
-    document.getElementById("paymentsToast").textContent = "Saved at " + fmtDate(new Date()) + " — Active gateway: " + (gw||"none");
+    document.getElementById("paymentsToast").textContent = "Saved at " + fmtDate(new Date()) + " — UPI Gateway: " + (gw ? "ON" : "OFF");
   }catch(error){
     console.error("Save payments:", error);
     showToast(error.message || "Could not save payments.", true);
@@ -1754,7 +1749,7 @@ async function savePayments(){
 
 // Make entire switch clickable (toggle checkbox)
 document.addEventListener("click", function(e){
-  var sw = e.target.closest("#binanceSwitchWrap, #cryptoSwitchWrap");
+  var sw = e.target.closest("#upiSwitchWrap, #binanceSwitchWrap, #cryptoSwitchWrap");
   if(!sw) return;
   // if click was directly on checkbox, let it handle; otherwise toggle
   if(e.target.tagName.toLowerCase()==="input") return;
@@ -1769,14 +1764,11 @@ async function loadServer2(){
   try{
     var result = await api("server_config");
     var cfg = result.config || {};
-    document.querySelectorAll('input[name="s2api"]').forEach(function(r){
-      r.checked = (r.value === (cfg.s2_api||"tgpva"));
-    });
     var profitEl = document.getElementById("s2profitInput");
     if(profitEl) profitEl.value = (cfg.s2_profit!=null ? cfg.s2_profit : 0);
     var hint = document.getElementById("s2apiHint");
     if(hint){
-      hint.textContent = "Active: " + String(cfg.s2_api||"tgpva").toUpperCase() + " • Profit " + (cfg.s2_profit||0) + "% — controls /api/countries and purchase pricing (like bot's /manageserver)";
+      hint.textContent = "Active: TG-LION • Profit " + (cfg.s2_profit||0) + "% — controls /api/countries and purchase pricing";
     }
     var toast = document.getElementById("server2Toast");
     if(toast) toast.textContent = "Loaded at " + fmtDate(new Date());
@@ -1788,17 +1780,16 @@ async function loadServer2(){
 }
 
 async function saveServer2(){
-  var apiEl = document.querySelector('input[name="s2api"]:checked');
-  var apiVal = apiEl ? apiEl.value : "tgpva";
   var profitEl = document.getElementById("s2profitInput");
   var profitVal = profitEl ? parseFloat(profitEl.value) : 0;
   if(!Number.isFinite(profitVal) || profitVal<0) profitVal = 0;
   try{
-    var result = await api("server_config", { method: "POST", body: { s2_api: apiVal, s2_profit: profitVal } });
+    // TG-Lion is the only provider — s2_api is always forced to tglion server-side
+    var result = await api("server_config", { method: "POST", body: { s2_api: "tglion", s2_profit: profitVal } });
     var cfg = result.config || {};
-    showToast("✅ Server 2 saved: " + String(cfg.s2_api||apiVal).toUpperCase() + " @ " + (cfg.s2_profit!=null?cfg.s2_profit:profitVal) + "%");
+    showToast("✅ TG-Lion saved @ " + (cfg.s2_profit!=null?cfg.s2_profit:profitVal) + "%");
     var hint = document.getElementById("s2apiHint");
-    if(hint) hint.textContent = "Saved: " + String(cfg.s2_api||apiVal).toUpperCase() + " • Profit " + (cfg.s2_profit!=null?cfg.s2_profit:profitVal) + "%";
+    if(hint) hint.textContent = "Saved: TG-LION • Profit " + (cfg.s2_profit!=null?cfg.s2_profit:profitVal) + "%";
     var toast = document.getElementById("server2Toast");
     if(toast) toast.textContent = "Saved at " + fmtDate(new Date());
   }catch(e){
@@ -1828,14 +1819,15 @@ async function loadRecharges(){
       return;
     }
     body.innerHTML = list.map(function(r){
-      var method = (r.method||"").toUpperCase();
-      var badge = method==="CRYPTO" ? "pill-otp" : method==="UPI" ? "pill-success" : method==="FAMPAY" ? "pill-buy" : method==="BINANCE" ? "pill-login" : "pill-waiting";
+      var method = String(r.method||"unknown").toUpperCase();
+      if(method === "FAMPAY") method = "UPI"; // unified UPI gateway branding
+      var badge = method==="CRYPTO" ? "pill-otp" : method==="UPI" ? "pill-success" : method==="BINANCE" ? "pill-login" : "pill-waiting";
       var amount = r.amount_usdt ? (r.amount_usdt + " USDT (₹" + Number(r.amount||0).toFixed(2)+")") : inr(r.amount);
       var status = String(r.status||"pending");
       var statusClass = status==="paid" ? "pill-success" : status==="pending" ? "pill-waiting" : "pill-failed";
       return '<tr>' +
         '<td class="muted">'+esc(fmtDate(r.created_at))+'</td>' +
-        '<td class="mono muted">'+esc(r.user_id)+'</td>' +
+        '<td><span class="strong">'+esc(r.username || "User")+'</span><br><span class="mono muted">'+esc(r.user_id)+'</span></td>' +
         '<td><span class="pill '+badge+'">'+esc(method)+'</span></td>' +
         '<td class="mono">'+esc(amount)+'</td>' +
         '<td><span class="pill '+statusClass+'">'+esc(status)+'</span></td>' +
