@@ -1,0 +1,9 @@
+{
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/admin/", "destination": "/admin.html" },
+    { "source": "/admin_login", "destination": "/admin_login.html" },
+    { "source": "/admin_login/", "destination": "/admin_login.html" }
+  ]
+}
