@@ -5,6 +5,7 @@ const {
   setCors
 } = require("../lib/db");
 const { getCode } = require("../lib/tglion");
+const { getMaintenance, logEvent } = require("../lib/site");
 
 function numberVariants(value) {
   const raw = String(value ?? "").trim();
@@ -56,12 +57,32 @@ module.exports = async function handler(req, res) {
     const variants = numberVariants(number);
     const db = await getDatabase();
 
+    const maintenance = await getMaintenance(db);
+
+    if (maintenance.enabled) {
+      return res.status(503).json({
+        success: false,
+        maintenance: true,
+        message:
+          maintenance.message ||
+          "The store is under maintenance. Please try again later."
+      });
+    }
+
     const order = await db.collection("orders").findOne({
       user_id: telegramId,
       number: { $in: variants }
     });
 
     if (!order) {
+      await logEvent(db, {
+        type: "otp",
+        status: "failed",
+        user_id: telegramId,
+        number: number,
+        message: "No order found for this number."
+      });
+
       return res.status(404).json({
         success: false,
         message: "No order found for this number."
@@ -71,6 +92,14 @@ module.exports = async function handler(req, res) {
     const result = await getCode(order.number || number);
 
     if (!result.code) {
+      await logEvent(db, {
+        type: "otp",
+        status: "failed",
+        user_id: telegramId,
+        number: order.number || number,
+        message: "OTP is not available yet."
+      });
+
       return res.status(409).json({
         success: false,
         message: "OTP is not available yet. Try again in a moment."
@@ -88,6 +117,14 @@ module.exports = async function handler(req, res) {
         }
       }
     );
+
+    await logEvent(db, {
+      type: "otp",
+      status: "success",
+      user_id: telegramId,
+      number: result.Number || order.number,
+      message: "OTP received."
+    });
 
     return res.status(200).json({
       success: true,

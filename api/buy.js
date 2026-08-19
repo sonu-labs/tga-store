@@ -6,6 +6,7 @@ const {
 } = require("../lib/db");
 const { getCountryInfo, getNumber } = require("../lib/tglion");
 const { sellingPriceInr } = require("../lib/money");
+const { getMaintenance, logEvent } = require("../lib/site");
 
 function getCountryCode(value) {
   const code = String(value ?? "").trim().toUpperCase();
@@ -33,6 +34,8 @@ module.exports = async function handler(req, res) {
 
   let chargedUserId = null;
   let chargedAmount = 0;
+  let attemptedUserId = null;
+  let attemptedCountryCode = null;
 
   try {
     const body = readJsonBody(req);
@@ -40,6 +43,9 @@ module.exports = async function handler(req, res) {
     const countryCode = getCountryCode(
       body.country_code || body.countryCode || body.code
     );
+
+    attemptedUserId = telegramId;
+    attemptedCountryCode = countryCode;
 
     if (telegramId === null) {
       return res.status(400).json({
@@ -55,9 +61,31 @@ module.exports = async function handler(req, res) {
       });
     }
 
+    const db = await getDatabase();
+
+    const maintenance = await getMaintenance(db);
+
+    if (maintenance.enabled) {
+      return res.status(503).json({
+        success: false,
+        maintenance: true,
+        message:
+          maintenance.message ||
+          "The store is under maintenance. Please try again later."
+      });
+    }
+
     const country = await getCountryInfo(countryCode);
 
     if (!country.qty) {
+      await logEvent(db, {
+        type: "buy",
+        status: "failed",
+        user_id: telegramId,
+        country_code: countryCode,
+        message: `${country.name} is out of stock.`
+      });
+
       return res.status(409).json({
         success: false,
         message: `${country.name} is out of stock.`
@@ -73,7 +101,6 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    const db = await getDatabase();
     const users = db.collection("users");
 
     const updatedUser = await users.findOneAndUpdate(
@@ -96,11 +123,28 @@ module.exports = async function handler(req, res) {
       const existing = await users.findOne({ _id: telegramId });
 
       if (!existing) {
+        await logEvent(db, {
+          type: "buy",
+          status: "failed",
+          user_id: telegramId,
+          country_code: countryCode,
+          message: "No account found for this Telegram ID."
+        });
+
         return res.status(404).json({
           success: false,
           message: "No account found for this Telegram ID. Start the bot first with /start."
         });
       }
+
+      await logEvent(db, {
+        type: "buy",
+        status: "failed",
+        user_id: telegramId,
+        country_code: countryCode,
+        price: chargeInr,
+        message: "Insufficient balance."
+      });
 
       return res.status(402).json({
         success: false,
@@ -133,6 +177,16 @@ module.exports = async function handler(req, res) {
       console.error("Order insert error:", error);
     }
 
+    await logEvent(db, {
+      type: "buy",
+      status: "success",
+      user_id: telegramId,
+      country: order.country,
+      country_code: countryCode,
+      number: purchased.Number,
+      price: chargeInr
+    });
+
     return res.status(200).json({
       success: true,
       Number: purchased.Number,
@@ -156,6 +210,20 @@ module.exports = async function handler(req, res) {
       } catch (refundError) {
         console.error("Buy refund error:", refundError);
       }
+    }
+
+    try {
+      const db = await getDatabase();
+
+      await logEvent(db, {
+        type: "buy",
+        status: "failed",
+        user_id: chargedUserId || attemptedUserId,
+        country_code: attemptedCountryCode || "",
+        message: error.message || "Could not complete purchase."
+      });
+    } catch (logError) {
+      console.error("Buy log error:", logError);
     }
 
     return res.status(error.statusCode || 500).json({
