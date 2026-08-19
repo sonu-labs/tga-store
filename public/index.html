@@ -13,6 +13,7 @@
   box-sizing:border-box;
   margin:0;
   padding:0;
+  -webkit-tap-highlight-color:transparent;
 }
 
 :root{
@@ -60,6 +61,10 @@ select{
 
 button{
   cursor:pointer;
+  -webkit-appearance:none;
+  appearance:none;
+  -webkit-tap-highlight-color:transparent;
+  outline:none;
 }
 
 button:disabled{
@@ -246,7 +251,16 @@ body.light .app-header{
   display:flex;
   align-items:center;
   justify-content:center;
+  overflow:hidden;
+  -webkit-tap-highlight-color:transparent;
+  outline:none;
   transition:.2s;
+}
+
+.header-refresh:focus,
+.header-refresh:active{
+  border-radius:50%;
+  outline:none;
 }
 
 .header-refresh:hover{
@@ -734,27 +748,34 @@ body.light .spinner{
   transform:translateX(-50%);
   width:min(720px,calc(100% - 28px));
   background:rgba(14,14,14,.94);
-  border:1px solid #2b2b2b;
+  border:1px solid rgba(66,232,137,.18);
   border-radius:28px;
   padding:9px;
   display:grid;
   grid-template-columns:repeat(5,1fr);
   backdrop-filter:blur(20px);
   -webkit-backdrop-filter:blur(20px);
-  box-shadow:0 15px 45px rgba(0,0,0,.5);
+  box-shadow:
+    0 15px 45px rgba(0,0,0,.5),
+    0 0 24px rgba(66,232,137,.16),
+    0 0 48px rgba(66,232,137,.08);
 }
 
 body.light .bottom-nav{
   background:rgba(255,255,255,.94);
-  border-color:#ddd;
+  border-color:rgba(16,160,90,.18);
+  box-shadow:
+    0 15px 45px rgba(0,0,0,.08),
+    0 0 20px rgba(16,160,90,.12);
 }
 
 .nav-btn{
   border:0;
   background:transparent;
   color:#777;
-  border-radius:20px;
+  border-radius:22px;
   min-height:66px;
+  min-width:0;
   display:flex;
   flex-direction:column;
   justify-content:center;
@@ -762,16 +783,62 @@ body.light .bottom-nav{
   gap:4px;
   font-size:11px;
   font-weight:700;
+  position:relative;
+  overflow:visible;
+  isolation:isolate;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-appearance:none;
+  appearance:none;
+  -webkit-tap-highlight-color:transparent;
+  outline:none;
+  touch-action:manipulation;
+  transition:
+    transform .18s ease,
+    background .2s ease,
+    color .2s ease,
+    box-shadow .2s ease;
+}
+
+.nav-btn:focus,
+.nav-btn:focus-visible,
+.nav-btn:active{
+  outline:none;
+  border-radius:22px;
+}
+
+.nav-btn:active{
+  transform:scale(.96);
 }
 
 .nav-icon{
   font-size:22px;
   line-height:1;
+  position:relative;
+  z-index:1;
+  transition:filter .2s ease, text-shadow .2s ease;
 }
 
 .nav-btn.active{
   color:var(--text);
-  background:var(--surface2);
+  background:linear-gradient(180deg,rgba(66,232,137,.16),rgba(18,18,18,.96));
+  box-shadow:
+    0 0 0 1px rgba(66,232,137,.28),
+    0 0 16px rgba(66,232,137,.38),
+    0 0 32px rgba(66,232,137,.16),
+    inset 0 1px 0 rgba(66,232,137,.28);
+}
+
+.nav-btn.active .nav-icon{
+  filter:drop-shadow(0 0 6px rgba(66,232,137,.85));
+  text-shadow:0 0 12px rgba(66,232,137,.55);
+}
+
+body.light .nav-btn.active{
+  background:linear-gradient(180deg,rgba(66,232,137,.18),#fff);
+  box-shadow:
+    0 0 0 1px rgba(16,160,90,.2),
+    0 0 14px rgba(16,160,90,.2);
 }
 
 /* ==================================================
@@ -2559,6 +2626,10 @@ function changeCurrency(currency){
   renderAllCountries();
 
   updatePurchasePrice();
+
+  if(dashboardData){
+    renderOrders(dashboardData.orders || []);
+  }
 }
 
 
@@ -2659,6 +2730,45 @@ function formatPrice(price){
     "$"+
     sellingPrice.toFixed(2)
   );
+}
+
+
+/*
+  Wallet and saved orders are INR.
+
+  Live catalog prices from TG-Lion are USD
+  (0.45, 0.80) and go through formatPrice.
+
+  Old orders sometimes stored that USD value
+  directly. Values under 20 are treated as USD
+  and converted at ₹100 per $1. Larger values
+  are already INR, so they must NOT be
+  multiplied by 100 or marked up again.
+
+  Example:
+  80 INR -> ₹80.00
+  0.80 USD -> ₹80.00
+  never ₹8000 / ₹8400
+*/
+function getAmountInr(value){
+
+  const amount =
+    Number(value || 0);
+
+  if(!Number.isFinite(amount) || amount <= 0){
+    return 0;
+  }
+
+  if(amount < 20){
+    return amount * INR_PER_USDT;
+  }
+
+  return amount;
+}
+
+
+function formatOrderMoney(value){
+  return formatMoney(getAmountInr(value));
 }
 
 
@@ -3393,10 +3503,10 @@ function showAccountResult(result){
     selectedCountry?.name ||
     "Unknown";
 
-  const price =
-    result.price ??
-    selectedCountry?.price ??
-    0;
+  const chargedInr =
+    result.price != null
+      ? getAmountInr(result.price)
+      : getSellingPrice(selectedCountry?.price || 0) * INR_PER_USDT;
 
   currentAccount={
     ...result,
@@ -3468,7 +3578,7 @@ function showAccountResult(result){
       </div>
 
       <div class="info-value">
-        ${formatPrice(price)}
+        ${formatMoney(chargedInr)}
       </div>
 
     </div>
@@ -3667,10 +3777,7 @@ function renderOrders(orders){
           <div class="order-right">
 
             <div class="order-price">
-              ${formatPrice(
-                order.price ||
-                0
-              )}
+              ${formatOrderMoney(order.price || 0)}
             </div>
 
             <span
