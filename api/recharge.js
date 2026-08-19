@@ -55,6 +55,9 @@ module.exports = async function handler(req, res) {
             pay_id: binancePayId,
             qr_url: binanceQrUrl,
           },
+          upi_id: process.env.UPI_ID || "",
+          fampay_upi: process.env.FAMPAY_UPI || "",
+          default_inr_gateway: process.env.DEFAULT_INR_GATEWAY || "upi",
           usdt_to_inr: USDT_TO_INR,
           min_usdt: MIN_USDT,
         });

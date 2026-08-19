@@ -403,6 +403,12 @@ input,select{
   border-color:var(--green);
 }
 
+.tool-btn.gw-btn-on{
+  background:var(--green);
+  border-color:var(--green);
+  color:#08110c;
+}
+
 /* ============ TABLES ============ */
 
 .table-wrap{
@@ -854,14 +860,6 @@ tbody tr:hover{
       <span class="ic">🛒</span> Orders
     </button>
 
-    <button class="nav-item" data-tab="payments" type="button" onclick="switchTab('payments')">
-      <span class="ic">💳</span> Payments
-    </button>
-
-    <button class="nav-item" data-tab="recharges" type="button" onclick="switchTab('recharges')">
-      <span class="ic">🧾</span> Recharges
-    </button>
-
     <button class="nav-item" data-tab="maintenance" type="button" onclick="switchTab('maintenance')">
       <span class="ic">⚙️</span> Settings
     </button>
@@ -1017,46 +1015,23 @@ tbody tr:hover{
 
       </div>
 
-      <div class="settings-shortcuts" aria-label="Admin tools">
-        <button class="settings-shortcut" type="button" onclick="switchTab('orders')">
-          <span class="settings-shortcut-icon">🛒</span>
-          <span><strong>Order monitoring</strong><small>Review deliveries and OTP status</small></span>
-          <b>›</b>
-        </button>
-        <button class="settings-shortcut" type="button" onclick="switchTab('users')">
-          <span class="settings-shortcut-icon">👥</span>
-          <span><strong>User directory</strong><small>Search users, balances and activity</small></span>
-          <b>›</b>
-        </button>
-        <button class="settings-shortcut" type="button" onclick="switchTab('logs')">
-          <span class="settings-shortcut-icon">📋</span>
-          <span><strong>Activity logs</strong><small>View logins, purchases and failures</small></span>
-          <b>›</b>
-        </button>
-        <button class="settings-shortcut logout-shortcut" type="button" onclick="handleLogout()">
-          <span class="settings-shortcut-icon">🚪</span>
-          <span><strong>Logout</strong><small>End this session and return to the login page</small></span>
-          <b>›</b>
-        </button>
-      </div>
-    </section>
-
-    <!-- ============ PAYMENTS (Recharge Control — Bot parity) ============ -->
-    <section id="page-payments" class="page">
-      <div class="page-title">Payment Gateways</div>
-      <div class="page-sub">Control recharge methods exactly like <code>/paymentsettings</code> in the bot. Changes apply instantly to the website's Recharge page.</div>
+      <!-- ============ PAY (merged into Settings) ============ -->
+      <div class="page-title" style="margin-top:26px">💳 Payment Gateways</div>
+      <div class="page-sub">Same as <code>/paymentsettings</code> in the bot. The UPI/FamPay switch default comes from the <b>Bot Codes file</b> (<code>config.py → DEFAULT_INR_GATEWAY</code>); you can switch it live here. Changes apply instantly to the bot and the website's Recharge page.</div>
 
       <div class="panel" style="margin-bottom:18px">
         <div class="panel-head">
-          <div class="panel-title">💳 UPI Gateway (Auto)</div>
-          <label class="maint-switch" style="width:64px;height:36px" id="upiSwitchWrap">
-            <input type="checkbox" id="upiEnabled" style="display:none" onchange="savePayments()">
-            <span style="width:28px;height:28px"></span>
-          </label>
+          <div class="panel-title">💳 UPI Gateway (Auto) — UPI / FamPay Switch</div>
         </div>
         <div style="padding:16px 18px">
-          <div style="font-size:13px;color:var(--muted)">When ON, users see the <b>UPI (Auto)</b> recharge card — they enter an amount, get a QR and the payment auto-verifies.</div>
-          <div id="paymentsINRHint" class="mono muted" style="margin-top:12px;font-size:12px"></div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:12px">Only ONE gateway powers the <b>UPI (Auto)</b> card at a time.</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+            <button id="gwUpiBtn" class="tool-btn" type="button" onclick="setInrGateway('upi')">💳 UPI</button>
+            <button id="gwFamPayBtn" class="tool-btn" type="button" onclick="setInrGateway('fampay')">💳 FamPay</button>
+            <button id="gwOffBtn" class="tool-btn" type="button" onclick="setInrGateway(null)">🚫 Disable</button>
+            <span id="paymentsINRHint" class="mono muted" style="font-size:12px"></span>
+          </div>
+          <div id="gatewayIds" style="margin-top:14px;display:grid;gap:8px;font-size:12px"></div>
         </div>
       </div>
 
@@ -1069,8 +1044,9 @@ tbody tr:hover{
           </label>
         </div>
         <div style="padding:16px 18px">
-          <div style="font-size:13px;color:var(--muted)">When ON, users see 🅱️ Binance (Auto) with Pay ID & QR and can verify via Order ID. Uses <code>BINANCE_PAY_ID</code>/<code>BINANCE_API_KEY</code> env.</div>
+          <div style="font-size:13px;color:var(--muted)">When ON, users see 🅱️ Binance (Auto) with Pay ID &amp; QR and can verify via Order ID. Uses <code>BINANCE_PAY_ID</code>/<code>BINANCE_QR_URL</code>/<code>BINANCE_API_KEY</code> env.</div>
           <div id="binanceInfo" style="margin-top:12px;font-size:12px" class="mono muted"></div>
+          <div id="binanceQrPreview" style="margin-top:12px"></div>
         </div>
       </div>
 
@@ -1115,11 +1091,9 @@ tbody tr:hover{
       </div>
 
       <div id="paymentsToast" style="margin-top:16px;font-size:13px" class="muted"></div>
-    </section>
 
-    <!-- ============ RECHARGES (Recent Transactions) ============ -->
-    <section id="page-recharges" class="page">
-      <div class="page-title">Recharge Transactions</div>
+      <!-- ============ RECHG (merged into Settings) ============ -->
+      <div class="page-title" style="margin-top:26px">🧾 Recharge Transactions</div>
       <div class="page-sub">All wallet top-ups from UPI / Binance / Crypto — latest first.</div>
       <div class="panel">
         <div class="panel-head">
@@ -1144,6 +1118,29 @@ tbody tr:hover{
           </table>
         </div>
       </div>
+
+      <div class="settings-shortcuts" aria-label="Admin tools">
+        <button class="settings-shortcut" type="button" onclick="switchTab('orders')">
+          <span class="settings-shortcut-icon">🛒</span>
+          <span><strong>Order monitoring</strong><small>Review deliveries and OTP status</small></span>
+          <b>›</b>
+        </button>
+        <button class="settings-shortcut" type="button" onclick="switchTab('users')">
+          <span class="settings-shortcut-icon">👥</span>
+          <span><strong>User directory</strong><small>Search users, balances and activity</small></span>
+          <b>›</b>
+        </button>
+        <button class="settings-shortcut" type="button" onclick="switchTab('logs')">
+          <span class="settings-shortcut-icon">📋</span>
+          <span><strong>Activity logs</strong><small>View logins, purchases and failures</small></span>
+          <b>›</b>
+        </button>
+        <button class="settings-shortcut logout-shortcut" type="button" onclick="handleLogout()">
+          <span class="settings-shortcut-icon">🚪</span>
+          <span><strong>Logout</strong><small>End this session and return to the login page</small></span>
+          <b>›</b>
+        </button>
+      </div>
     </section>
 
   </main>
@@ -1154,8 +1151,6 @@ tbody tr:hover{
   <button class="admin-nav-btn" data-tab="logs" type="button" onclick="switchTab('logs')"><span>≡</span>Logs</button>
   <button class="admin-nav-btn" data-tab="users" type="button" onclick="switchTab('users')"><span>👥</span>Users</button>
   <button class="admin-nav-btn" data-tab="orders" type="button" onclick="switchTab('orders')"><span>🛒</span>Orders</button>
-  <button class="admin-nav-btn" data-tab="payments" type="button" onclick="switchTab('payments')"><span>💳</span>Pay</button>
-  <button class="admin-nav-btn" data-tab="recharges" type="button" onclick="switchTab('recharges')"><span>🧾</span>Rechg</button>
   <button class="admin-nav-btn" data-tab="maintenance" type="button" onclick="switchTab('maintenance')"><span>⚙</span>Settings</button>
 </nav>
 
@@ -1336,9 +1331,12 @@ function switchTab(tab){
   else if(tab === "logs"){ loadLogs(); }
   else if(tab === "users"){ loadUsers(); }
   else if(tab === "orders"){ loadOrders(); }
-  else if(tab === "payments"){ loadPayments(); }
-  else if(tab === "recharges"){ loadRecharges(); }
-  else if(tab === "maintenance"){ loadMaintenance(); }
+  // Pay (gateways) & Rechg (transactions) now live inside Settings
+  else if(tab === "maintenance"){
+    loadMaintenance();
+    loadPayments();
+    loadRecharges();
+  }
 }
 
 function refreshCurrent(){
@@ -1666,21 +1664,24 @@ async function loadPayments(){
     var result = await api("payments");
     paymentsState = result.settings || {};
     var binance = result.binance || {};
-    // UPI gateway switch — fampay still powers the same UPI (Auto) card
     var gw = paymentsState.active_inr_gateway || "";
-    var upiOn = (gw === "upi" || gw === "fampay");
-    var ue = document.getElementById("upiEnabled");
-    if(ue){
-      ue.checked = upiOn;
-      var uwrap = document.getElementById("upiSwitchWrap");
-      if(uwrap) uwrap.classList.toggle("on", upiOn);
-    }
+
+    // UPI / FamPay switch — highlight the active selector button
+    var upiBtn = document.getElementById("gwUpiBtn");
+    var famBtn = document.getElementById("gwFamPayBtn");
+    var offBtn = document.getElementById("gwOffBtn");
+    if(upiBtn) upiBtn.classList.toggle("gw-btn-on", gw === "upi");
+    if(famBtn) famBtn.classList.toggle("gw-btn-on", gw === "fampay");
+    if(offBtn) offBtn.classList.toggle("gw-btn-on", gw === "" || gw === null || gw === "off");
+
     var hint = document.getElementById("paymentsINRHint");
     if(hint){
-      hint.textContent = upiOn
-        ? "ON — UPI (Auto) card is live on the website" + (gw === "fampay" ? " (auto gateway)" : "")
-        : "OFF — UPI (Auto) card is hidden on the website";
+      hint.textContent = gw
+        ? "ON — active gateway: " + gw.toUpperCase() + " (powers the UPI (Auto) card)"
+        : "OFF — INR payment button is hidden on bot & website";
     }
+
+    // Binance / Crypto toggles
     var be = document.getElementById("binanceEnabled");
     var ce = document.getElementById("cryptoEnabled");
     if(be){
@@ -1697,35 +1698,97 @@ async function loadPayments(){
         if(ce.checked) cwrap.classList.add("on"); else cwrap.classList.remove("on");
       }
     }
+
+    // Binance info + QR preview
     var bi = document.getElementById("binanceInfo");
     if(bi){
-      bi.textContent = binance.pay_id ? "Pay ID: " + binance.pay_id + (binance.qr_url ? " • QR configured" : " • No QR") : "Binance env not set (PAY_ID / QR_URL)";
+      bi.innerHTML = binance.pay_id
+        ? 'Pay ID: <code style="user-select:all">' + esc(binance.pay_id) + '</code> <button class="tool-btn" style="padding:4px 10px;font-size:12px" type="button" data-v="' + esc(binance.pay_id) + '" onclick="copyText(this.dataset.v)">📋 Copy</button>' + (binance.qr_url ? " • QR configured" : " • No QR")
+        : "Binance env not set (BINANCE_PAY_ID / BINANCE_QR_URL)";
     }
-    document.getElementById("paymentsToast").textContent = "Loaded at " + fmtDate(new Date());
+    var qp = document.getElementById("binanceQrPreview");
+    if(qp){
+      qp.innerHTML = binance.qr_url
+        ? '<div style="font-size:12px;color:var(--muted);margin-bottom:6px">QR preview (shown to users in the bot & website):</div><img src="' + esc(binance.qr_url) + '" alt="Binance QR" style="max-width:180px;border-radius:12px;border:1px solid var(--border)">'
+        : '<div style="font-size:12px;color:var(--muted)">Set <code>BINANCE_QR_URL</code> (image link) to show the Binance QR to users.</div>';
+    }
+
+    // UPI / FamPay IDs shown to users
+    var ids = document.getElementById("gatewayIds");
+    if(ids){
+      var rows = [];
+      var upiId = result.upi_id || "";
+      var fampayUpi = result.fampay_upi || "";
+      var defGw = result.default_inr_gateway || "upi";
+      if(upiId){
+        rows.push('<div><b>UPI ID:</b> <code style="user-select:all">' + esc(upiId) + '</code> <button class="tool-btn" style="padding:4px 10px;font-size:12px" type="button" data-v="' + esc(upiId) + '" onclick="copyText(this.dataset.v)">📋 Copy</button> <span class="muted">(env UPI_ID)</span></div>');
+      }
+      if(fampayUpi){
+        rows.push('<div><b>FamPay UPI:</b> <code style="user-select:all">' + esc(fampayUpi) + '</code> <button class="tool-btn" style="padding:4px 10px;font-size:12px" type="button" data-v="' + esc(fampayUpi) + '" onclick="copyText(this.dataset.v)">📋 Copy</button> <span class="muted">(env FAMPAY_UPI)</span></div>');
+      }
+      if(!rows.length){
+        rows.push('<div class="muted">⚠️ UPI ID / FamPay UPI not set — add <code>UPI_ID</code> and <code>FAMPAY_UPI</code> env vars (Bot Codes file / .env) to show copyable pay IDs to users.</div>');
+      }
+      rows.push('<div class="muted" style="margin-top:4px">Switch default from Bot Codes file: <code>config.py → DEFAULT_INR_GATEWAY = "' + esc(defGw) + '"</code> — override live with the buttons above.</div>');
+      ids.innerHTML = rows.join("");
+    }
+
+    var toast = document.getElementById("paymentsToast");
+    if(toast) toast.textContent = "Loaded at " + fmtDate(new Date());
   }catch(error){
     console.error("Payments load:", error);
-    document.getElementById("paymentsToast").textContent = "Failed to load: " + (error.message||"");
+    var toast = document.getElementById("paymentsToast");
+    if(toast) toast.textContent = "Failed to load: " + (error.message||"");
   }
 }
 
+async function setInrGateway(gw){
+  try{
+    var result = await api("payments", {
+      method: "POST",
+      body: { active_inr_gateway: gw }
+    });
+    paymentsState = result.settings || {};
+    var now = paymentsState.active_inr_gateway || "";
+    showToast(now ? "✅ INR gateway set to " + now.toUpperCase() + "." : "✅ INR gateway disabled.");
+    loadPayments();
+  }catch(error){
+    console.error("Set gateway:", error);
+    showToast(error.message || "Could not switch gateway.", true);
+  }
+}
+
+function copyText(txt){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){
+      showToast("📋 Copied: " + txt);
+    }).catch(function(){
+      fallbackCopy(txt);
+    });
+  }else{
+    fallbackCopy(txt);
+  }
+}
+
+function fallbackCopy(txt){
+  var ta = document.createElement("textarea");
+  ta.value = txt;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  try{ document.execCommand("copy"); showToast("📋 Copied: " + txt); }
+  catch(e){ showToast("Could not copy.", true); }
+  document.body.removeChild(ta);
+}
+
 async function savePayments(){
-  var upiOn = document.getElementById("upiEnabled") ? document.getElementById("upiEnabled").checked : false;
   var binanceOn = document.getElementById("binanceEnabled") ? document.getElementById("binanceEnabled").checked : true;
   var cryptoOn = document.getElementById("cryptoEnabled") ? document.getElementById("cryptoEnabled").checked : true;
 
-  // Keep the working gateway untouched: if UPI is ON and the current gateway is
-  // fampay, keep fampay (it powers the same "UPI (Auto)" card) — otherwise "upi".
-  var currentGw = paymentsState && paymentsState.active_inr_gateway;
-  var gw = null;
-  if(upiOn){
-    gw = (currentGw === "fampay") ? "fampay" : "upi";
-  }
-
   // update visuals
-  var uw = document.getElementById("upiSwitchWrap");
   var bw = document.getElementById("binanceSwitchWrap");
   var cw = document.getElementById("cryptoSwitchWrap");
-  if(uw) uw.classList.toggle("on", upiOn);
   if(bw) bw.classList.toggle("on", binanceOn);
   if(cw) cw.classList.toggle("on", cryptoOn);
 
@@ -1733,23 +1796,23 @@ async function savePayments(){
     var result = await api("payments", {
       method: "POST",
       body: {
-        active_inr_gateway: gw,
         binance_enabled: binanceOn,
         crypto_enabled: cryptoOn
       }
     });
     paymentsState = result.settings || {};
     showToast("✅ Payment settings saved.");
-    document.getElementById("paymentsToast").textContent = "Saved at " + fmtDate(new Date()) + " — UPI Gateway: " + (gw ? "ON" : "OFF");
+    var toast = document.getElementById("paymentsToast");
+    if(toast) toast.textContent = "Saved at " + fmtDate(new Date());
   }catch(error){
     console.error("Save payments:", error);
     showToast(error.message || "Could not save payments.", true);
   }
 }
 
-// Make entire switch clickable (toggle checkbox)
+// Make Binance/Crypto switch rows clickable (toggle checkbox)
 document.addEventListener("click", function(e){
-  var sw = e.target.closest("#upiSwitchWrap, #binanceSwitchWrap, #cryptoSwitchWrap");
+  var sw = e.target.closest("#binanceSwitchWrap, #cryptoSwitchWrap");
   if(!sw) return;
   // if click was directly on checkbox, let it handle; otherwise toggle
   if(e.target.tagName.toLowerCase()==="input") return;

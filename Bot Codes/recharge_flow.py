@@ -27,7 +27,7 @@ from auto_pay import (
 from payment_settings import (
     get_settings, set_inr_gateway, toggle_binance, toggle_crypto,
 )
-from config import BINANCE_PAY_ID, BINANCE_QR_URL
+from config import BINANCE_PAY_ID, BINANCE_QR_URL, UPI_ID, FAMPAY_UPI
 
 # CONFIG
 USDT_TO_INR = 90
@@ -135,20 +135,26 @@ def register_recharge_handlers(dp, bot, users_col, txns_col, crypto_col, setting
                 "method": "fampay",
                 "amount": None,
                 "status": "pending",
+                "qr_url": res.get("qr_url", ""),
                 "created_at": datetime.datetime.utcnow(),
                 "expires_at": datetime.datetime.utcnow() + datetime.timedelta(minutes=UPI_INVOICE_EXPIRY_MIN),
             })
 
             kb = InlineKeyboardBuilder()
+            if FAMPAY_UPI:
+                kb.button(text=f"📋 {FAMPAY_UPI}", copy_text=CopyTextButton(text=FAMPAY_UPI))
+                kb.button(text="📋 Copy UPI ID", copy_text=CopyTextButton(text=FAMPAY_UPI))
+            kb.button(text="⬇️ Download QR", callback_data=f"dlqr:{order_id}:fampay")
             kb.button(text="✅ Verify Payment", callback_data=f"verify_fampay:{order_id}")
             kb.button(text="🔙 Back", callback_data="recharge")
             kb.adjust(1)
 
             caption = (
-                "📲 <b>UPI Payment (Auto)</b>\n\n"
+                "📲 <b>UPI Payment (Auto) — FamPay</b>\n\n"
                 f"🆔 Order ID: <tg-spoiler>{order_id}</tg-spoiler>\n"
-                f"⏳ Expires: <code>{res.get('expire', 'N/A')}</code>\n\n"
-                "<blockquote>Scan the QR and pay any amount. Once done, tap 'Verify Payment' — it's fully automatic.</blockquote>"
+                f"⏳ Expires: <code>{res.get('expire', 'N/A')}</code>\n"
+                + (f"💳 Pay to (FamPay UPI): <code>{FAMPAY_UPI}</code>\n" if FAMPAY_UPI else "")
+                + "\n<blockquote>Scan the QR and pay any amount. Once done, tap 'Verify Payment' — it's fully automatic.</blockquote>"
             )
             await wait_msg.delete()
             await cq.message.answer_photo(res["qr_url"], caption=caption, parse_mode="HTML", reply_markup=kb.as_markup())
@@ -195,11 +201,16 @@ def register_recharge_handlers(dp, bot, users_col, txns_col, crypto_col, setting
             "method": "upi",
             "amount": amount,
             "status": "pending",
+            "qr_url": res.get("qr_url", ""),
             "created_at": datetime.datetime.utcnow(),
             "expires_at": datetime.datetime.utcnow() + datetime.timedelta(minutes=UPI_INVOICE_EXPIRY_MIN),
         })
 
         kb = InlineKeyboardBuilder()
+        if UPI_ID:
+            kb.button(text=f"📋 {UPI_ID}", copy_text=CopyTextButton(text=UPI_ID))
+            kb.button(text="📋 Copy UPI ID", copy_text=CopyTextButton(text=UPI_ID))
+        kb.button(text="⬇️ Download QR", callback_data=f"dlqr:{order_id}:upi")
         kb.button(text="✅ Verify Payment", callback_data=f"verify_upi:{order_id}")
         kb.button(text="🔙 Back", callback_data="recharge")
         kb.adjust(1)
@@ -207,8 +218,9 @@ def register_recharge_handlers(dp, bot, users_col, txns_col, crypto_col, setting
         caption = (
             "📲 <b>UPI Payment (Auto)</b>\n\n"
             f"💵 Amount: ₹{amount}\n"
-            f"🆔 Order ID: <tg-spoiler>{order_id}</tg-spoiler>\n\n"
-            "<blockquote>Scan with any UPI app. We auto-check every minute, or tap 'Verify Payment' manually.</blockquote>"
+            f"🆔 Order ID: <tg-spoiler>{order_id}</tg-spoiler>\n"
+            + (f"💳 Pay to: <code>{UPI_ID}</code>\n" if UPI_ID else "")
+            + "\n<blockquote>Scan with any UPI app. We auto-check every minute, or tap 'Verify Payment' manually.</blockquote>"
         )
         await wait_msg.delete()
         await message.answer_photo(res["qr_url"], caption=caption, parse_mode="HTML", reply_markup=kb.as_markup())
@@ -264,15 +276,21 @@ def register_recharge_handlers(dp, bot, users_col, txns_col, crypto_col, setting
 
         await cq.message.delete()
         kb = InlineKeyboardBuilder()
-        kb.button(text="📋 Copy Pay ID", copy_text=CopyTextButton(text=BINANCE_PAY_ID))
+        if BINANCE_PAY_ID:
+            # Tap the Pay ID itself to copy it
+            kb.button(text=f"📋 {BINANCE_PAY_ID}", copy_text=CopyTextButton(text=BINANCE_PAY_ID))
+            kb.button(text="📋 Copy Pay ID", copy_text=CopyTextButton(text=BINANCE_PAY_ID))
+        if BINANCE_QR_URL:
+            kb.button(text="⬇️ Download QR", callback_data="dlqr:binance:static")
         kb.button(text="✅ Verify Payment", callback_data="binance_verify_start")
         kb.button(text="🔙 Back", callback_data="recharge")
         kb.adjust(1)
 
         caption = (
             "🅱️ <b>Binance Pay (Auto)</b>\n\n"
-            f"🆔 Pay ID: <code>{BINANCE_PAY_ID}</code>\n\n"
-            "<blockquote>Send payment to this Pay ID via Binance app. Once done, tap 'Verify Payment' and send your Order ID / Transaction ID.</blockquote>"
+            f"🆔 Pay ID: <code>{BINANCE_PAY_ID}</code>\n"
+            + ("🖼️ QR: shows below — tap ⬇️ Download QR to save it.\n" if BINANCE_QR_URL else "⚠️ Binance QR not configured yet.\n")
+            + "\n<blockquote>Send payment to this Pay ID via Binance app. Once done, tap 'Verify Payment' and send your Order ID / Transaction ID.</blockquote>"
         )
         if BINANCE_QR_URL:
             await cq.message.answer_photo(BINANCE_QR_URL, caption=caption, parse_mode="HTML", reply_markup=kb.as_markup())
@@ -349,6 +367,46 @@ def register_recharge_handlers(dp, bot, users_col, txns_col, crypto_col, setting
                 )
             except Exception:
                 pass
+
+    # ==============================
+    # DOWNLOAD QR (UPI / FamPay / Binance) — sends the QR as a file
+    # ==============================
+    @dp.callback_query(F.data.startswith("dlqr:"))
+    async def download_qr_cb(cq: CallbackQuery):
+        parts = cq.data.split(":", 2)
+        qr_url = ""
+        label = "QR"
+        if len(parts) >= 2 and parts[1] == "binance":
+            qr_url = BINANCE_QR_URL
+            label = "Binance QR"
+        elif len(parts) >= 2:
+            order_id = parts[1]
+            method = parts[2] if len(parts) > 2 else "upi"
+            tx = txns_col.find_one({"_id": order_id})
+            qr_url = (tx or {}).get("qr_url", "")
+            label = "UPI QR" if method == "upi" else "FamPay QR"
+
+        if not qr_url:
+            await cq.answer("❌ QR not available. Please go back and generate a fresh one.", show_alert=True)
+            return
+
+        await cq.answer("⬇️ Sending QR file…")
+        try:
+            # send as a document so the user can download/save the image file
+            await cq.message.answer_document(
+                qr_url,
+                caption=f"⬇️ <b>{label}</b> — save this file to your device.",
+                parse_mode="HTML",
+            )
+        except Exception:
+            try:
+                await cq.message.answer_photo(
+                    qr_url,
+                    caption=f"⬇️ <b>{label}</b> — tap the image and long-press to save.",
+                    parse_mode="HTML",
+                )
+            except Exception:
+                await cq.answer("❌ Could not fetch the QR right now. Try again in a moment.", show_alert=True)
 
     # ==============================
     # CRYPTO (OxaPay) — unchanged flow, already automatic
@@ -610,7 +668,9 @@ def register_recharge_handlers(dp, bot, users_col, txns_col, crypto_col, setting
         await message.answer(
             "⚙️ <b>Payment Gateway Settings</b>\n\n"
             "Only one INR gateway (UPI or FamPay) can be active at a time — this powers the \"UPI (Auto)\" button.\n"
-            "Binance and Crypto can be toggled independently.",
+            "Binance and Crypto can be toggled independently.\n\n"
+            "🎛️ Default switch comes from the Bot Codes file: <code>config.py → DEFAULT_INR_GATEWAY</code>. "
+            "Tapping a button below overrides it (stored in DB).",
             parse_mode="HTML",
             reply_markup=_settings_kb(settings).as_markup()
         )

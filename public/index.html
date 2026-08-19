@@ -4430,8 +4430,10 @@ function openRechargeForm(method){
     formArea.innerHTML = `
       <div style="font-weight:850;font-size:18px;margin-bottom:6px">🅱️ Binance Pay (Auto)</div>
       <div class="recharge-meta">
-        <b>Pay ID:</b> <code style="user-select:all">${escapeHtml(payId||"Not configured")}</code><br>
+        <b>Pay ID:</b> <code style="user-select:all">${escapeHtml(payId||"Not configured")}</code>
+        ${payId ? `<button class="secondary-btn" type="button" style="margin-top:0;padding:6px 10px;font-size:12px" data-v="${escapeHtml(payId)}" onclick="copyToClipboard(this.dataset.v)">📋 Copy</button>` : ``}<br>
         ${qrUrl ? `<img src="${escapeHtml(qrUrl)}" class="recharge-qr" alt="Binance QR">` : ``}
+        ${qrUrl ? `<div class="recharge-actions" style="margin-top:6px"><a class="secondary-btn" style="display:inline-block;text-decoration:none;margin-top:0;text-align:center" href="${escapeHtml(qrUrl)}" download="binance_qr.png" target="_blank" rel="noopener">⬇️ Download QR</a></div>` : ``}
         <div style="margin-top:8px">Send payment via Binance app to this Pay ID, then enter your <b>Order ID / Transaction ID</b> below and verify.</div>
       </div>
       <input id="binanceOrderInput" class="recharge-input" type="text" placeholder="Enter Binance Order ID / Transaction ID">
@@ -4439,7 +4441,7 @@ function openRechargeForm(method){
         <button class="primary-btn" type="button" onclick="verifyBinanceFromInput()" style="margin-top:0">Verify Payment</button>
         <button class="secondary-btn" type="button" onclick="closeRechargeForm()">Back</button>
       </div>
-      ${payId ? `<div class="recharge-note">📋 <b>Tip:</b> Long-press Pay ID to copy. After paying in Binance, paste Order ID here.</div>` : ``}
+      ${payId ? `<div class="recharge-note">📋 <b>Tip:</b> Tap 📋 Copy to copy the Pay ID. After paying in Binance, paste Order ID here.</div>` : ``}
     `;
     const binput = document.getElementById("binanceOrderInput");
     if(binput){ binput.focus(); binput.scrollIntoView({ behavior:"smooth", block:"center" }); }
@@ -4485,13 +4487,18 @@ async function createUPIInvoice(){
 
 function showUPIInvoice(data){
   const area = document.getElementById("rechargeInvoiceArea");
+  const upiId = rechargeMeta ? (rechargeMeta.upi_id || "") : "";
   area.classList.remove("hidden");
   area.innerHTML = `
     <div style="font-weight:850;font-size:18px">📲 UPI Payment (Auto)</div>
     <img src="${escapeHtml(data.qr_url)}" class="recharge-qr" alt="UPI QR">
+    <div class="recharge-actions" style="margin-top:6px">
+      <a class="secondary-btn" style="display:inline-block;text-decoration:none;margin-top:0;text-align:center" href="${escapeHtml(data.qr_url)}" download="upi_qr_${escapeHtml(data.order_id)}.png" target="_blank" rel="noopener">⬇️ Download QR</a>
+    </div>
     <div class="recharge-meta">
       <b>Amount:</b> ₹${escapeHtml(String(data.amount))}<br>
       <b>Order ID:</b> <code>${escapeHtml(data.order_id)}</code><br>
+      ${upiId ? `<b>Pay to:</b> <code style="user-select:all">${escapeHtml(upiId)}</code> <button class="secondary-btn" type="button" style="margin-top:0;padding:4px 10px;font-size:12px" data-v="${escapeHtml(upiId)}" onclick="copyToClipboard(this.dataset.v)">📋 Copy</button><br>` : ``}
       <b>Expires:</b> ${data.expires_in_min||60} minutes
     </div>
     <div class="recharge-note">Scan with any UPI app and pay exactly ₹${escapeHtml(String(data.amount))}. Then tap Verify.</div>
@@ -4515,12 +4522,17 @@ async function createFamPayInvoice(){
     const data = await res.json();
     if(!res.ok || !data.success) throw new Error(data.message||"Failed to generate QR.");
     const area = document.getElementById("rechargeInvoiceArea");
+    const fampayUpi = rechargeMeta ? (rechargeMeta.fampay_upi || "") : "";
     area.classList.remove("hidden");
     area.innerHTML = `
       <div style="font-weight:850;font-size:18px">💳 UPI Gateway — Pay Any Amount</div>
       <img src="${escapeHtml(data.qr_url)}" class="recharge-qr" alt="UPI QR">
+      <div class="recharge-actions" style="margin-top:6px">
+        <a class="secondary-btn" style="display:inline-block;text-decoration:none;margin-top:0;text-align:center" href="${escapeHtml(data.qr_url)}" download="fampay_qr_${escapeHtml(data.order_id)}.png" target="_blank" rel="noopener">⬇️ Download QR</a>
+      </div>
       <div class="recharge-meta">
         <b>Order ID:</b> <code>${escapeHtml(data.order_id)}</code><br>
+        ${fampayUpi ? `<b>Pay to (FamPay):</b> <code style="user-select:all">${escapeHtml(fampayUpi)}</code> <button class="secondary-btn" type="button" style="margin-top:0;padding:4px 10px;font-size:12px" data-v="${escapeHtml(fampayUpi)}" onclick="copyToClipboard(this.dataset.v)">📋 Copy</button><br>` : ``}
         ${data.expire ? `<b>Expires:</b> ${escapeHtml(data.expire)}<br>` : ``}
         <b>Note:</b> Pay any amount you wish, then verify.
       </div>
@@ -5182,6 +5194,30 @@ function formatDateTime(value){
 /* ==================================================
    HTML ESCAPE
 ================================================== */
+
+function copyToClipboard(text){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){
+      showMessage("📋 Copied", text);
+    }).catch(function(){
+      fallbackCopyText(text);
+    });
+  }else{
+    fallbackCopyText(text);
+  }
+}
+
+function fallbackCopyText(text){
+  var ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  try{ document.execCommand("copy"); showMessage("📋 Copied", text); }
+  catch(e){ showMessage("Copy Failed", "Could not copy. Please copy manually."); }
+  document.body.removeChild(ta);
+}
 
 function escapeHtml(value){
 
