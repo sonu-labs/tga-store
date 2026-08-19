@@ -2134,6 +2134,106 @@ body.light .nav-btn.active{
 </div>
 
 
+<!-- ==================================================
+     MAINTENANCE OVERLAY
+================================================== -->
+
+<style>
+.maintenance-overlay{
+  position:fixed;
+  inset:0;
+  z-index:900;
+  background:var(--bg);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:22px;
+  text-align:center;
+}
+
+.maintenance-overlay.show{
+  display:flex;
+}
+
+.maintenance-card{
+  width:100%;
+  max-width:430px;
+}
+
+.maintenance-logo{
+  width:90px;
+  height:90px;
+  object-fit:contain;
+  margin-bottom:8px;
+}
+
+.maintenance-icon{
+  font-size:54px;
+  line-height:1;
+  margin-bottom:14px;
+}
+
+.maintenance-title{
+  font-size:26px;
+  font-weight:900;
+}
+
+.maintenance-message{
+  color:var(--muted);
+  margin:12px 0 22px;
+  line-height:1.6;
+}
+
+.maintenance-overlay .primary-btn{
+  margin-top:0;
+  max-width:220px;
+  margin-left:auto;
+  margin-right:auto;
+}
+</style>
+
+<div
+  id="maintenanceOverlay"
+  class="maintenance-overlay"
+>
+
+  <div class="maintenance-card">
+
+    <img
+      class="maintenance-logo"
+      src="https://files.catbox.moe/zsgsqb.png"
+      alt="TGA Store"
+    >
+
+    <div class="maintenance-icon">
+      🛠️
+    </div>
+
+    <div class="maintenance-title">
+      Store Under Maintenance
+    </div>
+
+    <div
+      id="maintenanceMessage"
+      class="maintenance-message"
+    >
+      We are doing some upgrades.
+      Please check back soon.
+    </div>
+
+    <button
+      class="primary-btn"
+      type="button"
+      onclick="checkMaintenance()"
+    >
+      Try Again
+    </button>
+
+  </div>
+
+</div>
+
+
 <script>
 /* ==================================================
    CONFIG
@@ -2480,6 +2580,15 @@ async function handleLogin(){
 
     const result =
       await response.json();
+
+    if(result && result.maintenance){
+
+      showMaintenance(
+        result.message
+      );
+
+      return;
+    }
 
     if(
       !response.ok ||
@@ -3436,6 +3545,15 @@ async function confirmPurchase(){
     const result =
       await response.json();
 
+    if(result && result.maintenance){
+
+      showMaintenance(
+        result.message
+      );
+
+      return;
+    }
+
     if(
       !response.ok ||
       !result.success
@@ -3636,6 +3754,15 @@ async function getOTP(){
 
     const result =
       await response.json();
+
+    if(result && result.maintenance){
+
+      showMaintenance(
+        result.message
+      );
+
+      return;
+    }
 
     if(
       !response.ok ||
@@ -4283,6 +4410,98 @@ document.addEventListener(
 
 
 /* ==================================================
+   MAINTENANCE
+================================================== */
+
+async function checkMaintenance(){
+
+  try{
+
+    const response =
+      await fetch(
+        "/api/status",
+        {
+          method:"GET",
+          cache:"no-store"
+        }
+      );
+
+    const result =
+      await response.json();
+
+    if(
+      result &&
+      result.maintenance
+    ){
+
+      showMaintenance(
+        result.message
+      );
+
+    }else{
+
+      hideMaintenance();
+
+    }
+
+  }catch(error){
+
+    console.error(
+      "Maintenance check:",
+      error
+    );
+
+  }
+}
+
+
+function showMaintenance(message){
+
+  const overlay =
+    document.getElementById(
+      "maintenanceOverlay"
+    );
+
+  if(!overlay){
+    return;
+  }
+
+  const text =
+    document.getElementById(
+      "maintenanceMessage"
+    );
+
+  if(text && message){
+
+    text.textContent =
+      message;
+
+  }
+
+  overlay.classList.add(
+    "show"
+  );
+}
+
+
+function hideMaintenance(){
+
+  const overlay =
+    document.getElementById(
+      "maintenanceOverlay"
+    );
+
+  if(overlay){
+
+    overlay.classList.remove(
+      "show"
+    );
+
+  }
+}
+
+
+/* ==================================================
    STARTUP
 ================================================== */
 
@@ -4291,6 +4510,13 @@ window.addEventListener(
   ()=>{
 
     loadTheme();
+
+    checkMaintenance();
+
+    setInterval(
+      checkMaintenance,
+      30000
+    );
 
     const currencySelect =
       document.getElementById(
