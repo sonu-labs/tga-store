@@ -1,4 +1,6 @@
 const TG_LION_BASE_URL = "https://TG-Lion.net";
+const { fetchServer2Countries } = require("../lib/server2");
+const { getDatabase } = require("../lib/db");
 
 module.exports = async function handler(req, res) {
   // CORS
@@ -18,6 +20,36 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    // Try Server 2 logic (bot parity: supports both TGPVA and TG-Lion via server_config)
+    try {
+      const db = await getDatabase();
+      const { countries, activeApi, config, fallback } = await fetchServer2Countries(db);
+      if (countries && countries.length) {
+        const dict = {};
+        for (const c of countries) {
+          dict[c.code] = {
+            name: c.name,
+            code: c.code,
+            code_Num: "",
+            qty: c.qty,
+            price: c.price
+          };
+        }
+        return res.status(200).json({
+          success: true,
+          countries: dict,
+          total: Object.keys(dict).length,
+          updatedAt: new Date().toISOString(),
+          provider: activeApi,
+          profit: config ? config.s2_profit : 0,
+          fallback: Boolean(fallback)
+        });
+      }
+    } catch (e) {
+      console.error("Server2 countries fallback:", e);
+    }
+
+    // Fallback: direct TG-Lion (original logic)
     const apiKey = process.env.TG_LION_API_KEY;
     const yourId = process.env.TG_LION_YOUR_ID;
 
