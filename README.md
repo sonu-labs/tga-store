@@ -1,6 +1,6 @@
 # 🛒 TGA Store — Telegram Account Store (Website + Admin Panel)
 
-TGA Store ek dark-themed, mobile-friendly web store hai jisme users Telegram accounts (phone numbers + OTP) kharid sakte hain, wallet recharge kar sakte hain (UPI / FamPay / Binance Pay / Crypto), aur admin poore store ko ek panel se control karta hai. Website same MongoDB database use karti hai jo Telegram bot (`bot.py`) use karta hai.
+TGA Store is a dark-themed, mobile-friendly web store where users can buy Telegram accounts (phone numbers + OTP), top up their wallet (UPI / FamPay / Binance Pay / Crypto), and an admin can control the entire store from one panel. The website shares the same MongoDB database used by the Telegram bot (`bot.py`).
 
 > **Live URL:** https://tga-store.vercel.app
 > **Admin Panel:** https://tga-store.vercel.app/admin
@@ -12,12 +12,12 @@ TGA Store ek dark-themed, mobile-friendly web store hai jisme users Telegram acc
 
 | Layer | Technology |
 |---|---|
-| Frontend | Plain HTML + CSS + vanilla JavaScript (`public/`) — koi framework nahi |
+| Frontend | Plain HTML + CSS + vanilla JavaScript (`public/`) — no framework |
 | Backend | Node.js serverless functions (`api/`) — Vercel Functions |
 | Database | MongoDB Atlas (database name: `TGAStoreBot`) |
 | Auth | bcrypt-hashed passwords + Bearer token sessions (admin) |
 | Telegram | Bot HTTP API (`api.telegram.org`) for sales/admin/buyer notifications |
-| Number provider | **TG-Lion** (`https://TG-Lion.net`) — website ka ekmatra provider |
+| Number provider | **TG-Lion** (`https://TG-Lion.net`) — the website's only provider |
 | Payments | UPI Gateway, FamPay, Binance Pay, OxaPay (USDT crypto) |
 | Hosting | Vercel (static + serverless) |
 
@@ -57,8 +57,8 @@ tga-store/
 │   ├── admin.html              # Admin dashboard (single page app)
 │   └── admin_login.html        # Admin login page
 │
-├── bot.py                      # Telegram bot (alag se hosted; website iske DB se share karti hai)
-├── BOT_PATCH_INSTRUCTIONS.md   # Bot ke andar website login/register/connect ke patch notes
+├── bot.py                      # Telegram bot (hosted separately; website shares its DB)
+├── BOT_PATCH_INSTRUCTIONS.md   # Patch notes for website login/register/connect inside the bot
 ├── vercel.json                 # Vercel rewrites (/admin → admin.html)
 └── package.json
 ```
@@ -69,16 +69,16 @@ tga-store/
 
 ### 1. Authentication
 - **Login methods:**
-  - ✈️ **Telegram** — Telegram User ID + password (bot se `/start register` karke password milta hai)
-  - 📧 **Email** — website pe register karke
-  - 📱 **Phone** — country code ke saath (e.g. `+919876543210`)
-- **Register** (website): username + email/phone + password (min 6 chars). Password bcrypt se hash hota hai.
-- **Telegram registration** sirf bot se hoti hai (`/start register`) — bot strong auto-generated password deta hai.
-- Legacy plain-password users automatically bcrypt hash me migrate ho jaate hain first login pe.
+  - ✈️ **Telegram** — Telegram User ID + password (get the password from the bot via `/start register`)
+  - 📧 **Email** — register on the website
+  - 📱 **Phone** — with country code (e.g. `+919876543210`)
+- **Register** (website): username + email/phone + password (min 6 chars). The password is hashed with bcrypt.
+- **Telegram registration** is only done through the bot (`/start register`) — the bot generates a strong auto-generated password.
+- Legacy plain-text passwords are automatically migrated to a bcrypt hash on first login.
 
 ### 2. Home / Dashboard
 - Welcome message + username
-- 💳 **Total Balance** (INR stored; display currency USD / INR / USDT selectable)
+- 💳 **Total Balance** (stored in INR; display currency selectable as USD / INR / USDT)
 - ⚡ **Total Recharge** count
 - 🔑 **Total Orders** count
 - 📢 Announcement section
@@ -87,39 +87,39 @@ tga-store/
 ### 3. Buy Page
 - 250+ countries (flag, name, ISO code, dial code)
 - 🔍 Live search (name / code / dial code)
-- Real-time stock + price from TG-Lion
-- **Price logic:** provider price (USD) pe 20% markup (`SELLING_MARKUP = 1.20`), then × ₹100 (INR). Example: provider $0.45 → selling $0.54 → **₹54.00**.
-- "Buy Now" → terms modal → purchase → success modal with number.
+- Real-time stock and price from TG-Lion
+- **Price logic:** a 20% markup is applied on the provider price (USD) via `SELLING_MARKUP = 1.20`, then × ₹100 (INR). Example: provider $0.45 → selling $0.54 → **₹54.00**.
+- "Buy Now" → terms modal → purchase → success modal with the number.
 
 ### 4. Purchase Flow
-1. User country select karta hai → price confirm karta hai.
-2. `/api/buy` balance check karta hai, paise kaatta hai, TG-Lion se number kharidta hai.
-3. Number turant milta hai; success modal me "Get OTP" button.
-4. OTP aane par `/api/code` se code + password fetch hota hai.
-5. Agar purchase ke beech me error aaye to **automatic refund** hota hai.
-6. Teen Telegram notifications fire hote hain (fire-and-forget): public sales channel, private admin log, buyer DM.
+1. User selects a country and confirms the price.
+2. `/api/buy` checks the balance, deducts payment, and buys the number from TG-Lion.
+3. The number is returned instantly; the success modal shows a "Get OTP" button.
+4. When the OTP arrives, `/api/code` fetches the code + password.
+5. If there is an error during purchase, an **automatic refund** is issued.
+6. Three Telegram notifications are fired (fire-and-forget): public sales channel, private admin log, and buyer DM.
 
 ### 5. Recharge / Wallet (`/api/recharge`)
 | Method | Flow |
 |---|---|
-| 💳 **UPI Gateway** | Amount enter karo → QR generate → kisi bhi UPI app se pay karo → "Verify Payment" (auto-check). 60 min expiry. |
-| 💳 **FamPay (UPI Gateway)** | Bina amount ke QR generate → **any amount** pay karo → verify. Duplicate transaction block. |
-| 🅱️ **Binance Pay** | Pay ID + QR dikhta hai → Binance app se pay → Order ID / Txn ID daal kar verify. |
-| 🪙 **Crypto (OxaPay)** | USDT amount (min 0.1) → OxaPay invoice → exact amount bhejo → "I Have Paid". Rate ₹90/USDT, 30 min expiry. |
+| 💳 **UPI Gateway** | Enter an amount → generate a QR → pay with any UPI app → tap "Verify Payment" (auto-check). Expires in 60 minutes. |
+| 💳 **FamPay (UPI Gateway)** | Generate a QR without an amount → pay **any amount** → verify. Duplicate transactions are blocked. |
+| 🅱️ **Binance Pay** | Pay ID + QR shown → pay in the Binance app → enter Order ID / Txn ID to verify. |
+| 🪙 **Crypto (OxaPay)** | USDT amount (min 0.1) → OxaPay invoice → send the exact amount → "I Have Paid". Rate ₹90/USDT, expires in 30 minutes. |
 
-- Recharge history (last 10 successful) UPI/Crypto/Binance sab combined.
-- Admin panel se koi bhi gateway live on/off kiya ja sakta hai — turant reflect hota hai.
+- Recharge history shows the last 10 successful recharges, combining UPI/Crypto/Binance.
+- Any gateway can be turned on/off live from the admin panel — changes reflect instantly.
 
 ### 6. Orders Page
-- Saari purchases ki list (country, number, OTP, date, price, status)
+- List of all purchases (country, number, OTP, date, price, status)
 - Status: `purchased` (in progress / OTP pending) → `completed` (OTP received)
-- Dates IST me (`Asia/Kolkata`)
+- Dates shown in IST (`Asia/Kolkata`)
 
 ### 7. Settings Page
-- 🤖 **Bot Connect** — Telegram bot link generate karke account link karte hain (purchase alerts + future features)
+- 🤖 **Bot Connect** — generate a Telegram bot link to connect the account (purchase alerts + future features)
 - 🔒 **Change Password** (current + new; min 6 chars)
 - 💱 **Currency** — USD / INR / USDT display
-- 🌙 **Dark / Light theme** (localStorage me save)
+- 🌙 **Dark / Light theme** (saved in localStorage)
 - 📄 Terms & Conditions modal
 - 📢 Telegram Channel link
 - 🎧 Contact Support link
@@ -127,33 +127,33 @@ tga-store/
 
 ### 8. UX Details
 - Mobile-first bottom navigation (Home / Buy / Recharge / Orders / Settings)
-- Pull-to-refresh style header refresh button
-- Maintenance mode pe poora UI block ho jaata hai (full-screen overlay)
-- QR images apne `/api/qr_proxy` se serve hoti hain — broken image aur cross-origin download dono fix
-- 30-second interval pe maintenance auto-check
-- Session localStorage me (`tga_user_id`, `tga_telegram_id`, `tga_username`)
+- Header refresh button (pull-to-refresh style)
+- In maintenance mode the entire UI is blocked (full-screen overlay)
+- QR images are served through our own `/api/qr_proxy` — fixes both broken images and cross-origin downloads
+- Maintenance is auto-checked every 30 seconds
+- Session stored in localStorage (`tga_user_id`, `tga_telegram_id`, `tga_username`)
 
 ---
 
 ## 🛡️ Admin Panel Features (A to Z)
 
-Admin panel `/admin` pe hai. Login `/admin_login` se. Admin credentials env vars me set hote hain (`ADMIN_ID`, `ADMIN_PASSWORD`) — **password kisi ko mat do, aur default ko production me badal dena**.
+The admin panel is at `/admin`. Login is at `/admin_login`. Admin credentials are set via environment variables (`ADMIN_ID`, `ADMIN_PASSWORD`) — **do not share the password with anyone, and replace the default in production**.
 
-Admin session 7 din ka Bearer token hai (Mongo `sessions` collection me stored).
+An admin session is a 7-day Bearer token stored in the MongoDB `sessions` collection.
 
 ### 1. ◧ Overview Tab
 Real-time dashboard with 9 stat cards:
 - 👥 Total Users
 - 🛒 Total Orders
-- 💰 Revenue (completed + purchased orders ka sum)
-- 💸 Total Recharged (paid transactions ka sum)
+- 💰 Revenue (sum of completed + purchased orders)
+- 💸 Total Recharged (sum of paid transactions)
 - ⏳ Buying Now (purchased / in-progress orders)
 - ✅ Completed Orders
 - 🔑 Successful Logins
 - ❌ Failed Logins
 - 🚫 Failed Buys
 
-Neeche **Recent Activity** feed (last 25 logs) — login, buy, OTP, recharge sab events.
+Below it is a **Recent Activity** feed (last 25 logs) — login, buy, OTP, and recharge events.
 
 ### 2. ≡ Activity Logs Tab
 - Filter by type: All / Logins / Login Success / Login Failed / Buys / Buy Success / Buy Failed / OTP / Recharges
@@ -162,74 +162,74 @@ Neeche **Recent Activity** feed (last 25 logs) — login, buy, OTP, recharge sab
 - Pagination via `limit`/`skip` (default 200, max 1000)
 
 ### 3. 👥 Users Tab
-- Har user ka: Username, Telegram ID, Balance, Total Logins, Last Login, Total Orders, Buying Now (active), Failed Buys, Total Spent
-- 🔍 Search by username ya numeric ID
-- A → Z sorted
-- Aggregations `orders` + `logs` collections se real-time calculate hote hain
+- For every user: Username, Telegram ID, Balance, Total Logins, Last Login, Total Orders, Buying Now (active), Failed Buys, Total Spent
+- 🔍 Search by username or numeric ID
+- Sorted A → Z
+- Aggregations are calculated in real-time from the `orders` + `logs` collections
 
 ### 4. 🛒 Orders Tab
-- Saari purchases latest-first
+- All purchases, newest first
 - Columns: Time (IST), User (username + ID), Country (+ code), Number, OTP, Price (₹), Status pill
 - Reload button
 
 ### 5. 💳 Recharge Tab
 - Combined list of `transactions` + `crypto_invoices`
 - Columns: Time (IST), User, Method (UPI / BINANCE / CRYPTO), Amount, Status, Order/Track ID
-- FamPay ko UI me "UPI" dikhaya jaata hai (unified branding)
-- Username lookup automatic (numeric + string + ObjectId forms match karke)
+- FamPay is shown as "UPI" in the UI (unified branding)
+- Username lookup is automatic (matches numeric + string + ObjectId forms)
 
 ### 6. ⚙️ Settings Tab
 
 #### 🛠️ Maintenance Mode
 - One-tap on/off toggle
-- Custom maintenance message (500 char max)
-- "Last updated by admin · timestamp" dikhata hai
-- On karne pe users ko poora store blocked dikhta hai (login + purchase + recharge sab); admin panel chalu rehta hai.
+- Custom maintenance message (max 500 chars)
+- Shows "Last updated by admin · timestamp"
+- When enabled, users see the whole store blocked (login + purchase + recharge); the admin panel stays live.
 
 #### 💳 Payment Gateways
-- **UPI Gateway switch:** UPI / FamPay / Disable — teeno buttons me se ek select. Yeh bot ke `/paymentsettings` ke equivalent hai.
+- **UPI Gateway switch:** UPI / FamPay / Disable — select one of the three buttons. This is equivalent to the bot's `/paymentsettings`.
 - **Binance Pay toggle** (on/off) + Pay ID/QR preview
 - **Crypto (OxaPay) toggle** — ₹90/USDT, min 0.1 USDT, 30 min expiry
-- Env se UPI_ID, FAMPAY_UPI, BINANCE_PAY_ID, BINANCE_QR_URL display hote hain with copy buttons
-- Changes DB `settings.payment_gateways` me save hote hain → bot + website dono pe turant lagu
+- Displays UPI_ID, FAMPAY_UPI, BINANCE_PAY_ID, BINANCE_QR_URL from the environment with copy buttons
+- Changes are saved to DB `settings.payment_gateways` → applied instantly to both bot and website
 
 #### 📡 TG-Lion Provider
-- Active provider always **TG-Lion** (TGPVA ab supported nahi)
-- **Profit Margin %** input — provider price ke upar add hota hai (Example: 20 = +20%). Yeh `/api/countries` ke prices aur purchase pricing dono ko affect karta hai.
-- `settings.server_config.s2_profit` me save hota hai
+- The active provider is always **TG-Lion** (TGPVA is no longer supported)
+- **Profit Margin %** input — added on top of the provider price (e.g. 20 = +20%). It affects both `/api/countries` prices and purchase pricing.
+- Saved to `settings.server_config.s2_profit`
 
 #### Logout button
-- Session token DB + browser dono se delete
+- Deletes the session token from both DB and browser
 
 ### Admin Mobile UX
-- Sidebar 820px se niche bottom nav me convert ho jaati hai (6 tabs)
-- Tables horizontally scroll hote hain chhoti screen pe
-- Auto-refresh every 20 seconds on Overview tab
+- Below 820px the sidebar converts to a bottom nav (6 tabs)
+- Tables scroll horizontally on small screens
+- Auto-refreshes every 20 seconds on the Overview tab
 
 ---
 
 ## 🔌 API Endpoints Reference
 
 ### Public / User APIs
-| Method | Endpoint | Kaam |
+| Method | Endpoint | Purpose |
 |---|---|---|
-| GET | `/api/status` | Maintenance status (website har 30s poll karti hai) |
+| GET | `/api/status` | Maintenance status (website polls every 30s) |
 | GET | `/api/countries` | Live countries with stock + price from TG-Lion |
 | POST | `/api/login` | Login (identifier + method + password) |
 | POST | `/api/account?action=register` | Email/phone registration |
-| GET/POST | `/api/account?action=bot-connect` | Bot connect token create / status check |
-| POST | `/api/account?action=change-password` | Password update |
+| GET/POST | `/api/account?action=bot-connect` | Create bot-connect token / check status |
+| POST | `/api/account?action=change-password` | Update password |
 | GET | `/api/dashboard?userId=` | Balance, orders, total stats |
 | POST | `/api/buy` | Purchase number `{userId, country_code}` |
 | POST | `/api/code` | Get OTP `{userId, number}` |
 | GET | `/api/recharge?action=settings` | Available payment methods |
 | GET | `/api/recharge?action=history&userId=` | Last 10 paid recharges |
-| POST | `/api/recharge?action=create` | UPI/FamPay/Crypto/Binance invoice create |
-| POST | `/api/recharge?action=verify` | Payment verify + balance credit |
+| POST | `/api/recharge?action=create` | Create UPI/FamPay/Crypto/Binance invoice |
+| POST | `/api/recharge?action=verify` | Verify payment + credit balance |
 | GET | `/api/qr_proxy?url=&dl=` | QR image proxy (display + download) |
 
 ### Admin APIs (Bearer token required)
-| Method | Endpoint | Kaam |
+| Method | Endpoint | Purpose |
 |---|---|---|
 | POST | `/api/admin_login` | `{id, password}` → token |
 | GET | `/api/admin?action=overview` | Dashboard stats + recent logs |
@@ -240,17 +240,17 @@ Neeche **Recent Activity** feed (last 25 logs) — login, buy, OTP, recharge sab
 | GET/POST | `/api/admin?action=maintenance` | Get / toggle maintenance |
 | GET/POST | `/api/admin?action=payments` | Get / update gateway settings |
 | GET/POST | `/api/admin?action=server_config` | TG-Lion profit % |
-| POST | `/api/admin?action=logout` | Session destroy |
+| POST | `/api/admin?action=logout` | Destroy session |
 
 ---
 
 ## 🗄️ MongoDB Collections
 
-Database name: **`TGAStoreBot`** (bot.py bhi same use karta hai).
+Database name: **`TGAStoreBot`** (also used by `bot.py`).
 
 | Collection | Purpose |
 |---|---|
-| `users` | `_id` (numeric Telegram ID ya ObjectId), `telegram_id`, `username`, `email`, `phone`, `balance` (INR), `password_hash`, `bot_connected`, `created_at`, `joined_at` |
+| `users` | `_id` (numeric Telegram ID or ObjectId), `telegram_id`, `username`, `email`, `phone`, `balance` (INR), `password_hash`, `bot_connected`, `created_at`, `joined_at` |
 | `orders` | `user_id`, `country`, `country_code`, `number`, `otp`, `pass`, `price` (INR), `provider_price` (USD), `status` (`purchased`/`completed`), `provider`, `created_at`, `code_at` |
 | `transactions` | UPI/FamPay/Binance recharges: `_id` (order id), `user_id`, `method`, `amount`, `status` (`pending`/`paid`), `created_at`, `settled_at`, `expires_at`, `claimed_txn` |
 | `crypto_invoices` | OxaPay invoices: `user_id`, `track_id`, `order_id`, `amount_usdt`, `amount_inr`, `status`, `payment_url`, `created_at` |
@@ -263,7 +263,7 @@ Database name: **`TGAStoreBot`** (bot.py bhi same use karta hai).
 
 ## ⚙️ Environment Variables
 
-Vercel project me ye sab set karne hain. **Koi bhi real password / API key yahan nahi likhi — apne values daalo.**
+Set all of these in the Vercel project. **No real password or API key is written here — use your own values.**
 
 ### Database
 | Var | Description |
@@ -274,12 +274,12 @@ Vercel project me ye sab set karne hain. **Koi bhi real password / API key yahan
 | Var | Description |
 |---|---|
 | `ADMIN_ID` | Admin username (default `admin`) |
-| `ADMIN_PASSWORD` | Admin password — **production me strong rakho, default mat chhodo** |
+| `ADMIN_PASSWORD` | Admin password — **use a strong password in production, never keep the default** |
 
 ### Telegram Bot
 | Var | Description |
 |---|---|
-| `BOT_TOKEN` | Telegram bot token (sales/admin/buyer notifications ke liye) |
+| `BOT_TOKEN` | Telegram bot token (for sales/admin/buyer notifications) |
 | `SALES_CHAT_ID` / `SALES` | Public sales channel (e.g. `-1002254383562`) |
 | `ADMIN_LOG_CHAT_ID` / `ADMINLOG` | Private admin log group (e.g. `-1003441797589`) |
 | `BOT_USERNAME` / `BOTUSER` | Bot username without @ (e.g. `TGAStore1Bot`) |
@@ -296,8 +296,8 @@ Vercel project me ye sab set karne hain. **Koi bhi real password / API key yahan
 |---|---|
 | `UPI_API_KEY` | UPI payment link API key |
 | `UPI_API_URL` | UPI API endpoint (default `https://bot.jackdev.tech/paymentlinkbot/api.php`) |
-| `UPI_ID` | UPI ID jo users ko dikhta hai (copy-able) |
-| `DEFAULT_INR_GATEWAY` | `upi` ya `fampay` (admin panel se override ho sakta hai) |
+| `UPI_ID` | UPI ID shown to users (copy-able) |
+| `DEFAULT_INR_GATEWAY` | `upi` or `fampay` (can be overridden from the admin panel) |
 
 ### FamPay
 | Var | Description |
@@ -310,9 +310,9 @@ Vercel project me ye sab set karne hain. **Koi bhi real password / API key yahan
 ### Binance Pay
 | Var | Description |
 |---|---|
-| `BINANCE_PAY_ID` | Binance Pay ID (users ko dikhta hai) |
+| `BINANCE_PAY_ID` | Binance Pay ID (shown to users) |
 | `BINANCE_QR_URL` | Binance QR image URL |
-| `BINANCE_API_KEY` | Binance API key (verify ke liye) |
+| `BINANCE_API_KEY` | Binance API key (for verification) |
 | `BINANCE_SECRET` | Binance API secret |
 
 ### OxaPay (Crypto)
@@ -320,51 +320,51 @@ Vercel project me ye sab set karne hain. **Koi bhi real password / API key yahan
 |---|---|
 | `OXAPAY_API_KEY` | OxaPay merchant API key |
 
-> **Note:** Recharge rate `USDT_TO_INR = 90` aur `MIN_USDT = 0.1` code me constant hain (`lib/payments.js`). Badalna ho to wahan edit karo.
+> **Note:** The recharge rate `USDT_TO_INR = 90` and `MIN_USDT = 0.1` are constants in the code (`lib/payments.js`). Edit them there if you need to change them.
 
 ---
 
 ## 🚀 Deployment (Vercel)
 
-1. GitHub repo ko Vercel se connect karo.
+1. Connect the GitHub repo to Vercel.
 2. Framework preset: **Other** (plain static + functions).
-3. Build command: khaali (koi build nahi).
-4. Output directory: khaali / root.
-5. Saari environment variables upar wali table ke hisaab se Vercel dashboard me daalo.
-6. Deploy. `vercel.json` automatically `/admin` → `/admin.html` route kar deta hai.
-7. `api/` ke saare files automatically serverless functions ban jaate hain.
+3. Build command: leave empty (no build).
+4. Output directory: leave empty / root.
+5. Add all environment variables listed above in the Vercel dashboard.
+6. Deploy. `vercel.json` automatically routes `/admin` → `/admin.html`.
+7. All files in `api/` automatically become serverless functions.
 
 ### Local dev
 ```bash
 npm install
-vercel dev          # agar Vercel CLI hai
-# ya sirf static files kisi bhi static server se serve karo (api functions ke liye Vercel env chahiye)
+vercel dev          # if you have the Vercel CLI
+# or just serve the static files with any static server (api functions need the Vercel env)
 ```
 
 ---
 
 ## 🤖 Telegram Bot Integration (`bot.py`)
 
-Website aur bot ek hi MongoDB database share karte hain. `BOT_PATCH_INSTRUCTIONS.md` me ye patches hain jo bot ke andar daalne hain (manually):
+The website and bot share the same MongoDB database. `BOT_PATCH_INSTRUCTIONS.md` contains the patches that must be pasted into the bot (manually):
 
-- `/start register` aur `/start login` handlers — website account ke liye strong password generate karke user ko DM + admin log
-- `/start connect_<token>` — website Settings → Bot Connect se generate link ko accept karta hai, user ka `telegram_id` link karta hai
+- `/start register` and `/start login` handlers — generate a strong password for the website account and DM it to the user + log to admin
+- `/start connect_<token>` — accepts a link generated from Website Settings → Bot Connect and links the user's `telegram_id`
 - `/changepassword old new` command
-- `users.password_hash` (bcrypt), `users.telegram_id`, `users.bot_connected` fields use hote hain
-- Website purchase pe bot automatically sales channel, admin log, aur buyer DM bhej deti hai (alag se bot code ki zaroorat nahi)
+- Uses the `users.password_hash` (bcrypt), `users.telegram_id`, `users.bot_connected` fields
+- The website automatically sends the sales channel, admin log, and buyer DM on purchase (no extra bot code needed)
 
-Bot ko restart karna padta hai patches paste karne ke baad.
+The bot must be restarted after pasting the patches.
 
 ---
 
 ## 💰 Pricing & Money Logic
 
-- **Wallet balance INR me store hota hai** (`users.balance`).
-- **Display currency** user select karta hai: USD / INR / USDT. Conversion: ₹100 = $1 = 1 USDT (`INR_PER_USDT = 100`).
-- **Provider price** TG-Lion se USD me aata hai (e.g. 0.45).
+- **Wallet balance is stored in INR** (`users.balance`).
+- **Display currency** is selected by the user: USD / INR / USDT. Conversion: ₹100 = $1 = 1 USDT (`INR_PER_USDT = 100`).
+- **Provider price** comes from TG-Lion in USD (e.g. 0.45).
 - **Selling price** = provider USD × 1.20 (20% markup) → × 100 = INR. Example: 0.45 × 1.20 = 0.54 USD = **₹54.00**.
-- **Admin profit margin** (Settings → TG-Lion) provider price ke upar extra % add karta hai before the 20% selling markup — dono combine hote hain.
-- **Crypto recharge** pe 1 USDT = ₹90 wallet credit (provider rate alag, selling rate alag).
+- **Admin profit margin** (Settings → TG-Lion) adds an extra % on top of the provider price before the 20% selling markup — the two are combined.
+- On **Crypto recharge**, 1 USDT = ₹90 wallet credit (the provider rate and selling rate differ).
 
 ---
 
@@ -372,28 +372,28 @@ Bot ko restart karna padta hai patches paste karne ke baad.
 
 | Problem | Check |
 |---|---|
-| "Could not load history" recharge me | `/api/recharge` logs dekho — ab sahi error message ata hai. Mostly MONGODB_URI ya user resolution issue. |
-| Countries nahi dikh rahe | `TG_LION_API_KEY` + `TG_LION_YOUR_ID` env set hai? TG-Lion API reachable hai? |
-| Buy "Insufficient balance" | User ka `users.balance` INR me hai; price ₹ me charge hoti hai. Old orders me <20 values USD treat hoti hain. |
-| UPI QR nahi dikh raha | `UPI_API_KEY` set hai? `/api/qr_proxy` logs dekho — upstream image block to nahi kar raha. |
-| OTP nahi aa raha | TG-Lion balance check karo (`checkS2ApiBalance`). Number status "Received" hone do. |
-| Admin login invalid | `ADMIN_ID` / `ADMIN_PASSWORD` env vars match karo. `sessions` collection me stale token nahi hona chahiye. |
-| Maintenance hat nahi raha | `settings` collection me `_id: "maintenance"` doc delete kar do ya admin panel se toggle karo. |
-| Login "Database connection error" | MONGODB_URI missing / Atlas IP allowlist / network issue. |
+| "Could not load history" in recharge | Check the `/api/recharge` logs — the real error message is now shown. Usually an MONGODB_URI or user resolution issue. |
+| Countries not showing | Are `TG_LION_API_KEY` + `TG_LION_YOUR_ID` env vars set? Is the TG-Lion API reachable? |
+| Buy says "Insufficient balance" | The user's `users.balance` is in INR; the price is charged in ₹. Old orders with values <20 are treated as USD. |
+| UPI QR not showing | Is `UPI_API_KEY` set? Check `/api/qr_proxy` logs — is the upstream blocking the image? |
+| OTP not arriving | Check TG-Lion balance (`checkS2ApiBalance`). Wait for the number status to become "Received". |
+| Admin login invalid | Do `ADMIN_ID` / `ADMIN_PASSWORD` env vars match? There should be no stale token in the `sessions` collection. |
+| Maintenance won't turn off | Delete the `_id: "maintenance"` doc in the `settings` collection, or toggle it from the admin panel. |
+| Login says "Database connection error" | MONGODB_URI is missing / Atlas IP allowlist / network issue. |
 
 ---
 
 ## 🔒 Security Notes
 
-- User passwords hamesha bcrypt (`SALT_ROUNDS = 10`) se hash hote hain; plain text kabhi store nahi hota (legacy auto-migrate hota hai).
-- Admin session tokens 32-byte random hex hote hain; 7 din baad invalidate.
-- Saare APIs CORS `*` allow karte hain (public read APIs) lekin admin actions Bearer token maangte hain.
-- QR proxy sirf `http`/`https` URLs fetch karta hai; content-type image hi hone chahiye.
-- Maintenance mode on karne pe login/buy/recharge/dashboard sab 503 dete hain — sirf admin panel aur `/api/status` chalu rehte hain.
-- **Production me hamesha:** `ADMIN_PASSWORD` strong rakho, default `adminlogin123` ko replace karo, MONGODB_URI ko Vercel env me hi rakho (code me commit mat karo).
+- User passwords are always hashed with bcrypt (`SALT_ROUNDS = 10`); plain text is never stored (legacy passwords are auto-migrated).
+- Admin session tokens are 32-byte random hex; they expire after 7 days.
+- All APIs allow CORS `*` (public read APIs), but admin actions require a Bearer token.
+- The QR proxy only fetches `http`/`https` URLs; the content-type must be an image.
+- When maintenance mode is on, login/buy/recharge/dashboard all return 503 — only the admin panel and `/api/status` stay live.
+- **Always in production:** use a strong `ADMIN_PASSWORD`, replace the default `adminlogin123`, and keep MONGODB_URI in Vercel env only (never commit it in code).
 
 ---
 
 ## 📝 Editing This README
 
-Is file ko apne hisaab se edit kar sakte ho — URLs, support links, Telegram channel (@tgaforu / @OfcCuteSmile / @TGAStore1Bot), prices, ya naye features add karne ho to yahi update kar do. **Sirf passwords / API keys / Bot token is file me kabhi mat likho** — woh hamesha Vercel environment variables me raho.
+Feel free to edit this file as needed — update URLs, support links, the Telegram channel (@tgaforu / @OfcCuteSmile / @TGAStore1Bot), prices, or add new features here. **Never write passwords / API keys / the bot token in this file** — always keep them in Vercel environment variables.
