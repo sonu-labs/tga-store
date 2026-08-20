@@ -8,6 +8,7 @@ const { getCountryInfo: getTgLionCountryInfo, getNumber: getTgLionNumber } = req
 const { sellingPriceInr } = require("../lib/money");
 const { getMaintenance, logEvent } = require("../lib/site");
 const { fetchServer2Countries, checkS2ApiBalance } = require("../lib/server2");
+const { notifyWebsitePurchase } = require("../lib/notify");
 
 function getCountryCode(value) {
   const code = String(value ?? "").trim().toUpperCase();
@@ -224,6 +225,24 @@ module.exports = async function handler(req, res) {
       number: purchased.Number,
       price: chargeInr
     });
+
+    // Fire Telegram notifications (sales channel + admin log + buyer DM).
+    // Fire-and-forget: never block the API response on Telegram latency,
+    // and never fail the purchase if Telegram is momentarily unreachable.
+    try {
+      const buyer = user || (await db.collection("users").findOne({ _id: telegramId })) || {};
+      notifyWebsitePurchase({
+        userId: telegramId,
+        username: buyer.username || "",
+        country: order.country,
+        countryCode: countryCode,
+        number: purchased.Number,
+        price: chargeInr,
+        balance: Number(user?.balance || 0),
+      }).catch((e) => console.error("notifyWebsitePurchase error:", e));
+    } catch (e) {
+      console.error("notify hook error:", e);
+    }
 
     return res.status(200).json({
       success: true,
