@@ -1,4 +1,5 @@
-const { getDatabase, readJsonBody, setCors } = require("../lib/db");
+const { getDatabase, readJsonBody, setCors, findUserByAny, findUserById, resolveUserId } = require("../lib/db");
+const { ObjectId } = require("mongodb");
 const { getMaintenance, logEvent } = require("../lib/site");
 const {
   getPaymentSettings,
@@ -15,6 +16,49 @@ const {
 
 const UPI_INVOICE_EXPIRY_MIN = 60;
 const HISTORY_LIMIT = 10;
+
+/*
+  Recharge operations must work for both:
+   • legacy Telegram users whose `users._id` is the numeric Telegram ID and
+     whose transactions/crypto_invoices are stored against that number, and
+   • website-registered (email/phone) users whose `users._id` is an ObjectId
+     but who later linked a Telegram account (telegram_id set).
+
+  The recharge frontend only ever knows the website `userId` (the string the
+  login API returns), so resolving it to the right set of identifiers before
+  querying transaction/crypto_invoice collections is essential.
+*/
+async function resolveRechargeUser(db, rawIdentifier) {
+  const raw = String(rawIdentifier || "").trim();
+  if (!raw) return null;
+
+  let user = await findUserByAny(db, raw);
+  if (!user) user = await findUserById(db, raw);
+  if (!user) {
+    // Last-resort: a raw numeric Telegram ID not yet present in users.
+    if (/^\d+$/.test(raw)) {
+      return { user: null, telegramId: Number(raw), userIdString: raw, idCandidates: [Number(raw), raw] };
+    }
+    return null;
+  }
+
+  const telegramId = user.telegram_id || (typeof user._id === "number" ? user._id : null);
+  const userIdString = resolveUserId(user);
+
+  const idCandidates = [];
+  if (telegramId !== null && telegramId !== undefined) {
+    idCandidates.push(telegramId);
+    idCandidates.push(String(telegramId));
+  }
+  idCandidates.push(user._id);
+  idCandidates.push(userIdString);
+  if (user._id instanceof ObjectId) idCandidates.push(user._id.toHexString());
+  else if (/^[a-fA-F0-9]{24}$/.test(userIdString)) {
+    try { idCandidates.push(new ObjectId(userIdString)); } catch {}
+  }
+
+  return { user, telegramId, userIdString, idCandidates };
+}
 
 module.exports = async function handler(req, res) {
   setCors(res, "GET, POST, OPTIONS");
@@ -66,20 +110,20 @@ module.exports = async function handler(req, res) {
 
     if (req.method === "GET" && action === "history") {
       const _rawHist = String(req.query.userId || req.query.telegramId || req.query.user_id || body.userId || body.telegramId || "").trim();
-      const _uHist = await resolveUserForRecharge(db, _rawHist);
+      const _uHist = await resolveRechargeUser(db, _rawHist);
       if (!_uHist) return res.status(400).json({ success: false, message: "Invalid user." });
-      const telegramId = _uHist._id;
-      const telegramIdStr = resolveUserId(_uHist);
-      if (telegramId === null) {
-        return res.status(400).json({ success: false, message: "Invalid Telegram ID." });
-      }
+      // idCandidates covers both legacy numeric Telegram ids and website
+      // ObjectId/string ids, so website users who later linked a Telegram
+      // account see all of their recharges (not just ones created after
+      // linking).
+      const userFilter = { user_id: { $in: _uHist.idCandidates }, status: "paid" };
       const txns = await db.collection("transactions")
-        .find({ user_id: telegramId, status: "paid" })
+        .find(userFilter)
         .sort({ settled_at: -1, created_at: -1 })
         .limit(HISTORY_LIMIT)
         .toArray();
       const cryptos = await db.collection("crypto_invoices")
-        .find({ user_id: telegramId, status: "paid" })
+        .find(userFilter)
         .sort({ settled_at: -1, created_at: -1 })
         .limit(HISTORY_LIMIT)
         .toArray();
@@ -92,7 +136,6 @@ module.exports = async function handler(req, res) {
           status: tx.status,
           order_id: String(tx._id),
           date: tx.settled_at || tx.created_at,
-          raw: tx,
         });
       }
       for (const c of cryptos) {
@@ -104,7 +147,6 @@ module.exports = async function handler(req, res) {
           order_id: String(c.track_id || c._id),
           track_id: String(c.track_id),
           date: c.settled_at || c.created_at,
-          raw: c,
         });
       }
       combined.sort((a, b) => {
@@ -124,17 +166,13 @@ module.exports = async function handler(req, res) {
     // POST create
     if (req.method === "POST" && (action === "create" || action === "create_upi" || action === "create_fampay" || action === "create_crypto" || action === "create_binance")) {
       const _rawCreate = String(body.userId || body.telegramId || body.telegram_id || req.query.userId || req.query.telegramId || "").trim();
-      const _uCreate = await resolveUserForRecharge(db, _rawCreate);
-      if (!_uCreate) return res.status(400).json({ success: false, message: "Invalid user. Login again." });
-      const telegramId = _uCreate._id;
-      const telegramIdStr = resolveUserId(_uCreate);
-      if (telegramId === null) {
-        return res.status(400).json({ success: false, message: "Invalid Telegram ID." });
-      }
-      const user = await db.collection("users").findOne({ _id: telegramId });
-      if (!user) {
-        return res.status(404).json({ success: false, message: "User not found. Start the bot first." });
-      }
+      const _uCreate = await resolveRechargeUser(db, _rawCreate);
+      if (!_uCreate || !_uCreate.user) return res.status(400).json({ success: false, message: "Invalid user. Login again." });
+      // For DB writes on transactions/crypto_invoices/user balance we use the
+      // canonical users._id value. Legacy numeric Telegram users keep using the
+      // same numeric id they always have; website users keep their ObjectId.
+      const user = _uCreate.user;
+      const telegramId = user._id;
       const settings = await getPaymentSettings(db);
       let method = String(body.method || body.type || "").toLowerCase();
       // infer from action if not provided
@@ -297,13 +335,15 @@ module.exports = async function handler(req, res) {
     // POST verify
     if (req.method === "POST" && (action === "verify" || action === "verify_upi" || action === "verify_fampay" || action === "verify_crypto" || action === "verify_binance")) {
       const _rawCreate = String(body.userId || body.telegramId || body.telegram_id || req.query.userId || req.query.telegramId || "").trim();
-      const _uCreate = await resolveUserForRecharge(db, _rawCreate);
-      if (!_uCreate) return res.status(400).json({ success: false, message: "Invalid user. Login again." });
-      const telegramId = _uCreate._id;
-      const telegramIdStr = resolveUserId(_uCreate);
-      if (telegramId === null) {
-        return res.status(400).json({ success: false, message: "Invalid Telegram ID." });
-      }
+      const _uCreate = await resolveRechargeUser(db, _rawCreate);
+      if (!_uCreate || !_uCreate.user) return res.status(400).json({ success: false, message: "Invalid user. Login again." });
+      const user = _uCreate.user;
+      // Canonical users._id used for all DB writes / ownership checks.
+      const telegramId = user._id;
+      // Accept invoices stored under ANY of the user's known identifiers
+      // (numeric Telegram id, string id, ObjectId, hex string).
+      const invoiceOwnerIds = _uCreate.idCandidates;
+      const ownsInvoice = (storedUserId) => invoiceOwnerIds.some((id) => String(id) === String(storedUserId));
       let method = String(body.method || body.type || "").toLowerCase();
       if (!method) {
         if (action === "verify_upi") method = "upi";
@@ -320,7 +360,7 @@ module.exports = async function handler(req, res) {
       if (method === "upi") {
         const tx = await db.collection("transactions").findOne({ _id: orderId });
         if (!tx) return res.status(404).json({ success: false, message: "Invoice not found." });
-        if (String(tx.user_id) !== String(telegramId)) return res.status(403).json({ success: false, message: "Not your invoice." });
+        if (!ownsInvoice(tx.user_id)) return res.status(403).json({ success: false, message: "Not your invoice." });
         if (tx.status === "paid") return res.status(200).json({ success: true, already: true, message: "Already credited!", amount: tx.amount, balance: (await db.collection("users").findOne({ _id: telegramId }))?.balance || 0 });
         if (tx.expires_at && new Date(tx.expires_at) < new Date()) {
           return res.status(410).json({ success: false, message: "Invoice expired." });
@@ -339,7 +379,7 @@ module.exports = async function handler(req, res) {
       if (method === "fampay") {
         const tx = await db.collection("transactions").findOne({ _id: orderId });
         if (!tx) return res.status(404).json({ success: false, message: "Invoice not found." });
-        if (String(tx.user_id) !== String(telegramId)) return res.status(403).json({ success: false, message: "Not your invoice." });
+        if (!ownsInvoice(tx.user_id)) return res.status(403).json({ success: false, message: "Not your invoice." });
         if (tx.status === "paid") return res.status(200).json({ success: true, already: true, message: "Already credited!", amount: tx.amount, balance: (await db.collection("users").findOne({ _id: telegramId }))?.balance || 0 });
         if (tx.expires_at && new Date(tx.expires_at) < new Date()) {
           return res.status(410).json({ success: false, message: "Invoice expired." });
@@ -362,7 +402,7 @@ module.exports = async function handler(req, res) {
         const tid = trackId || orderId;
         const inv = await db.collection("crypto_invoices").findOne({ track_id: tid });
         if (!inv) return res.status(404).json({ success: false, message: "Invoice not found." });
-        if (String(inv.user_id) !== String(telegramId)) return res.status(403).json({ success: false, message: "Not your invoice." });
+        if (!ownsInvoice(inv.user_id)) return res.status(403).json({ success: false, message: "Not your invoice." });
         if (inv.status === "paid") return res.status(200).json({ success: true, already: true, message: "Already credited!", amount: inv.amount_inr, balance: (await db.collection("users").findOne({ _id: telegramId }))?.balance || 0 });
         const apiRes = await checkOxaInvoice(tid);
         let remoteStatus = "unknown";
