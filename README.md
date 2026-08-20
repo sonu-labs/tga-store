@@ -111,7 +111,8 @@ tga-store/
 - Any gateway can be turned on/off live from the admin panel — changes reflect instantly.
 
 ### 6. Orders Page
-- List of all purchases (country, number, OTP, date, price, status)
+- List of all purchases (country, number, OTP, password, date, price, status)
+- 📩 **Get OTP** button on every order — select the account you bought and tap it to fetch the OTP/password from TG-Lion without leaving the page. Works for both the success modal and any past order in the history.
 - Status: `purchased` (in progress / OTP pending) → `completed` (OTP received)
 - Dates shown in IST (`Asia/Kolkata`)
 
@@ -221,7 +222,7 @@ Below it is a **Recent Activity** feed (last 25 logs) — login, buy, OTP, and r
 | POST | `/api/account?action=change-password` | Update password |
 | GET | `/api/dashboard?userId=` | Balance, orders, total stats |
 | POST | `/api/buy` | Purchase number `{userId, country_code}` |
-| POST | `/api/code` | Get OTP `{userId, number}` |
+| POST | `/api/code` | Get OTP `{userId, number, orderId?}` |
 | GET | `/api/recharge?action=settings` | Available payment methods |
 | GET | `/api/recharge?action=history&userId=` | Last 10 paid recharges |
 | POST | `/api/recharge?action=create` | Create UPI/FamPay/Crypto/Binance invoice |
