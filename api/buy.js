@@ -1,8 +1,9 @@
 const {
   getDatabase,
-  getTelegramId,
   readJsonBody,
-  setCors
+  setCors,
+  findUserById,
+  resolveUserId,
 } = require("../lib/db");
 const { getCountryInfo: getTgLionCountryInfo, getNumber: getTgLionNumber } = require("../lib/tglion");
 const { sellingPriceInr } = require("../lib/money");
@@ -41,20 +42,30 @@ module.exports = async function handler(req, res) {
 
   try {
     const body = readJsonBody(req);
-    const telegramId = getTelegramId(body.telegramId);
+    const rawUser = String(body.userId || body.telegramId || body.identifier || "").trim();
     const countryCode = getCountryCode(
       body.country_code || body.countryCode || body.code
     );
 
-    attemptedUserId = telegramId;
     attemptedCountryCode = countryCode;
 
-    if (telegramId === null) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid Telegram ID."
-      });
+    if (!rawUser) {
+      return res.status(400).json({ success: false, message: "Missing user. Please login again." });
     }
+    const db0 = await getDatabase();
+    let lookupUser = await findUserById(db0, rawUser);
+    if (!lookupUser && /^\d+$/.test(rawUser)) lookupUser = await db0.collection("users").findOne({ _id: Number(rawUser) });
+    if (!lookupUser && rawUser.includes("@")) lookupUser = await db0.collection("users").findOne({ email: rawUser.toLowerCase() });
+    if (!lookupUser && rawUser.startsWith("+")) lookupUser = await db0.collection("users").findOne({ phone: rawUser });
+    if (!lookupUser) {
+      return res.status(404).json({ success: false, message: "User not found. Please login again." });
+    }
+    const telegramId = lookupUser.telegram_id || (typeof lookupUser._id === "number" ? lookupUser._id : null);
+    // Use the actual _id for balance deduction to support both numeric and ObjectId users
+    const userPrimaryId = lookupUser._id;
+    const userIdForOrder = telegramId !== null ? telegramId : resolveUserId(lookupUser);
+
+    attemptedUserId = userPrimaryId;
 
     if (!countryCode) {
       return res.status(400).json({
@@ -134,7 +145,7 @@ module.exports = async function handler(req, res) {
 
     const updatedUser = await users.findOneAndUpdate(
       {
-        _id: telegramId,
+        _id: userPrimaryId,
         balance: { $gte: chargeInr }
       },
       {
@@ -149,7 +160,7 @@ module.exports = async function handler(req, res) {
     const user = updatedUser?.value || null;
 
     if (!user) {
-      const existing = await users.findOne({ _id: telegramId });
+      const existing = await users.findOne({ _id: userPrimaryId });
 
       if (!existing) {
         await logEvent(db, {
@@ -157,12 +168,12 @@ module.exports = async function handler(req, res) {
           status: "failed",
           user_id: telegramId,
           country_code: countryCode,
-          message: "No account found for this Telegram ID."
+          message: "No account found."
         });
 
         return res.status(404).json({
           success: false,
-          message: "No account found for this Telegram ID. Start the bot first with /start."
+          message: "No account found. Please login again."
         });
       }
 
@@ -181,7 +192,7 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    chargedUserId = telegramId;
+    chargedUserId = userPrimaryId;
     chargedAmount = chargeInr;
 
     // Purchase via TG-Lion (only provider used by the website)
@@ -195,7 +206,7 @@ module.exports = async function handler(req, res) {
     }
 
     const order = {
-      user_id: telegramId,
+      user_id: userIdForOrder,
       country: purchased.name || country.name,
       country_code: countryCode,
       number: purchased.Number,
@@ -230,9 +241,10 @@ module.exports = async function handler(req, res) {
     // Fire-and-forget: never block the API response on Telegram latency,
     // and never fail the purchase if Telegram is momentarily unreachable.
     try {
-      const buyer = user || (await db.collection("users").findOne({ _id: telegramId })) || {};
+      const buyer = user || (await db.collection("users").findOne({ _id: userPrimaryId })) || {};
+      const notifyId = telegramId || userPrimaryId;
       notifyWebsitePurchase({
-        userId: telegramId,
+        userId: notifyId,
         username: buyer.username || "",
         country: order.country,
         countryCode: countryCode,

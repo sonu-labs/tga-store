@@ -1215,52 +1215,59 @@ body.light .nav-btn.active{
       Telegram Account Store
     </div>
 
-    <div class="welcome-text">
-      Welcome Back
+    <div style="display:flex;gap:8px;margin-top:22px">
+      <button id="tabLogin" type="button" onclick="switchAuthTab('login')" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-weight:800">Login</button>
+      <button id="tabRegister" type="button" onclick="switchAuthTab('register')" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted);font-weight:800">Register</button>
     </div>
 
-    <div class="welcome-sub">
-      Login with your Telegram ID
+    <div id="loginFormArea" style="text-align:left;margin-top:18px">
+      <div style="display:flex;gap:6px;margin-bottom:12px">
+        <button type="button" onclick="setLoginMethod('telegram')" id="lmTelegram" class="secondary-btn" style="flex:1;padding:8px;font-size:12px;background:var(--surface2)">✈️ Telegram</button>
+        <button type="button" onclick="setLoginMethod('email')" id="lmEmail" class="secondary-btn" style="flex:1;padding:8px;font-size:12px">📧 Email</button>
+        <button type="button" onclick="setLoginMethod('phone')" id="lmPhone" class="secondary-btn" style="flex:1;padding:8px;font-size:12px">📱 Phone</button>
+      </div>
+      <div id="telegramLoginBox">
+        <a href="https://t.me/TGAStore1Bot?start=login" target="_blank" rel="noopener" class="primary-btn" style="display:block;text-align:center;text-decoration:none;margin-top:0">✈️ Login via Telegram Bot</a>
+        <div style="text-align:center;color:var(--muted);font-size:12px;margin:10px 0">— or login with Telegram ID + password —</div>
+        <div class="field-label">Telegram User ID</div>
+        <input id="telegramIdInput" class="field-input" type="text" inputmode="numeric" autocomplete="username" placeholder="e.g. 7888066934">
+      </div>
+      <div id="emailLoginBox" class="hidden">
+        <div class="field-label">Email</div>
+        <input id="loginEmailInput" class="field-input" type="email" placeholder="you@example.com">
+      </div>
+      <div id="phoneLoginBox" class="hidden">
+        <div class="field-label">Phone</div>
+        <input id="loginPhoneInput" class="field-input" type="tel" placeholder="+919876543210">
+      </div>
+      <div class="field-label">Password</div>
+      <input id="passwordInput" class="field-input" type="password" autocomplete="current-password" placeholder="Enter password">
+      <button id="loginBtn" class="login-btn" type="button" onclick="handleLogin()">Login Now</button>
+      <div style="text-align:center;margin-top:10px"><a href="https://t.me/TGAStore1Bot?start=register" target="_blank" rel="noopener" style="color:var(--muted);font-size:12px">New here? Register via Telegram Bot →</a></div>
     </div>
 
-    <div class="field-label">
-      Telegram User ID
+    <div id="registerFormArea" class="hidden" style="text-align:left;margin-top:18px">
+      <div style="display:flex;gap:6px;margin-bottom:12px">
+        <button type="button" onclick="setRegisterMethod('email')" id="rmEmail" class="secondary-btn" style="flex:1;padding:8px;font-size:12px;background:var(--surface2)">📧 Email</button>
+        <button type="button" onclick="setRegisterMethod('phone')" id="rmPhone" class="secondary-btn" style="flex:1;padding:8px;font-size:12px">📱 Phone</button>
+        <a href="https://t.me/TGAStore1Bot?start=register" target="_blank" rel="noopener" class="secondary-btn" style="flex:1;padding:8px;font-size:12px;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center">✈️ Telegram</a>
+      </div>
+      <div class="field-label">Username</div>
+      <input id="regUsernameInput" class="field-input" type="text" placeholder="Your display name">
+      <div id="regEmailBox">
+        <div class="field-label">Email</div>
+        <input id="regEmailInput" class="field-input" type="email" placeholder="you@example.com">
+      </div>
+      <div id="regPhoneBox" class="hidden">
+        <div class="field-label">Phone</div>
+        <input id="regPhoneInput" class="field-input" type="tel" placeholder="+919876543210">
+      </div>
+      <div class="field-label">Password</div>
+      <input id="regPasswordInput" class="field-input" type="password" placeholder="Min 6 chars">
+      <button id="registerBtn" class="login-btn" type="button" onclick="handleRegister()">Create Account</button>
     </div>
 
-    <input
-      id="telegramIdInput"
-      class="field-input"
-      type="text"
-      inputmode="numeric"
-      autocomplete="username"
-      placeholder="e.g. 7888066934"
-    >
-
-    <div class="field-label">
-      Password
-    </div>
-
-    <input
-      id="passwordInput"
-      class="field-input"
-      type="password"
-      autocomplete="current-password"
-      placeholder="Enter password"
-    >
-
-    <button
-      id="loginBtn"
-      class="login-btn"
-      type="button"
-      onclick="handleLogin()"
-    >
-      Login Now
-    </button>
-
-    <div
-      id="loginError"
-      class="login-error"
-    ></div>
+    <div id="loginError" class="login-error"></div>
 
   </div>
 
@@ -1823,42 +1830,19 @@ body.light .nav-btn.active{
 
   <div class="settings-list">
 
-    <div
-      class="setting-item"
-      onclick="showComingSoon('Change Username')"
-    >
-
+    <div class="setting-item" onclick="openBotConnect()">
       <div class="setting-left">
-
-        <div class="setting-icon">
-          👤
-        </div>
-
+        <div class="setting-icon">🤖</div>
         <div>
-
-          <div class="setting-title">
-            Change Username
-          </div>
-
-          <div class="setting-sub">
-            Update your username
-          </div>
-
+          <div class="setting-title">Bot Connect <span id="botConnectDot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--red);margin-left:6px;vertical-align:middle"></span></div>
+          <div class="setting-sub" id="botConnectSub">Connect Telegram bot for purchase alerts</div>
         </div>
-
       </div>
-
-      <div class="setting-arrow">
-        ›
-      </div>
-
+      <div class="setting-arrow">›</div>
     </div>
 
+    <div class="setting-item" onclick="openChangePassword()">
 
-    <div
-      class="setting-item"
-      onclick="showComingSoon('Change Password')"
-    >
 
       <div class="setting-left">
 
@@ -2597,7 +2581,11 @@ const LOGO_URL =
    GLOBAL STATE
 ================================================== */
 
-let currentTelegramId = null;
+let currentUserId = null;
+let currentTelegramId = null; // backward compat alias
+let loginMethod = 'telegram';
+let registerMethod = 'email';
+let authTab = 'login';
 
 let dashboardData = null;
 
@@ -2859,13 +2847,65 @@ const COUNTRIES = [
    LOGIN
 ================================================== */
 
+function switchAuthTab(tab){
+  authTab = tab;
+  document.getElementById("loginFormArea").classList.toggle("hidden", tab!=="login");
+  document.getElementById("registerFormArea").classList.toggle("hidden", tab!=="register");
+  document.getElementById("tabLogin").style.background = tab==="login" ? "var(--surface2)" : "transparent";
+  document.getElementById("tabLogin").style.color = tab==="login" ? "var(--text)" : "var(--muted)";
+  document.getElementById("tabRegister").style.background = tab==="register" ? "var(--surface2)" : "transparent";
+  document.getElementById("tabRegister").style.color = tab==="register" ? "var(--text)" : "var(--muted)";
+  hideLoginError();
+}
+function setLoginMethod(m){
+  loginMethod=m;
+  document.getElementById("telegramLoginBox").classList.toggle("hidden", m!=="telegram");
+  document.getElementById("emailLoginBox").classList.toggle("hidden", m!=="email");
+  document.getElementById("phoneLoginBox").classList.toggle("hidden", m!=="phone");
+  ["lmTelegram","lmEmail","lmPhone"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    el.style.background = (id.toLowerCase().includes(m) ? "var(--surface2)" : "transparent");
+  });
+}
+function setRegisterMethod(m){
+  registerMethod=m;
+  document.getElementById("regEmailBox").classList.toggle("hidden", m!=="email");
+  document.getElementById("regPhoneBox").classList.toggle("hidden", m!=="phone");
+  document.getElementById("rmEmail").style.background = m==="email" ? "var(--surface2)" : "transparent";
+  document.getElementById("rmPhone").style.background = m==="phone" ? "var(--surface2)" : "transparent";
+}
+async function handleRegister(){
+  const username=document.getElementById("regUsernameInput").value.trim();
+  const email=document.getElementById("regEmailInput").value.trim();
+  const phone=document.getElementById("regPhoneInput").value.trim();
+  const password=document.getElementById("regPasswordInput").value;
+  const btn=document.getElementById("registerBtn");
+  hideLoginError();
+  if(!username || username.length<2){ showLoginError("Enter username (min 2 chars)."); return; }
+  if(registerMethod==="email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showLoginError("Enter valid email."); return; }
+  if(registerMethod==="phone" && !/^\+\d{7,15}$/.test(phone.replace(/\s/g,""))){ showLoginError("Enter valid phone e.g. +919876543210"); return; }
+  if(!password || password.length<6){ showLoginError("Password min 6 chars."); return; }
+  btn.disabled=true; btn.textContent="Creating...";
+  try{
+    const body={ method: registerMethod, username, password };
+    if(registerMethod==="email") body.email=email;
+    else body.phone=phone;
+    const response = await fetch("/api/account?action=register",{ method:"POST", headers:{"Content-Type":"application/json"}, cache:"no-store", body:JSON.stringify(body)});
+    const result=await response.json();
+    if(!response.ok || !result.success){ showLoginError(result.message||"Register failed."); return; }
+    showMessage("✅ Registered", "Account created! Now login with your credentials.");
+    switchAuthTab("login");
+    if(registerMethod==="email") { setLoginMethod("email"); document.getElementById("loginEmailInput").value=email; }
+    else { setLoginMethod("phone"); document.getElementById("loginPhoneInput").value=phone; }
+  }catch(e){ showLoginError("Unable to connect."); } finally{ btn.disabled=false; btn.textContent="Create Account"; }
+}
 async function handleLogin(){
 
-  const telegramId =
-    document
-      .getElementById("telegramIdInput")
-      .value
-      .trim();
+  let identifier="";
+  if(loginMethod==="telegram") identifier=document.getElementById("telegramIdInput").value.trim();
+  else if(loginMethod==="email") identifier=document.getElementById("loginEmailInput").value.trim();
+  else if(loginMethod==="phone") identifier=document.getElementById("loginPhoneInput").value.trim();
 
   const password =
     document
@@ -2877,10 +2917,10 @@ async function handleLogin(){
 
   hideLoginError();
 
-  if(!/^\d+$/.test(telegramId)){
+  if(!identifier){
 
     showLoginError(
-      "Enter a valid numeric Telegram ID."
+      loginMethod==="telegram" ? "Enter Telegram ID." : loginMethod==="email" ? "Enter email." : "Enter phone."
     );
 
     return;
@@ -2908,7 +2948,8 @@ async function handleLogin(){
         },
         cache:"no-store",
         body:JSON.stringify({
-          telegramId,
+          identifier,
+          method: loginMethod,
           password
         })
       });
@@ -2938,18 +2979,11 @@ async function handleLogin(){
       return;
     }
 
-    currentTelegramId =
-      String(result.user.telegramId);
-
-    localStorage.setItem(
-      "tga_telegram_id",
-      currentTelegramId
-    );
-
-    localStorage.setItem(
-      "tga_username",
-      result.user.username || "User"
-    );
+    currentUserId = String(result.user.userId || result.user.telegramId);
+    currentTelegramId = result.user.telegramId ? String(result.user.telegramId) : currentUserId;
+    localStorage.setItem("tga_user_id", currentUserId);
+    localStorage.setItem("tga_telegram_id", currentTelegramId);
+    localStorage.setItem("tga_username", result.user.username || "User");
 
     showDashboard();
 
@@ -2979,16 +3013,17 @@ async function handleLogin(){
 
 async function loadDashboardData(){
 
-  if(!currentTelegramId){
+  if(!currentUserId && !currentTelegramId){
     return;
   }
 
   try{
 
+    const uid = currentUserId || currentTelegramId;
     const response =
       await fetch(
-        "/api/dashboard?telegramId="+
-        encodeURIComponent(currentTelegramId)+
+        "/api/dashboard?userId="+
+        encodeURIComponent(uid)+
         "&t="+Date.now(),
         {
           method:"GET",
@@ -3824,7 +3859,7 @@ async function confirmPurchase(){
     return;
   }
 
-  if(!currentTelegramId){
+  if(!currentUserId && !currentTelegramId){
 
     showMessage(
       "Login Required",
@@ -3868,8 +3903,7 @@ async function confirmPurchase(){
           },
           cache:"no-store",
           body:JSON.stringify({
-            telegramId:
-              currentTelegramId,
+            userId: currentUserId || currentTelegramId,
 
             country_code:
               selectedCountry.code
@@ -4079,8 +4113,7 @@ async function getOTP(){
           },
           cache:"no-store",
           body:JSON.stringify({
-            telegramId:
-              currentTelegramId,
+            userId: currentUserId || currentTelegramId,
 
             number:number
           })
@@ -4472,7 +4505,7 @@ async function createUPIInvoice(){
       method:"POST",
       headers:{"Content-Type":"application/json"},
       cache:"no-store",
-      body:JSON.stringify({ telegramId: currentTelegramId, method:"upi", amount: amount })
+      body:JSON.stringify({ userId: (currentUserId||currentTelegramId), method:"upi", amount: amount })
     });
     const data = await res.json();
     if(!res.ok || !data.success) throw new Error(data.message||"Failed to generate QR.");
@@ -4517,7 +4550,7 @@ async function createFamPayInvoice(){
       method:"POST",
       headers:{"Content-Type":"application/json"},
       cache:"no-store",
-      body:JSON.stringify({ telegramId: currentTelegramId, method:"fampay" })
+      body:JSON.stringify({ userId: (currentUserId||currentTelegramId), method:"fampay" })
     });
     const data = await res.json();
     if(!res.ok || !data.success) throw new Error(data.message||"Failed to generate QR.");
@@ -4564,7 +4597,7 @@ async function createCryptoInvoice(){
       method:"POST",
       headers:{"Content-Type":"application/json"},
       cache:"no-store",
-      body:JSON.stringify({ telegramId: currentTelegramId, method:"crypto", amount: usdt })
+      body:JSON.stringify({ userId: (currentUserId||currentTelegramId), method:"crypto", amount: usdt })
     });
     const data = await res.json();
     if(!res.ok || !data.success) throw new Error(data.message||"Failed to generate invoice.");
@@ -4603,7 +4636,7 @@ async function verifyUPI(orderId){
       method:"POST",
       headers:{"Content-Type":"application/json"},
       cache:"no-store",
-      body:JSON.stringify({ telegramId: currentTelegramId, method:"upi", order_id: orderId })
+      body:JSON.stringify({ userId: (currentUserId||currentTelegramId), method:"upi", order_id: orderId })
     });
     const data = await res.json();
     if(data.success){
@@ -4631,7 +4664,7 @@ async function verifyFamPay(orderId){
       method:"POST",
       headers:{"Content-Type":"application/json"},
       cache:"no-store",
-      body:JSON.stringify({ telegramId: currentTelegramId, method:"fampay", order_id: orderId })
+      body:JSON.stringify({ userId: (currentUserId||currentTelegramId), method:"fampay", order_id: orderId })
     });
     const data = await res.json();
     if(data.success){
@@ -4659,7 +4692,7 @@ async function verifyCrypto(trackId){
       method:"POST",
       headers:{"Content-Type":"application/json"},
       cache:"no-store",
-      body:JSON.stringify({ telegramId: currentTelegramId, method:"crypto", track_id: trackId, order_id: trackId })
+      body:JSON.stringify({ userId: (currentUserId||currentTelegramId), method:"crypto", track_id: trackId, order_id: trackId })
     });
     const data = await res.json();
     if(data.success){
@@ -4691,7 +4724,7 @@ async function verifyBinanceFromInput(){
       method:"POST",
       headers:{"Content-Type":"application/json"},
       cache:"no-store",
-      body:JSON.stringify({ telegramId: currentTelegramId, method:"binance", order_id: orderId })
+      body:JSON.stringify({ userId: (currentUserId||currentTelegramId), method:"binance", order_id: orderId })
     });
     const data = await res.json();
     if(data.success){
@@ -4710,12 +4743,12 @@ async function verifyBinanceFromInput(){
 }
 
 async function loadRechargeHistory(){
-  if(!currentTelegramId) return;
+  if(!currentUserId && !currentTelegramId) return;
   const box = document.getElementById("rechargeHistoryList");
   if(!box) return;
   box.innerHTML = `<div class="loading"><div class="spinner"></div>Loading history...</div>`;
   try{
-    const res = await fetch("/api/recharge?action=history&telegramId="+encodeURIComponent(currentTelegramId)+"&t="+Date.now(),{ cache:"no-store" });
+    const res = await fetch("/api/recharge?action=history&userId="+encodeURIComponent(currentUserId||currentTelegramId)+"&t="+Date.now(),{ cache:"no-store" });
     const data = await res.json();
     if(!res.ok || !data.success) throw new Error(data.message||"Failed");
     const list = data.history || [];
@@ -4746,7 +4779,7 @@ async function loadRechargeHistory(){
 }
 
 async function initRechargePage(){
-  if(!currentTelegramId) return;
+  if(!currentUserId && !currentTelegramId) return;
   await loadRechargeSettings();
   renderRechargeMethods();
   await loadRechargeHistory();
@@ -4815,10 +4848,10 @@ function openPage(page){
   }
 
   if(page==="home"){
-
     loadDashboardData();
     loadCountries();
   }
+  if(page==="settings"){ refreshBotStatus(); }
 }
 
 
@@ -5010,14 +5043,10 @@ async function refreshCurrentPage(){
 
 function handleLogout(){
 
-  localStorage.removeItem(
-    "tga_telegram_id"
-  );
-
-  localStorage.removeItem(
-    "tga_username"
-  );
-
+  localStorage.removeItem("tga_user_id");
+  localStorage.removeItem("tga_telegram_id");
+  localStorage.removeItem("tga_username");
+  currentUserId=null;
   currentTelegramId=null;
 
   dashboardData=null;
@@ -5047,6 +5076,69 @@ function handleLogout(){
   ).value="";
 }
 
+
+
+async function refreshBotStatus(){
+  const uid = currentUserId || currentTelegramId;
+  if(!uid) return;
+  try{
+    const res = await fetch("/api/account?action=bot-connect&userId="+encodeURIComponent(uid)+"&t="+Date.now(),{cache:"no-store"});
+    const data = await res.json();
+    const dot=document.getElementById("botConnectDot");
+    const sub=document.getElementById("botConnectSub");
+    if(!dot) return;
+    if(data.success && data.bot_connected){
+      dot.style.background="var(--green)";
+      dot.style.boxShadow="0 0 8px var(--green)";
+      if(sub) sub.textContent="✅ Connected as @"+(data.username||"")+" (Telegram: "+(data.telegram_id||"")+")";
+    } else {
+      dot.style.background="var(--red)";
+      dot.style.boxShadow="none";
+      if(sub) sub.textContent="🔴 Not connected — tap to connect for purchase alerts";
+    }
+  }catch(e){}
+}
+async function openBotConnect(){
+  const uid = currentUserId || currentTelegramId;
+  if(!uid){ showMessage("Login required","Please login first."); return; }
+  try{
+    const stRes = await fetch("/api/account?action=bot-connect&userId="+encodeURIComponent(uid));
+    const st=await stRes.json();
+    if(st.success && st.bot_connected){
+      showMessage("🤖 Bot Connected", "Your Telegram is already connected ✅\nTelegram ID: "+st.telegram_id);
+      return;
+    }
+  }catch(e){}
+  // create token
+  try{
+    const res = await fetch("/api/account?action=bot-connect",{method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({userId: uid})});
+    const data=await res.json();
+    if(data.already_connected){ showMessage("✅ Already connected","Telegram ID: "+data.telegram_id); refreshBotStatus(); return; }
+    if(!data.success) throw new Error(data.message||"Failed");
+    const link=data.link;
+    document.getElementById("messageTitle").textContent="🤖 Connect Telegram Bot";
+    document.getElementById("messageText").innerHTML='Tap the button below to connect:<br><br><a href="'+link+'" target="_blank" rel="noopener" style="display:inline-block;padding:12px 18px;background:#fff;color:#000;border-radius:12px;text-decoration:none;font-weight:800">✈️ Open Bot — Connect</a><br><br><code style="word-break:break-all">'+link+'</code><br><br><span style="color:var(--muted)">Link expires in 15 minutes. After tapping Start in bot, refresh this page.</span>';
+    document.getElementById("messageModal").classList.add("show");
+  }catch(e){ showMessage("Error", e.message||"Could not create link."); }
+}
+function openChangePassword(){
+  document.getElementById("messageTitle").textContent="🔒 Change Password";
+  document.getElementById("messageText").innerHTML='<div style="text-align:left"><div class="field-label">Current Password</div><input id="cpOld" class="field-input" type="password" placeholder="Current"><div class="field-label">New Password</div><input id="cpNew" class="field-input" type="password" placeholder="Min 6 chars"><button class="primary-btn" onclick="submitChangePassword()">Update Password</button></div>';
+  document.getElementById("messageModal").classList.add("show");
+}
+async function submitChangePassword(){
+  const oldP=document.getElementById("cpOld").value;
+  const newP=document.getElementById("cpNew").value;
+  if(!newP || newP.length<6){ showMessage("Error","New password min 6 chars."); return; }
+  const uid=currentUserId||currentTelegramId;
+  try{
+    const res=await fetch("/api/account?action=change-password",{method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({userId: uid, oldPassword: oldP, newPassword: newP})});
+    const d=await res.json();
+    if(!res.ok || !d.success) throw new Error(d.message||"Failed");
+    closeModal("messageModal");
+    showMessage("✅ Updated","Password changed successfully.");
+  }catch(e){ showMessage("Failed", e.message); }
+}
 
 function closeAllModals(){
 
@@ -5428,15 +5520,10 @@ window.addEventListener(
         currentCurrency;
     }
 
-    const savedId =
-      localStorage.getItem(
-        "tga_telegram_id"
-      );
-
+    const savedId = localStorage.getItem("tga_user_id") || localStorage.getItem("tga_telegram_id");
     if(savedId){
-
-      currentTelegramId =
-        savedId;
+      currentUserId = savedId;
+      currentTelegramId = localStorage.getItem("tga_telegram_id") || savedId;
 
       showDashboard();
 

@@ -1,4 +1,4 @@
-const { getDatabase, getTelegramId, readJsonBody, setCors } = require("../lib/db");
+const { getDatabase, readJsonBody, setCors } = require("../lib/db");
 const { getMaintenance, logEvent } = require("../lib/site");
 const {
   getPaymentSettings,
@@ -65,7 +65,11 @@ module.exports = async function handler(req, res) {
     }
 
     if (req.method === "GET" && action === "history") {
-      const telegramId = getTelegramId(req.query.telegramId || req.query.user_id || body.telegramId);
+      const _rawHist = String(req.query.userId || req.query.telegramId || req.query.user_id || body.userId || body.telegramId || "").trim();
+      const _uHist = await resolveUserForRecharge(db, _rawHist);
+      if (!_uHist) return res.status(400).json({ success: false, message: "Invalid user." });
+      const telegramId = _uHist._id;
+      const telegramIdStr = resolveUserId(_uHist);
       if (telegramId === null) {
         return res.status(400).json({ success: false, message: "Invalid Telegram ID." });
       }
@@ -119,7 +123,11 @@ module.exports = async function handler(req, res) {
 
     // POST create
     if (req.method === "POST" && (action === "create" || action === "create_upi" || action === "create_fampay" || action === "create_crypto" || action === "create_binance")) {
-      const telegramId = getTelegramId(body.telegramId || body.telegram_id || req.query.telegramId);
+      const _rawCreate = String(body.userId || body.telegramId || body.telegram_id || req.query.userId || req.query.telegramId || "").trim();
+      const _uCreate = await resolveUserForRecharge(db, _rawCreate);
+      if (!_uCreate) return res.status(400).json({ success: false, message: "Invalid user. Login again." });
+      const telegramId = _uCreate._id;
+      const telegramIdStr = resolveUserId(_uCreate);
       if (telegramId === null) {
         return res.status(400).json({ success: false, message: "Invalid Telegram ID." });
       }
@@ -288,7 +296,11 @@ module.exports = async function handler(req, res) {
 
     // POST verify
     if (req.method === "POST" && (action === "verify" || action === "verify_upi" || action === "verify_fampay" || action === "verify_crypto" || action === "verify_binance")) {
-      const telegramId = getTelegramId(body.telegramId || body.telegram_id || req.query.telegramId);
+      const _rawCreate = String(body.userId || body.telegramId || body.telegram_id || req.query.userId || req.query.telegramId || "").trim();
+      const _uCreate = await resolveUserForRecharge(db, _rawCreate);
+      if (!_uCreate) return res.status(400).json({ success: false, message: "Invalid user. Login again." });
+      const telegramId = _uCreate._id;
+      const telegramIdStr = resolveUserId(_uCreate);
       if (telegramId === null) {
         return res.status(400).json({ success: false, message: "Invalid Telegram ID." });
       }
