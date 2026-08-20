@@ -1,7 +1,8 @@
 const { getDatabase, readJsonBody, setCors, findUserById } = require("../lib/db");
 const { getCode: getTgLionCode } = require("../lib/tglion");
 const { getMaintenance, logEvent } = require("../lib/site");
-const { notifyWebsitePurchase } = require("../lib/notify");
+const { notifyOtpDelivered } = require("../lib/notify");
+const { BOT_VISIBLE_STATUS, telegramIdOf, accountIdOf, ownerQueries } = require("../lib/orders");
 const { ObjectId } = require("mongodb");
 
 function numberVariants(value) {
@@ -43,10 +44,9 @@ module.exports = async function handler(req, res) {
     if (!user && rawUser.startsWith("+")) user = await db.collection("users").findOne({ phone: rawUser });
     if (!user) return res.status(404).json({ success: false, message: "User not found." });
 
-    const telegramId = user.telegram_id || (typeof user._id === "number" ? user._id : null);
-    const userIdStr = user._id instanceof ObjectId ? user._id.toHexString() : String(user._id);
-    const candidates = [telegramId, user._id, userIdStr, String(user._id)].filter(v => v !== null && v !== undefined);
-    try { candidates.push(new ObjectId(userIdStr)); } catch {}
+    const telegramId = telegramIdOf(user);
+    const userIdStr = accountIdOf(user);
+    const candidates = ownerQueries(user).map(q => q.user_id);
 
     // Helper: make sure a found order belongs to this user.
     const ownsOrder = (order) => order && candidates.some(c => sameId(c, order.user_id));
@@ -109,28 +109,55 @@ module.exports = async function handler(req, res) {
       return res.status(409).json({ success: false, message: "OTP is not available yet. Try again in a moment." });
     }
 
+    // IMPORTANT: keep status == "purchased".
+    //
+    // bot.py's purchase history is `orders.find({user_id: <tg id>, status: "purchased"})`.
+    // Setting status to "completed" here used to delete the order from the bot's
+    // "📂 View Purchase Logs" — exactly what happened to +918053118669.
+    // Website-side completion is tracked with `delivery_status` instead, and
+    // `password` mirrors `pass` because that is the field the bot prints.
     await db.collection("orders").updateOne(
       { _id: order._id },
-      { $set: { otp: result.code, pass: result.pass || "", status: "completed", code_at: new Date() } }
+      {
+        $set: {
+          otp: result.code,
+          pass: result.pass || "",
+          password: result.pass || "",
+          status: BOT_VISIBLE_STATUS,
+          delivery_status: "completed",
+          // If this order was created before the telegram id was linked,
+          // re-point it now so the bot can see it.
+          ...(telegramId !== null ? { user_id: telegramId, telegram_id: telegramId } : {}),
+          ...(userIdStr ? { account_id: userIdStr } : {}),
+          code_at: new Date()
+        }
+      }
     );
     await logEvent(db, { type: "otp", status: "success", user_id: telegramId, number: result.Number || orderNumber, message: "OTP received." });
     await logEvent(db, { type: "sales", status: "success", user_id: telegramId, number: result.Number || orderNumber, message: "OTP delivered for purchase." });
     await logEvent(db, { type: "admin", status: "success", user_id: telegramId, number: result.Number || orderNumber, message: "Admin log - OTP received for " + (result.Number || orderNumber) });
 
-    // Notify user + admin + sales log for OTP update on number +918053118669 and all others
+    // Notify buyer DM + admin log + sales channel that the OTP arrived.
+    // Awaited (see lib/notify.js header): a detached promise gets frozen with
+    // the lambda and the message never leaves the machine.
+    let notified = null;
     try {
-      const buyer = user || (await db.collection("users").findOne({ _id: user._id })) || {};
-      notifyWebsitePurchase({
-        userId: telegramId || user._id,
-        username: buyer.username || "",
+      notified = await notifyOtpDelivered({
+        db,
+        userId: telegramId,
+        accountRef: userIdStr,
+        username: user.username || "",
         country: order.country || "",
         countryCode: order.country_code || "",
         number: result.Number || orderNumber,
+        code: result.code,
+        pass: result.pass || "",
         price: order.price || 0,
-        balance: Number(buyer.balance || 0),
-      }).catch((e) => console.error("notifyWebsitePurchase error on OTP:", e));
+        balance: Number(user.balance || 0),
+      });
+      if (!notified.ok) console.warn("notifyOtpDelivered incomplete:", notified.targets);
     } catch (e) {
-      console.error("notify hook error on OTP:", e);
+      console.error("notify hook error on OTP:", (e && e.message) || e);
     }
 
     return res.status(200).json({
@@ -140,7 +167,8 @@ module.exports = async function handler(req, res) {
       code: result.code,
       pass: result.pass || "",
       orderId: String(order._id),
-      status: "completed"
+      status: "completed",
+      notified: notified ? notified.targets : null
     });
   } catch (error) {
     console.error("OTP error:", error);
