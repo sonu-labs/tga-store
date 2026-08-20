@@ -2891,7 +2891,7 @@ async function handleRegister(){
     const body={ method: registerMethod, username, password };
     if(registerMethod==="email") body.email=email;
     else body.phone=phone;
-    const response = await fetch("/api/register",{ method:"POST", headers:{"Content-Type":"application/json"}, cache:"no-store", body:JSON.stringify(body)});
+    const response = await fetch("/api/account?action=register",{ method:"POST", headers:{"Content-Type":"application/json"}, cache:"no-store", body:JSON.stringify(body)});
     const result=await response.json();
     if(!response.ok || !result.success){ showLoginError(result.message||"Register failed."); return; }
     showMessage("✅ Registered", "Account created! Now login with your credentials.");
@@ -5082,7 +5082,7 @@ async function refreshBotStatus(){
   const uid = currentUserId || currentTelegramId;
   if(!uid) return;
   try{
-    const res = await fetch("/api/bot-connect?userId="+encodeURIComponent(uid)+"&t="+Date.now(),{cache:"no-store"});
+    const res = await fetch("/api/account?action=bot-connect&userId="+encodeURIComponent(uid)+"&t="+Date.now(),{cache:"no-store"});
     const data = await res.json();
     const dot=document.getElementById("botConnectDot");
     const sub=document.getElementById("botConnectSub");
@@ -5102,7 +5102,7 @@ async function openBotConnect(){
   const uid = currentUserId || currentTelegramId;
   if(!uid){ showMessage("Login required","Please login first."); return; }
   try{
-    const stRes = await fetch("/api/bot-connect?userId="+encodeURIComponent(uid));
+    const stRes = await fetch("/api/account?action=bot-connect&userId="+encodeURIComponent(uid));
     const st=await stRes.json();
     if(st.success && st.bot_connected){
       showMessage("🤖 Bot Connected", "Your Telegram is already connected ✅\nTelegram ID: "+st.telegram_id);
@@ -5111,7 +5111,7 @@ async function openBotConnect(){
   }catch(e){}
   // create token
   try{
-    const res = await fetch("/api/bot-connect?action=create",{method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({userId: uid})});
+    const res = await fetch("/api/account?action=bot-connect",{method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({userId: uid})});
     const data=await res.json();
     if(data.already_connected){ showMessage("✅ Already connected","Telegram ID: "+data.telegram_id); refreshBotStatus(); return; }
     if(!data.success) throw new Error(data.message||"Failed");
@@ -5132,7 +5132,7 @@ async function submitChangePassword(){
   if(!newP || newP.length<6){ showMessage("Error","New password min 6 chars."); return; }
   const uid=currentUserId||currentTelegramId;
   try{
-    const res=await fetch("/api/change-password",{method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({userId: uid, oldPassword: oldP, newPassword: newP})});
+    const res=await fetch("/api/account?action=change-password",{method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({userId: uid, oldPassword: oldP, newPassword: newP})});
     const d=await res.json();
     if(!res.ok || !d.success) throw new Error(d.message||"Failed");
     closeModal("messageModal");
