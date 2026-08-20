@@ -1,4 +1,10 @@
 const { getDatabase, findUserById, resolveUserId } = require("../lib/db");
+const {
+  telegramIdOf,
+  ownerQueries,
+  backfillOrderOwnership,
+  displayStatus,
+} = require("../lib/orders");
 const { ObjectId } = require("mongodb");
 
 function serialize(value) {
@@ -38,16 +44,24 @@ module.exports = async function handler(req, res) {
     if (!user) return res.status(404).json({ success: false, message: "User not found." });
 
     const userIdStr = resolveUserId(user);
-    const telegramId = user.telegram_id || (typeof user._id === "number" ? user._id : null);
-    // orders may be stored under numeric telegramId or userId string/ObjectId; query both
-    const orQueries = [];
-    if (telegramId !== null) orQueries.push({ user_id: telegramId });
-    orQueries.push({ user_id: user._id });
-    orQueries.push({ user_id: userIdStr });
-    try { orQueries.push({ user_id: new ObjectId(userIdStr) }); } catch {}
-    if (telegramId !== null) orQueries.push({ user_id: String(telegramId) });
+    const telegramId = telegramIdOf(user);
 
-    const orders = await db.collection("orders").find({ $or: orQueries }).sort({ created_at: -1 }).limit(50).toArray();
+    // If this account has a Telegram id, make sure every past website order is
+    // stored under that numeric id — otherwise the bot's "📂 View Purchase Logs"
+    // (which queries orders by telegram id) will not list website purchases.
+    await backfillOrderOwnership(db, user);
+
+    // orders may be stored under numeric telegramId or userId string/ObjectId; query both
+    const orQueries = ownerQueries(user);
+
+    const rawOrders = await db.collection("orders").find({ $or: orQueries }).sort({ created_at: -1 }).limit(50).toArray();
+    // `status` stays "purchased" in the DB for bot compatibility; the UI gets
+    // the derived status so a delivered order still reads "completed".
+    const orders = rawOrders.map(o => ({
+      ...o,
+      status: displayStatus(o),
+      pass: o.pass || o.password || "",
+    }));
 
     // Count recharges: need to handle multiple id forms
     const orUser = orQueries.map(q => ({ user_id: q.user_id }));

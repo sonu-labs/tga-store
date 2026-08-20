@@ -15,6 +15,14 @@ const {
   setPaymentSettings
 } = require("../lib/payments");
 
+const {
+  notifyConfig,
+  notifyDeploy,
+  currentDeployId
+} = require("../lib/notify");
+
+const { displayStatus } = require("../lib/orders");
+
 function serialize(value) {
   if (value === null || value === undefined) {
     return value;
@@ -76,8 +84,20 @@ async function getOverview(db) {
   const [totalUsers, totalOrders, completedOrders, inProgress, failedBuys, successfulLogins, failedLogins, otpReceived, revenueRows, rechargeRows, recentLogs, maintenance] = await Promise.all([
     db.collection("users").countDocuments(),
     db.collection("orders").countDocuments(),
-    db.collection("orders").countDocuments({ status: "completed" }),
-    db.collection("orders").countDocuments({ status: "purchased" }),
+    // Website orders keep status "purchased" (bot.py filters on it), so an
+    // order counts as completed once its OTP was delivered.
+    db.collection("orders").countDocuments({
+      $or: [
+        { status: "completed" },
+        { delivery_status: "completed" },
+        { otp: { $nin: [null, ""] } }
+      ]
+    }),
+    db.collection("orders").countDocuments({
+      status: "purchased",
+      delivery_status: { $ne: "completed" },
+      $or: [{ otp: null }, { otp: "" }, { otp: { $exists: false } }]
+    }),
     db.collection("logs").countDocuments({ type: "buy", status: "failed" }),
     db.collection("logs").countDocuments({ type: "login", status: "success" }),
     db.collection("logs").countDocuments({ type: "login", status: "failed" }),
@@ -230,11 +250,37 @@ async function getUsers(db, query) {
         $group: {
           _id: "$user_id",
           orders: { $sum: 1 },
+          // Website orders stay status="purchased" so bot.py keeps listing
+          // them, so "completed" is decided by delivery_status / otp instead.
           in_progress: {
-            $sum: { $cond: [{ $eq: ["$status", "purchased"] }, 1, 0] }
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    { $ne: ["$status", "completed"] },
+                    { $ne: ["$delivery_status", "completed"] },
+                    { $in: [{ $ifNull: ["$otp", ""] }, ["", null]] }
+                  ]
+                },
+                1,
+                0
+              ]
+            }
           },
           completed: {
-            $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] }
+            $sum: {
+              $cond: [
+                {
+                  $or: [
+                    { $eq: ["$status", "completed"] },
+                    { $eq: ["$delivery_status", "completed"] },
+                    { $not: { $in: [{ $ifNull: ["$otp", ""] }, ["", null]] } }
+                  ]
+                },
+                1,
+                0
+              ]
+            }
           },
           spent: {
             $sum: {
@@ -295,8 +341,34 @@ async function getUsers(db, query) {
     Object.assign(map[row._id], row);
   }
 
+  // Stats are grouped by orders.user_id, which for a website account is the
+  // linked numeric telegram id rather than the account's ObjectId — so look
+  // the user up under both keys and merge whatever is found.
+  const statsFor = user => {
+    const keys = [user._id, user.telegram_id, String(user._id)]
+      .filter(k => k !== null && k !== undefined && k !== "")
+      .map(String);
+
+    const merged = {};
+    const seen = new Set();
+
+    for (const key of keys) {
+      if (seen.has(key) || !map[key]) continue;
+      seen.add(key);
+
+      for (const [field, value] of Object.entries(map[key])) {
+        if (field === "_id") continue;
+        merged[field] = typeof value === "number"
+          ? Number(merged[field] || 0) + value
+          : value;
+      }
+    }
+
+    return merged;
+  };
+
   const rows = users.map(user => {
-    const stats = map[user._id] || {};
+    const stats = statsFor(user);
 
     return {
       telegramId: user._id,
@@ -330,10 +402,45 @@ async function getOrders(db, query) {
     { $sort: { created_at: -1 } },
     { $limit: limit },
     {
+      // Orders can reference their owner in three ways:
+      //   user_id      -> numeric telegram id (bot orders + new website orders)
+      //   account_id   -> website account _id as a string (website orders)
+      //   telegram_id  -> mirrored telegram id
+      // A plain localField/foreignField join on _id misses the last two, which
+      // is why website orders used to show up as "User" in the admin panel.
       $lookup: {
         from: "users",
-        localField: "user_id",
-        foreignField: "_id",
+        let: {
+          uid: "$user_id",
+          tgid: "$telegram_id",
+          acc: "$account_id"
+        },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $or: [
+                  { $eq: ["$_id", "$$uid"] },
+                  { $eq: [{ $toString: "$_id" }, { $toString: "$$uid" }] },
+                  { $eq: [{ $toString: "$_id" }, { $toString: "$$acc" }] },
+                  {
+                    $and: [
+                      { $ne: ["$$tgid", null] },
+                      { $eq: [{ $toString: "$telegram_id" }, { $toString: "$$tgid" }] }
+                    ]
+                  },
+                  {
+                    $and: [
+                      { $ne: ["$$uid", null] },
+                      { $eq: [{ $toString: "$telegram_id" }, { $toString: "$$uid" }] }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          { $limit: 1 }
+        ],
         as: "user"
       }
     },
@@ -353,10 +460,12 @@ async function getOrders(db, query) {
     country_code: order.country_code || "",
     number: order.number || "",
     otp: order.otp || "",
-    pass: order.pass || "",
+    pass: order.pass || order.password || "",
     price: Number(order.price || 0),
     provider_price: Number(order.provider_price || 0),
-    status: order.status || "purchased",
+    // DB keeps status "purchased" for bot compatibility; show the real state here.
+    status: displayStatus(order),
+    source: order.source || "bot",
     created_at: order.created_at,
     code_at: order.code_at || null
   }));
@@ -603,6 +712,50 @@ module.exports = async function handler(req, res) {
       }
       const rows = sliced.map(x => ({ ...x, username: userMap[x.user_id] || "" }));
       return res.status(200).json({ success: true, data: { recharges: rows.map(serialize), total: rows.length } });
+    }
+
+    // Telegram notification health: check the config and send a test ping so
+    // you can confirm the logs channel + owner DM are wired up correctly.
+    if (action === "notify" || action === "notify_test" || action === "notifications") {
+      if (req.method === "GET") {
+        const config = notifyConfig();
+        const ping = await db.collection("settings").findOne({ _id: "deploy_ping" });
+        const recent = await db.collection("logs")
+          .find({ type: "notify" })
+          .sort({ created_at: -1 })
+          .limit(20)
+          .toArray();
+
+        return res.status(200).json({
+          success: true,
+          config,
+          deploy_ping: serialize(ping || null),
+          recent: recent.map(serialize),
+          hint: config.bot_token_set
+            ? "BOT_TOKEN is set. Use POST ?action=notify to send a test message."
+            : "BOT_TOKEN env var is MISSING — no Telegram message can be sent."
+        });
+      }
+
+      if (req.method === "POST") {
+        const result = await notifyDeploy({
+          db,
+          deployId: currentDeployId(),
+          reason: "Manual test from admin panel",
+          manual: true
+        });
+
+        return res.status(200).json({
+          success: result.ok,
+          targets: result.targets,
+          config: notifyConfig(),
+          message: result.ok
+            ? "Test notification sent."
+            : "Test notification failed — check BOT_TOKEN and that the bot is an admin in the log channel."
+        });
+      }
+
+      return res.status(405).json({ success: false, message: "Method not allowed." });
     }
 
     if (action === "logout") {

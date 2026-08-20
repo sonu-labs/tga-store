@@ -10,6 +10,11 @@ const { sellingPriceInr } = require("../lib/money");
 const { getMaintenance, logEvent } = require("../lib/site");
 const { fetchServer2Countries, checkS2ApiBalance } = require("../lib/server2");
 const { notifyWebsitePurchase } = require("../lib/notify");
+const {
+  BOT_VISIBLE_STATUS,
+  telegramIdOf,
+  accountIdOf,
+} = require("../lib/orders");
 
 function getCountryCode(value) {
   const code = String(value ?? "").trim().toUpperCase();
@@ -60,10 +65,14 @@ module.exports = async function handler(req, res) {
     if (!lookupUser) {
       return res.status(404).json({ success: false, message: "User not found. Please login again." });
     }
-    const telegramId = lookupUser.telegram_id || (typeof lookupUser._id === "number" ? lookupUser._id : null);
+    // Numeric Telegram id — this is what bot.py queries orders by.
+    const telegramId = telegramIdOf(lookupUser);
     // Use the actual _id for balance deduction to support both numeric and ObjectId users
     const userPrimaryId = lookupUser._id;
-    const userIdForOrder = telegramId !== null ? telegramId : resolveUserId(lookupUser);
+    const accountId = accountIdOf(lookupUser) || resolveUserId(lookupUser);
+    // Orders MUST be stored under the numeric Telegram id so the bot's
+    // "📂 View Purchase Logs" (user_id == telegram id) can find them.
+    const userIdForOrder = telegramId !== null ? telegramId : accountId;
 
     attemptedUserId = userPrimaryId;
 
@@ -207,14 +216,23 @@ module.exports = async function handler(req, res) {
 
     const order = {
       user_id: userIdForOrder,
+      // Extra ids so the order can always be traced back, whichever way it is queried.
+      telegram_id: telegramId,
+      account_id: accountId,
       country: purchased.name || country.name,
       country_code: countryCode,
       number: purchased.Number,
       otp: null,
       pass: null,
+      // bot.py prints order["password"] in the purchase logs — keep the field
+      // present so it shows a value instead of "N/A" once the OTP arrives.
+      password: null,
       price: chargeInr,
       provider_price: country.price,
-      status: "purchased",
+      // Keep "purchased": bot.py filters purchase history on status == "purchased".
+      status: BOT_VISIBLE_STATUS,
+      delivery_status: "waiting",
+      source: "website",
       created_at: new Date(),
       provider: "tglion",
       provider_hash: null
@@ -237,23 +255,30 @@ module.exports = async function handler(req, res) {
       price: chargeInr
     });
 
-    // Fire Telegram notifications (sales channel + admin log + buyer DM).
-    // Fire-and-forget: never block the API response on Telegram latency,
-    // and never fail the purchase if Telegram is momentarily unreachable.
+    // Telegram notifications (sales channel + admin log + buyer DM).
+    //
+    // These are AWAITED on purpose. On Vercel the function is frozen the moment
+    // the response is sent, so a detached promise usually gets killed before the
+    // Telegram request is actually made — that was the reason no purchase alert
+    // ever reached the logs channel or the buyer's DM.
+    let notified = null;
     try {
       const buyer = user || (await db.collection("users").findOne({ _id: userPrimaryId })) || {};
-      const notifyId = telegramId || userPrimaryId;
-      notifyWebsitePurchase({
-        userId: notifyId,
+      notified = await notifyWebsitePurchase({
+        db,
+        userId: telegramId,
+        accountRef: accountId,
         username: buyer.username || "",
         country: order.country,
         countryCode: countryCode,
         number: purchased.Number,
         price: chargeInr,
         balance: Number(user?.balance || 0),
-      }).catch((e) => console.error("notifyWebsitePurchase error:", e));
+      });
+      if (!notified.ok) console.warn("notifyWebsitePurchase incomplete:", notified.targets);
     } catch (e) {
-      console.error("notify hook error:", e);
+      // A Telegram hiccup must never fail (or refund) a completed purchase.
+      console.error("notify hook error:", (e && e.message) || e);
     }
 
     return res.status(200).json({
@@ -263,7 +288,9 @@ module.exports = async function handler(req, res) {
       name: order.country,
       price: chargeInr,
       country_code: countryCode,
-      balance: Number(user.balance || 0)
+      orderId: order._id ? String(order._id) : null,
+      balance: Number(user.balance || 0),
+      notified: notified ? notified.targets : null
     });
   } catch (error) {
     console.error("Buy error:", error);
