@@ -25,8 +25,15 @@
   --muted:#8d8d8d;
   --soft:#666;
   --green:#42e889;
+  --green-rgb:66,232,137;
   --red:#ff5656;
   --yellow:#ffc857;
+  --btn:#fff;
+  --btn-text:#000;
+  --header-bg:rgba(0,0,0,.88);
+  --nav-bg:rgba(14,14,14,.94);
+  --nav-border:rgba(66,232,137,.18);
+  --nav-active:rgba(18,18,18,.96);
 }
 
 html{
@@ -51,6 +58,12 @@ body.light{
   --text:#111;
   --muted:#666;
   --soft:#888;
+  --btn:#111;
+  --btn-text:#fff;
+  --header-bg:rgba(245,245,247,.9);
+  --nav-bg:rgba(255,255,255,.94);
+  --nav-border:rgba(16,160,90,.18);
+  --nav-active:#fff;
 }
 
 button,
@@ -166,8 +179,8 @@ button:disabled{
   border-radius:14px;
   padding:15px;
   margin-top:22px;
-  background:#fff;
-  color:#000;
+  background:var(--btn);
+  color:var(--btn-text);
   font-weight:800;
   transition:.2s;
 }
@@ -175,12 +188,6 @@ button:disabled{
 .login-btn:hover,
 .primary-btn:hover{
   transform:translateY(-1px);
-}
-
-body.light .login-btn,
-body.light .primary-btn{
-  background:#111;
-  color:#fff;
 }
 
 .login-btn:disabled{
@@ -214,13 +221,9 @@ body.light .primary-btn{
   position:sticky;
   top:0;
   z-index:20;
-  background:rgba(0,0,0,.88);
+  background:var(--header-bg);
   backdrop-filter:blur(18px);
   -webkit-backdrop-filter:blur(18px);
-}
-
-body.light .app-header{
-  background:rgba(245,245,247,.9);
 }
 
 .header-brand{
@@ -366,18 +369,13 @@ body.light .app-header{
 
 .add-balance{
   width:100%;
-  background:#fff;
-  color:#000;
+  background:var(--btn);
+  color:var(--btn-text);
   border:0;
   border-radius:14px;
   padding:16px;
   font-weight:800;
   margin-top:20px;
-}
-
-body.light .add-balance{
-  background:#111;
-  color:#fff;
 }
 
 .stats-row{
@@ -526,8 +524,8 @@ body.light .add-balance{
 
 .buy-now{
   width:100%;
-  background:#fff;
-  color:#000;
+  background:var(--btn);
+  color:var(--btn-text);
   border:0;
   border-radius:12px;
   padding:12px;
@@ -538,11 +536,6 @@ body.light .add-balance{
 
 .buy-now:hover:not(:disabled){
   transform:translateY(-1px);
-}
-
-body.light .buy-now{
-  background:#111;
-  color:#fff;
 }
 
 .out-stock{
@@ -563,16 +556,11 @@ body.light .buy-now{
 .spinner{
   width:28px;
   height:28px;
-  border:3px solid #333;
-  border-top-color:#fff;
+  border:3px solid var(--border);
+  border-top-color:var(--text);
   border-radius:50%;
   animation:spin .8s linear infinite;
   margin:0 auto 12px;
-}
-
-body.light .spinner{
-  border-color:#ddd;
-  border-top-color:#111;
 }
 
 @keyframes spin{
@@ -630,7 +618,7 @@ body.light .spinner{
 
 .status-completed{
   color:var(--green);
-  background:rgba(66,232,137,.12);
+  background:rgba(var(--green-rgb),.12);
 }
 
 .status-waiting{
@@ -789,8 +777,8 @@ a.setting-item:hover{
   left:50%;
   transform:translateX(-50%);
   width:min(720px,calc(100% - 28px));
-  background:rgba(14,14,14,.94);
-  border:1px solid rgba(66,232,137,.18);
+  background:var(--nav-bg);
+  border:1px solid var(--nav-border);
   border-radius:28px;
   padding:9px;
   display:grid;
@@ -799,8 +787,8 @@ a.setting-item:hover{
   -webkit-backdrop-filter:blur(20px);
   box-shadow:
     0 15px 45px rgba(0,0,0,.5),
-    0 0 24px rgba(66,232,137,.16),
-    0 0 48px rgba(66,232,137,.08);
+    0 0 24px rgba(var(--green-rgb),.16),
+    0 0 48px rgba(var(--green-rgb),.08);
 }
 
 body.light .bottom-nav{
@@ -863,17 +851,17 @@ body.light .bottom-nav{
 
 .nav-btn.active{
   color:var(--text);
-  background:linear-gradient(180deg,rgba(66,232,137,.16),rgba(18,18,18,.96));
+  background:linear-gradient(180deg,rgba(var(--green-rgb),.16),var(--nav-active));
   box-shadow:
-    0 0 0 1px rgba(66,232,137,.28),
-    0 0 16px rgba(66,232,137,.38),
-    0 0 32px rgba(66,232,137,.16),
-    inset 0 1px 0 rgba(66,232,137,.28);
+    0 0 0 1px rgba(var(--green-rgb),.28),
+    0 0 16px rgba(var(--green-rgb),.38),
+    0 0 32px rgba(var(--green-rgb),.16),
+    inset 0 1px 0 rgba(var(--green-rgb),.28);
 }
 
 .nav-btn.active .nav-icon{
-  filter:drop-shadow(0 0 6px rgba(66,232,137,.85));
-  text-shadow:0 0 12px rgba(66,232,137,.55);
+  filter:drop-shadow(0 0 6px rgba(var(--green-rgb),.85));
+  text-shadow:0 0 12px rgba(var(--green-rgb),.55);
 }
 
 body.light .nav-btn.active{
@@ -989,7 +977,7 @@ body.light .nav-btn.active{
   height:90px;
   border-radius:50%;
   background:var(--green);
-  color:#000;
+  color:var(--btn-text);
   display:flex;
   align-items:center;
   justify-content:center;
@@ -1221,6 +1209,155 @@ body.light .nav-btn.active{
   .nav-icon{
     font-size:18px;
   }
+}
+
+/* ==================================================
+   STORE THEMES (admin-selected)
+   Applied as body[data-theme="<id>"]. The admin panel
+   picks one from Settings → 🎨 Store Theme; the USER
+   site restyles itself. The admin panel never changes.
+   "default" (no data-theme) is the current TGA dark theme.
+================================================== */
+
+body[data-theme="neon"]{
+  --bg:#020403;--surface:#0a130d;--surface2:#0f1a12;--border:#1d2b21;
+  --text:#eafff1;--muted:#8bb89b;--soft:#5f846d;
+  --green:#39ff88;--green-rgb:57,255,136;--red:#ff5470;--yellow:#ffd166;
+  --btn:#39ff88;--btn-text:#03140a;--header-bg:rgba(2,4,3,.88);
+  --nav-bg:rgba(8,18,12,.94);--nav-border:rgba(57,255,136,.22);--nav-active:rgba(10,24,15,.96);
+}
+body[data-theme="cyberpunk"]{
+  --bg:#0a0118;--surface:#120426;--surface2:#190735;--border:#2c1552;
+  --text:#f4eaff;--muted:#a894d6;--soft:#6f5aa6;
+  --green:#ff2bd6;--green-rgb:255,43,214;--red:#ff3b5c;--yellow:#ffe14d;
+  --btn:#ff2bd6;--btn-text:#1a0110;--header-bg:rgba(10,1,24,.88);
+  --nav-bg:rgba(16,4,34,.94);--nav-border:rgba(255,43,214,.22);--nav-active:rgba(20,6,44,.96);
+}
+body[data-theme="matrix"]{
+  --bg:#000000;--surface:#041205;--surface2:#06240a;--border:#0f3d18;
+  --text:#d9ffd9;--muted:#6fbf7f;--soft:#3f8a50;
+  --green:#00ff6a;--green-rgb:0,255,106;--red:#ff4d4d;--yellow:#eaff00;
+  --btn:#00ff6a;--btn-text:#001a08;--header-bg:rgba(0,0,0,.9);
+  --nav-bg:rgba(3,14,5,.94);--nav-border:rgba(0,255,106,.22);--nav-active:rgba(4,20,8,.96);
+}
+body[data-theme="midnight"]{
+  --bg:#05070f;--surface:#0c1220;--surface2:#121a2e;--border:#1f2b46;
+  --text:#eaf0ff;--muted:#8fa2c9;--soft:#5b6c93;
+  --green:#4d8dff;--green-rgb:77,141,255;--red:#ff5c72;--yellow:#ffc857;
+  --btn:#4d8dff;--btn-text:#061029;--header-bg:rgba(5,7,15,.88);
+  --nav-bg:rgba(10,15,28,.94);--nav-border:rgba(77,141,255,.22);--nav-active:rgba(12,18,34,.96);
+}
+body[data-theme="ocean"]{
+  --bg:#04121c;--surface:#081f2c;--surface2:#0c2b3c;--border:#16435a;
+  --text:#e3f6fb;--muted:#86b7c8;--soft:#4f8196;
+  --green:#26d0ce;--green-rgb:38,208,206;--red:#ff6b6b;--yellow:#ffd166;
+  --btn:#26d0ce;--btn-text:#032028;--header-bg:rgba(4,18,28,.88);
+  --nav-bg:rgba(6,26,38,.94);--nav-border:rgba(38,208,206,.22);--nav-active:rgba(8,34,48,.96);
+}
+body[data-theme="sunset"]{
+  --bg:#170a12;--surface:#24101c;--surface2:#331624;--border:#4c2236;
+  --text:#ffefe9;--muted:#d9a09a;--soft:#a06a63;
+  --green:#ff8a5c;--green-rgb:255,138,92;--red:#ff4d6d;--yellow:#ffc857;
+  --btn:#ff8a5c;--btn-text:#2a0e04;--header-bg:rgba(23,10,18,.88);
+  --nav-bg:rgba(30,13,23,.94);--nav-border:rgba(255,138,92,.22);--nav-active:rgba(40,16,28,.96);
+}
+body[data-theme="royal"]{
+  --bg:#0d0716;--surface:#1a0f2b;--surface2:#241640;--border:#3a2466;
+  --text:#f1e9ff;--muted:#b39cd9;--soft:#7a63a6;
+  --green:#a86bff;--green-rgb:168,107,255;--red:#ff5c72;--yellow:#ffd166;
+  --btn:#a86bff;--btn-text:#140526;--header-bg:rgba(13,7,22,.88);
+  --nav-bg:rgba(20,12,34,.94);--nav-border:rgba(168,107,255,.22);--nav-active:rgba(26,15,44,.96);
+}
+body[data-theme="rose"]{
+  --bg:#1c0a12;--surface:#2a111c;--surface2:#3a1827;--border:#5a2638;
+  --text:#ffeef3;--muted:#e0a3b4;--soft:#a86b7c;
+  --green:#ff9eb5;--green-rgb:255,158,181;--red:#ff5c72;--yellow:#ffd166;
+  --btn:#ff9eb5;--btn-text:#2a0512;--header-bg:rgba(28,10,18,.88);
+  --nav-bg:rgba(34,13,22,.94);--nav-border:rgba(255,158,181,.22);--nav-active:rgba(44,16,28,.96);
+}
+body[data-theme="crimson"]{
+  --bg:#0d0204;--surface:#1c070b;--surface2:#2a0b11;--border:#451219;
+  --text:#ffecee;--muted:#d99aa2;--soft:#a05f66;
+  --green:#ff4d5e;--green-rgb:255,77,94;--red:#ff1f3d;--yellow:#ffc857;
+  --btn:#ff4d5e;--btn-text:#2a0103;--header-bg:rgba(13,2,4,.9);
+  --nav-bg:rgba(20,5,8,.94);--nav-border:rgba(255,77,94,.22);--nav-active:rgba(26,6,10,.96);
+}
+body[data-theme="gold"]{
+  --bg:#0d0a02;--surface:#1c1606;--surface2:#2a210b;--border:#453718;
+  --text:#fff6e0;--muted:#d9c48f;--soft:#a08c54;
+  --green:#ffc857;--green-rgb:255,200,87;--red:#ff5c72;--yellow:#ffe08a;
+  --btn:#ffc857;--btn-text:#2a1d02;--header-bg:rgba(13,10,2,.9);
+  --nav-bg:rgba(20,16,4,.94);--nav-border:rgba(255,200,87,.24);--nav-active:rgba(26,20,5,.96);
+}
+body[data-theme="forest"]{
+  --bg:#04120a;--surface:#0a1f12;--surface2:#0f2c1a;--border:#1c4529;
+  --text:#e6f7ec;--muted:#93c2a3;--soft:#5e8f6d;
+  --green:#3ddc84;--green-rgb:61,220,132;--red:#ff5c72;--yellow:#ffd166;
+  --btn:#3ddc84;--btn-text:#041a0c;--header-bg:rgba(4,18,10,.88);
+  --nav-bg:rgba(8,24,14,.94);--nav-border:rgba(61,220,132,.22);--nav-active:rgba(10,30,17,.96);
+}
+body[data-theme="sky"]{
+  --bg:#eef4fb;--surface:#ffffff;--surface2:#e4ecf6;--border:#ccd9ea;
+  --text:#12263a;--muted:#5a7186;--soft:#8ba0b4;
+  --green:#1b98f5;--green-rgb:27,152,245;--red:#e5484d;--yellow:#f5a623;
+  --btn:#12263a;--btn-text:#ffffff;--header-bg:rgba(255,255,255,.9);
+  --nav-bg:rgba(255,255,255,.94);--nav-border:rgba(27,152,245,.28);--nav-active:#ffffff;
+}
+body[data-theme="lavender"]{
+  --bg:#f3effb;--surface:#ffffff;--surface2:#ece6f7;--border:#d8cdec;
+  --text:#241d3a;--muted:#6f6387;--soft:#9a8fb0;
+  --green:#7c5cff;--green-rgb:124,92,255;--red:#e5484d;--yellow:#e6a23c;
+  --btn:#241d3a;--btn-text:#ffffff;--header-bg:rgba(255,255,255,.9);
+  --nav-bg:rgba(255,255,255,.94);--nav-border:rgba(124,92,255,.28);--nav-active:#ffffff;
+}
+body[data-theme="mono"]{
+  --bg:#f4f4f5;--surface:#ffffff;--surface2:#e9e9ec;--border:#d4d4d8;
+  --text:#111111;--muted:#66666b;--soft:#94949b;
+  --green:#111111;--green-rgb:17,17,17;--red:#d9383f;--yellow:#b98400;
+  --btn:#111111;--btn-text:#ffffff;--header-bg:rgba(255,255,255,.9);
+  --nav-bg:rgba(255,255,255,.94);--nav-border:rgba(17,17,17,.18);--nav-active:#ffffff;
+}
+body[data-theme="coffee"]{
+  --bg:#120c08;--surface:#1f1610;--surface2:#2c2017;--border:#463324;
+  --text:#f6ecdf;--muted:#c7a988;--soft:#8f735a;
+  --green:#d7a86e;--green-rgb:215,168,110;--red:#ff5c72;--yellow:#ffc857;
+  --btn:#d7a86e;--btn-text:#241407;--header-bg:rgba(18,12,8,.9);
+  --nav-bg:rgba(24,17,11,.94);--nav-border:rgba(215,168,110,.22);--nav-active:rgba(30,21,14,.96);
+}
+body[data-theme="teal"]{
+  --bg:#03110f;--surface:#07201d;--surface2:#0b2f2a;--border:#14473f;
+  --text:#e0fbf6;--muted:#85c2b8;--soft:#4f8f83;
+  --green:#2dd4bf;--green-rgb:45,212,191;--red:#ff6b6b;--yellow:#ffd166;
+  --btn:#2dd4bf;--btn-text:#04140f;--header-bg:rgba(3,17,15,.88);
+  --nav-bg:rgba(5,24,21,.94);--nav-border:rgba(45,212,191,.22);--nav-active:rgba(7,30,26,.96);
+}
+body[data-theme="violet"]{
+  --bg:#0a0414;--surface:#160a26;--surface2:#201038;--border:#35205c;
+  --text:#efe8ff;--muted:#a994d9;--soft:#6f5aa6;
+  --green:#8b5cf6;--green-rgb:139,92,246;--red:#ff5c72;--yellow:#ffd166;
+  --btn:#8b5cf6;--btn-text:#120524;--header-bg:rgba(10,4,20,.88);
+  --nav-bg:rgba(16,8,30,.94);--nav-border:rgba(139,92,246,.22);--nav-active:rgba(20,10,38,.96);
+}
+body[data-theme="arctic"]{
+  --bg:#eaf2f7;--surface:#ffffff;--surface2:#e0eaf1;--border:#c6d6e2;
+  --text:#0b2735;--muted:#55707e;--soft:#86a0ae;
+  --green:#0288d1;--green-rgb:2,136,209;--red:#e5484d;--yellow:#e6a23c;
+  --btn:#0b2735;--btn-text:#ffffff;--header-bg:rgba(255,255,255,.9);
+  --nav-bg:rgba(255,255,255,.94);--nav-border:rgba(2,136,209,.28);--nav-active:#ffffff;
+}
+body[data-theme="cherry"]{
+  --bg:#1a0610;--surface:#2a0c1a;--surface2:#3a1224;--border:#5a1e36;
+  --text:#ffeaf2;--muted:#e09ab0;--soft:#a8647c;
+  --green:#ff5c8a;--green-rgb:255,92,138;--red:#ff2d55;--yellow:#ffd166;
+  --btn:#ff5c8a;--btn-text:#2a0510;--header-bg:rgba(26,6,16,.88);
+  --nav-bg:rgba(32,8,20,.94);--nav-border:rgba(255,92,138,.22);--nav-active:rgba(42,10,26,.96);
+}
+body[data-theme="slate"]{
+  --bg:#0b0e12;--surface:#14181f;--surface2:#1c222b;--border:#2a323f;
+  --text:#e8edf4;--muted:#93a0b2;--soft:#5e6a7a;
+  --green:#8ea5c0;--green-rgb:142,165,192;--red:#ff5c72;--yellow:#ffc857;
+  --btn:#8ea5c0;--btn-text:#0b0e12;--header-bg:rgba(11,14,18,.88);
+  --nav-bg:rgba(16,20,26,.94);--nav-border:rgba(142,165,192,.22);--nav-active:rgba(20,25,32,.96);
 }
 </style>
 </head>
@@ -1643,7 +1780,7 @@ body.light .nav-btn.active{
 
 .recharge-method-card.selected{
   border-color:var(--green);
-  box-shadow:0 0 0 1px rgba(66,232,137,.4), 0 10px 30px rgba(66,232,137,.12);
+  box-shadow:0 0 0 1px rgba(var(--green-rgb),.4), 0 10px 30px rgba(var(--green-rgb),.12);
 }
 
 .recharge-method-card.disabled{
@@ -1679,9 +1816,9 @@ body.light .nav-btn.active{
   font-weight:800;
   padding:4px 10px;
   border-radius:99px;
-  background:rgba(66,232,137,.14);
+  background:rgba(var(--green-rgb),.14);
   color:var(--green);
-  border:1px solid rgba(66,232,137,.28);
+  border:1px solid rgba(var(--green-rgb),.28);
 }
 
 .recharge-method-badge.off{
@@ -2468,17 +2605,13 @@ body.light .nav-btn.active{
   position:fixed;
   inset:0;
   z-index:9999;
-  background:#000;
+  background:var(--bg);
   display:none;
   align-items:center;
   justify-content:center;
   padding:22px;
   text-align:center;
   isolation:isolate;
-}
-
-body.light .maintenance-overlay{
-  background:#f5f5f7;
 }
 
 body.maintenance-active{
@@ -5158,7 +5291,45 @@ function openPage(page){
    THEME
 ================================================== */
 
+// Active store theme chosen by the admin (from /api/status). "default" means
+// the user keeps the original dark theme and their own dark/light toggle.
+let siteTheme = "default";
+
+function isCustomTheme(){
+  return Boolean(siteTheme) && siteTheme !== "default";
+}
+
+function applySiteTheme(id){
+  siteTheme = (typeof id === "string" && id) ? id : "default";
+  const body = document.body;
+
+  if(isCustomTheme()){
+    body.setAttribute("data-theme", siteTheme);
+    // Admin theme wins over the user's local dark/light toggle.
+    body.classList.remove("light");
+  }else{
+    body.removeAttribute("data-theme");
+    // Fall back to the user's own dark/light preference.
+    loadTheme();
+  }
+
+  // Keep the browser chrome colour in sync with the page background.
+  try{
+    const bg = getComputedStyle(body).getPropertyValue("--bg").trim();
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if(meta && bg){ meta.setAttribute("content", bg); }
+  }catch(e){}
+
+  updateThemeSwitch();
+}
+
+
 function toggleTheme(){
+
+  // While the admin has set a store theme, the local dark/light switch is a no-op.
+  if(isCustomTheme()){
+    return;
+  }
 
   document.body.classList.toggle(
     "light"
@@ -5204,6 +5375,11 @@ function updateThemeSwitch(){
 
 
 function loadTheme(){
+
+  // Don't clobber an admin-selected theme with the local preference.
+  if(isCustomTheme()){
+    return;
+  }
 
   const theme =
     localStorage.getItem(
@@ -5719,6 +5895,11 @@ async function checkMaintenance(){
 
     const result =
       await response.json();
+
+    // Apply the admin-selected store theme (falls back to "default").
+    if(result && typeof result.theme === "string"){
+      applySiteTheme(result.theme);
+    }
 
     if(
       result &&

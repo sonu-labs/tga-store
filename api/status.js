@@ -1,6 +1,8 @@
 const { getDatabase, setCors } = require("../lib/db");
 const { getMaintenance } = require("../lib/site");
 const { maybeNotifyDeploy, currentDeployId } = require("../lib/notify");
+const { getSiteTheme } = require("../lib/themes");
+const { runMigrations } = require("../lib/migrations");
 
 module.exports = async function handler(req, res) {
   setCors(res, "GET, OPTIONS");
@@ -33,10 +35,27 @@ module.exports = async function handler(req, res) {
       console.error("Deploy ping error:", (e && e.message) || e);
     }
 
+    // Idempotent one-time data fixes (guarded by a flag in the settings
+    // collection). Runs at most once per deployment.
+    try {
+      await runMigrations(db);
+    } catch (e) {
+      console.error("Migrations error:", (e && e.message) || e);
+    }
+
+    // Active store theme so the user site can restyle itself.
+    let theme = "default";
+    try {
+      theme = await getSiteTheme(db);
+    } catch (e) {
+      console.error("Theme error:", (e && e.message) || e);
+    }
+
     return res.status(200).json({
       success: true,
       maintenance: maintenance.enabled,
       message: maintenance.message,
+      theme,
       deploy_id: currentDeployId() || null,
       deploy_ping: deploy && deploy.skipped ? "already-sent" : deploy && deploy.ok ? "sent" : "failed"
     });

