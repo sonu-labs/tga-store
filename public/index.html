@@ -643,6 +643,40 @@ body.light .spinner{
   background:rgba(255,86,86,.12);
 }
 
+.order-otp{
+  margin-top:10px;
+  font-size:13px;
+  line-height:1.6;
+  min-height:18px;
+}
+
+.code-val{
+  font-weight:800;
+  color:var(--green);
+  word-break:break-all;
+}
+
+.otp-btn{
+  margin-top:12px;
+  width:100%;
+  border:1px solid var(--border);
+  background:var(--surface2);
+  color:var(--text);
+  border-radius:11px;
+  padding:10px 12px;
+  font-weight:800;
+  font-size:13px;
+  transition:border-color .18s ease, opacity .18s ease;
+}
+
+.otp-btn:hover:not(:disabled){
+  border-color:#666;
+}
+
+.otp-btn:disabled{
+  opacity:.55;
+}
+
 /* ==================================================
    SETTINGS
 ================================================== */
@@ -2362,6 +2396,7 @@ body.light .nav-btn.active{
       <button
         class="primary-btn"
         type="button"
+        id="getOtpButton"
         onclick="getOTP()"
       >
         📩 Get OTP
@@ -2588,6 +2623,8 @@ let registerMethod = 'email';
 let authTab = 'login';
 
 let dashboardData = null;
+
+let currentOrders = [];
 
 let countriesData = {};
 
@@ -4081,6 +4118,85 @@ function showAccountResult(result){
    GET OTP
 ================================================== */
 
+async function fetchOtp(number, orderId){
+
+  const body={
+    userId: currentUserId || currentTelegramId,
+    number:number
+  };
+
+  if(orderId){
+    body.orderId=orderId;
+  }
+
+  const response =
+    await fetch(
+      "/api/code",
+      {
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json"
+        },
+        cache:"no-store",
+        body:JSON.stringify(body)
+      }
+    );
+
+  let result=null;
+
+  try{
+    result=await response.json();
+  }catch(jsonError){
+    console.error(
+      "OTP response parse:",
+      jsonError
+    );
+
+    const err = new Error(
+      "Could not read server response."
+    );
+
+    err.statusCode=response.status;
+    throw err;
+  }
+
+  if(result && result.maintenance){
+
+    showMaintenance(
+      result.message
+    );
+
+    const err = new Error(
+      result.message ||
+      "Under maintenance."
+    );
+
+    err.statusCode=response.status;
+    throw err;
+  }
+
+  if(
+    !response.ok ||
+    !result.success
+  ){
+
+    const err = new Error(
+      result.message ||
+      "OTP not received."
+    );
+
+    err.statusCode=response.status;
+    throw err;
+  }
+
+  return {
+    code: result.code || "",
+    pass: result.pass || "",
+    number: result.number || result.Number || number
+  };
+}
+
+
 async function getOTP(){
 
   if(!currentAccount){
@@ -4101,46 +4217,44 @@ async function getOTP(){
     return;
   }
 
+  const button =
+    document.getElementById(
+      "getOtpButton"
+    );
+
+  if(button){
+    button.disabled=true;
+    button.textContent="⏳ Getting OTP…";
+  }
+
   try{
 
-    const response =
-      await fetch(
-        "/api/code",
-        {
-          method:"POST",
-          headers:{
-            "Content-Type":"application/json"
-          },
-          cache:"no-store",
-          body:JSON.stringify({
-            userId: currentUserId || currentTelegramId,
+    let result=null;
+    let lastError=null;
 
-            number:number
-          })
+    // TG-Lion often needs a few seconds after purchase to deliver the SMS.
+    // Retry a handful of times so the code appears as soon as it responds.
+    for(let attempt=0; attempt<8; attempt++){
+
+      try{
+
+        result=await fetchOtp(number, null);
+        break;
+
+      }catch(error){
+
+        lastError=error;
+
+        if(error.statusCode!==409){
+          throw error;
         }
-      );
 
-    const result =
-      await response.json();
-
-    if(result && result.maintenance){
-
-      showMaintenance(
-        result.message
-      );
-
-      return;
+        await new Promise(resolve=>setTimeout(resolve,2500));
+      }
     }
 
-    if(
-      !response.ok ||
-      !result.success
-    ){
-
-      throw new Error(
-        result.message ||
-        "OTP not received."
-      );
+    if(!result){
+      throw lastError || new Error("OTP not received.");
     }
 
     const codeEl =
@@ -4154,14 +4268,12 @@ async function getOTP(){
       );
 
     if(codeEl){
-
       codeEl.textContent =
         result.code ||
         "Not received";
     }
 
     if(passwordEl){
-
       passwordEl.textContent =
         result.pass ||
         "Not received";
@@ -4169,7 +4281,9 @@ async function getOTP(){
 
     currentAccount={
       ...currentAccount,
-      ...result
+      ...result,
+      otp:result.code,
+      pass:result.pass
     };
 
   }catch(error){
@@ -4184,6 +4298,148 @@ async function getOTP(){
       error.message ||
       "OTP could not be received."
     );
+
+  }finally{
+
+    if(button){
+      button.disabled=false;
+      button.textContent="📩 Get OTP";
+    }
+
+  }
+}
+
+
+/* ==================================================
+   GET OTP FROM ORDER HISTORY
+================================================== */
+
+async function getOrderOTP(index){
+
+  const order =
+    currentOrders &&
+    currentOrders[index];
+
+  if(!order){
+    return;
+  }
+
+  const number =
+    order.number ||
+    order.Number;
+
+  if(!number){
+
+    showMessage(
+      "OTP",
+      "Number not found for this order."
+    );
+
+    return;
+  }
+
+  const button =
+    document.getElementById(
+      "orderOtpBtn-"+index
+    );
+
+  const area =
+    document.getElementById(
+      "orderOtpArea-"+index
+    );
+
+  if(button){
+    button.disabled=true;
+    button.textContent="⏳ Getting OTP…";
+  }
+
+  if(area){
+    area.innerHTML=
+      '<span class="muted">Contacting TG-Lion…</span>';
+  }
+
+  try{
+
+    const result =
+      await fetchOtp(
+        number,
+        order._id || order.id || null
+      );
+
+    const otpEl =
+      document.getElementById(
+        "orderOtp-"+index
+      );
+
+    const passEl =
+      document.getElementById(
+        "orderPass-"+index
+      );
+
+    const statusEl =
+      document.getElementById(
+        "orderStatus-"+index
+      );
+
+    if(otpEl){
+      otpEl.textContent =
+        result.code ||
+        "Not received";
+
+      otpEl.classList.add(
+        "code-val"
+      );
+    }
+
+    if(passEl){
+      passEl.textContent =
+        result.pass ||
+        "—";
+
+      passEl.classList.add(
+        "code-val"
+      );
+    }
+
+    if(statusEl){
+      statusEl.textContent="completed";
+      statusEl.className=
+        "status-pill status-completed";
+    }
+
+    if(area){
+      area.innerHTML=
+        '<span style="color:var(--green)">✅ OTP received</span>';
+    }
+
+    // Keep the local order data in sync so re-renders show the OTP too.
+    order.otp=result.code;
+    order.pass=result.pass;
+    order.status="completed";
+
+  }catch(error){
+
+    console.error(
+      "Order OTP:",
+      error
+    );
+
+    if(area){
+      area.innerHTML=
+        '<span style="color:var(--red)">'+
+        escapeHtml(
+          error.message ||
+          "Could not get OTP."
+        )+
+        "</span>";
+    }
+
+  }finally{
+
+    if(button){
+      button.disabled=false;
+      button.textContent="🔄 Get OTP Again";
+    }
 
   }
 }
@@ -4204,10 +4460,12 @@ function renderOrders(orders){
     return;
   }
 
-  if(
-    !Array.isArray(orders) ||
-    !orders.length
-  ){
+  currentOrders =
+    Array.isArray(orders)
+      ? orders
+      : [];
+
+  if(!currentOrders.length){
 
     container.innerHTML=
       `
@@ -4220,7 +4478,7 @@ function renderOrders(orders){
   }
 
   container.innerHTML =
-    orders.map(order=>{
+    currentOrders.map((order,index)=>{
 
       const status =
         String(
@@ -4228,11 +4486,17 @@ function renderOrders(orders){
           "waiting"
         );
 
+      const hasOtp =
+        Boolean(
+          order.otp &&
+          String(order.otp).trim()
+        );
+
       return `
 
         <div class="order-card">
 
-          <div>
+          <div style="flex:1;min-width:0">
 
             <div class="order-country">
               🌍
@@ -4253,10 +4517,28 @@ function renderOrders(orders){
               <br>
 
               <b>OTP:</b>
-              ${escapeHtml(
-                order.otp ||
-                "Not received"
-              )}
+              <span
+                id="orderOtp-${index}"
+                class="${hasOtp ? "code-val" : ""}"
+              >
+                ${escapeHtml(
+                  order.otp ||
+                  "Not received"
+                )}
+              </span>
+
+              <br>
+
+              <b>Password:</b>
+              <span
+                id="orderPass-${index}"
+                class="${order.pass ? "code-val" : ""}"
+              >
+                ${escapeHtml(
+                  order.pass ||
+                  "—"
+                )}
+              </span>
 
               <br>
 
@@ -4267,6 +4549,20 @@ function renderOrders(orders){
 
             </div>
 
+            <div
+              id="orderOtpArea-${index}"
+              class="order-otp"
+            ></div>
+
+            <button
+              class="otp-btn"
+              type="button"
+              id="orderOtpBtn-${index}"
+              onclick="getOrderOTP(${index})"
+            >
+              ${hasOtp ? "🔄 Get OTP Again" : "📩 Get OTP"}
+            </button>
+
           </div>
 
           <div class="order-right">
@@ -4276,6 +4572,7 @@ function renderOrders(orders){
             </div>
 
             <span
+              id="orderStatus-${index}"
               class="
                 status-pill
                 ${getStatusClass(status)}
@@ -5052,6 +5349,8 @@ function handleLogout(){
   currentTelegramId=null;
 
   dashboardData=null;
+
+  currentOrders=[];
 
   countriesData={};
 
