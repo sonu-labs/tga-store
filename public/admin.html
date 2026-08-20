@@ -860,6 +860,10 @@ tbody tr:hover{
       <span class="ic">🛒</span> Orders
     </button>
 
+    <button class="nav-item" data-tab="recharge" type="button" onclick="switchTab('recharge')">
+      <span class="ic">💳</span> Recharge
+    </button>
+
     <button class="nav-item" data-tab="maintenance" type="button" onclick="switchTab('maintenance')">
       <span class="ic">⚙️</span> Settings
     </button>
@@ -1092,33 +1096,6 @@ tbody tr:hover{
 
       <div id="paymentsToast" style="margin-top:16px;font-size:13px" class="muted"></div>
 
-      <!-- ============ RECHG (merged into Settings) ============ -->
-      <div class="page-title" style="margin-top:26px">🧾 Recharge Transactions</div>
-      <div class="page-sub">All wallet top-ups from UPI / Binance / Crypto — latest first.</div>
-      <div class="panel">
-        <div class="panel-head">
-          <div class="panel-title">Recent Recharges</div>
-          <div class="panel-tools">
-            <button class="tool-btn" type="button" onclick="loadRecharges()">↻ Reload</button>
-          </div>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Time (IST)</th>
-                <th>User</th>
-                <th>Method</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th>Order ID</th>
-              </tr>
-            </thead>
-            <tbody id="rechargesBody"></tbody>
-          </table>
-        </div>
-      </div>
-
       <div class="settings-shortcuts" aria-label="Admin tools">
         <button class="settings-shortcut" type="button" onclick="switchTab('orders')">
           <span class="settings-shortcut-icon">🛒</span>
@@ -1143,6 +1120,35 @@ tbody tr:hover{
       </div>
     </section>
 
+    <!-- ============ RECHARGE (dedicated tab) ============ -->
+    <section id="page-recharge" class="page">
+      <div class="page-title">🧾 Recharge Transactions</div>
+      <div class="page-sub">All wallet top-ups from UPI / Binance / Crypto — latest first.</div>
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Recent Recharges</div>
+          <div class="panel-tools">
+            <button class="tool-btn" type="button" onclick="loadRecharges()">↻ Reload</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Time (IST)</th>
+                <th>User</th>
+                <th>Method</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Order ID</th>
+              </tr>
+            </thead>
+            <tbody id="rechargesBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
   </main>
 </div>
 
@@ -1151,8 +1157,8 @@ tbody tr:hover{
   <button class="admin-nav-btn" data-tab="logs" type="button" onclick="switchTab('logs')"><span>≡</span>Logs</button>
   <button class="admin-nav-btn" data-tab="users" type="button" onclick="switchTab('users')"><span>👥</span>Users</button>
   <button class="admin-nav-btn" data-tab="orders" type="button" onclick="switchTab('orders')"><span>🛒</span>Orders</button>
-  <button class="admin-nav-btn" data-tab="maintenance" type="button" onclick="switchTab('maintenance')"><span>⚙</span>Settings</button>
   <button class="admin-nav-btn" data-tab="recharge" type="button" onclick="switchTab('recharge')"><span>💳</span>Recharge</button>
+  <button class="admin-nav-btn" data-tab="maintenance" type="button" onclick="switchTab('maintenance')"><span>⚙</span>Settings</button>
 </nav>
 
 <div id="toast" class="toast"></div>
@@ -1332,11 +1338,12 @@ function switchTab(tab){
   else if(tab === "logs"){ loadLogs(); }
   else if(tab === "users"){ loadUsers(); }
   else if(tab === "orders"){ loadOrders(); }
-  // Pay (gateways) & Rechg (transactions) now live inside Settings
+  else if(tab === "recharge"){ loadRecharges(); }
+  // Settings keeps the payment-gateway controls; Recharge transactions
+  // now live on their own dedicated tab.
   else if(tab === "maintenance"){
     loadMaintenance();
     loadPayments();
-    loadRecharges();
   }
 }
 

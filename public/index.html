@@ -4432,8 +4432,8 @@ function openRechargeForm(method){
       <div class="recharge-meta">
         <b>Pay ID:</b> <code style="user-select:all">${escapeHtml(payId||"Not configured")}</code>
         ${payId ? `<button class="secondary-btn" type="button" style="margin-top:0;padding:6px 10px;font-size:12px" data-v="${escapeHtml(payId)}" onclick="copyToClipboard(this.dataset.v)">📋 Copy</button>` : ``}<br>
-        ${qrUrl ? `<img src="${escapeHtml(qrUrl)}" class="recharge-qr" alt="Binance QR">` : ``}
-        ${qrUrl ? `<div class="recharge-actions" style="margin-top:6px"><a class="secondary-btn" style="display:inline-block;text-decoration:none;margin-top:0;text-align:center" href="${escapeHtml(qrUrl)}" download="binance_qr.png" target="_blank" rel="noopener">⬇️ Download QR</a></div>` : ``}
+        ${qrUrl ? `<img src="${escapeHtml(qrProxy(qrUrl))}" class="recharge-qr" alt="Binance QR" loading="lazy">` : ``}
+        ${qrUrl ? `<div class="recharge-actions" style="margin-top:6px"><a class="secondary-btn" style="display:inline-block;text-decoration:none;margin-top:0;text-align:center" href="${escapeHtml(qrDownload(qrUrl,'binance_qr.png'))}" download="binance_qr.png">⬇️ Download QR</a></div>` : ``}
         <div style="margin-top:8px">Send payment via Binance app to this Pay ID, then enter your <b>Order ID / Transaction ID</b> below and verify.</div>
       </div>
       <input id="binanceOrderInput" class="recharge-input" type="text" placeholder="Enter Binance Order ID / Transaction ID">
@@ -4491,9 +4491,9 @@ function showUPIInvoice(data){
   area.classList.remove("hidden");
   area.innerHTML = `
     <div style="font-weight:850;font-size:18px">📲 UPI Payment (Auto)</div>
-    <img src="${escapeHtml(data.qr_url)}" class="recharge-qr" alt="UPI QR">
+    <img src="${escapeHtml(qrProxy(data.qr_url))}" class="recharge-qr" alt="UPI QR" loading="lazy">
     <div class="recharge-actions" style="margin-top:6px">
-      <a class="secondary-btn" style="display:inline-block;text-decoration:none;margin-top:0;text-align:center" href="${escapeHtml(data.qr_url)}" download="upi_qr_${escapeHtml(data.order_id)}.png" target="_blank" rel="noopener">⬇️ Download QR</a>
+      <a class="secondary-btn" style="display:inline-block;text-decoration:none;margin-top:0;text-align:center" href="${escapeHtml(qrDownload(data.qr_url,'upi_qr_'+data.order_id+'.png'))}" download="upi_qr_${escapeHtml(data.order_id)}.png">⬇️ Download QR</a>
     </div>
     <div class="recharge-meta">
       <b>Amount:</b> ₹${escapeHtml(String(data.amount))}<br>
@@ -4526,9 +4526,9 @@ async function createFamPayInvoice(){
     area.classList.remove("hidden");
     area.innerHTML = `
       <div style="font-weight:850;font-size:18px">💳 UPI Gateway — Pay Any Amount</div>
-      <img src="${escapeHtml(data.qr_url)}" class="recharge-qr" alt="UPI QR">
+      <img src="${escapeHtml(qrProxy(data.qr_url))}" class="recharge-qr" alt="UPI QR" loading="lazy">
       <div class="recharge-actions" style="margin-top:6px">
-        <a class="secondary-btn" style="display:inline-block;text-decoration:none;margin-top:0;text-align:center" href="${escapeHtml(data.qr_url)}" download="fampay_qr_${escapeHtml(data.order_id)}.png" target="_blank" rel="noopener">⬇️ Download QR</a>
+        <a class="secondary-btn" style="display:inline-block;text-decoration:none;margin-top:0;text-align:center" href="${escapeHtml(qrDownload(data.qr_url,'fampay_qr_'+data.order_id+'.png'))}" download="fampay_qr_${escapeHtml(data.order_id)}.png">⬇️ Download QR</a>
       </div>
       <div class="recharge-meta">
         <b>Order ID:</b> <code>${escapeHtml(data.order_id)}</code><br>
@@ -5217,6 +5217,25 @@ function fallbackCopyText(text){
   try{ document.execCommand("copy"); showMessage("📋 Copied", text); }
   catch(e){ showMessage("Copy Failed", "Could not copy. Please copy manually."); }
   document.body.removeChild(ta);
+}
+
+/* QR helpers — always route external QR images through our own /api/qr_proxy
+   endpoint. This fixes two long-standing bugs:
+     1. Broken image icon: some UPI/FamPay QR CDNs block hot-linking or serve
+        short-lived signed URLs, so <img src="external"> shows nothing.
+     2. "Download QR" opening in a new tab instead of saving the file:
+        the HTML `download` attribute is IGNORED for cross-origin URLs by
+        Chrome (especially on Android). Serving the bytes from our own origin
+        + Content-Disposition: attachment forces a real file download. */
+function qrProxy(url){
+  if(!url) return "";
+  return "/api/qr_proxy?url=" + encodeURIComponent(String(url));
+}
+function qrDownload(url, filename){
+  if(!url) return "";
+  var q = "/api/qr_proxy?url=" + encodeURIComponent(String(url));
+  if(filename){ q += "&dl=" + encodeURIComponent(String(filename)); }
+  return q;
 }
 
 function escapeHtml(value){
