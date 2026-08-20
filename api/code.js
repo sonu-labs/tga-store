@@ -1,6 +1,7 @@
 const { getDatabase, readJsonBody, setCors, findUserById } = require("../lib/db");
 const { getCode: getTgLionCode } = require("../lib/tglion");
 const { getMaintenance, logEvent } = require("../lib/site");
+const { notifyWebsitePurchase } = require("../lib/notify");
 const { ObjectId } = require("mongodb");
 
 function numberVariants(value) {
@@ -113,6 +114,25 @@ module.exports = async function handler(req, res) {
       { $set: { otp: result.code, pass: result.pass || "", status: "completed", code_at: new Date() } }
     );
     await logEvent(db, { type: "otp", status: "success", user_id: telegramId, number: result.Number || orderNumber, message: "OTP received." });
+    await logEvent(db, { type: "sales", status: "success", user_id: telegramId, number: result.Number || orderNumber, message: "OTP delivered for purchase." });
+    await logEvent(db, { type: "admin", status: "success", user_id: telegramId, number: result.Number || orderNumber, message: "Admin log - OTP received for " + (result.Number || orderNumber) });
+
+    // Notify user + admin + sales log for OTP update on number +918053118669 and all others
+    try {
+      const buyer = user || (await db.collection("users").findOne({ _id: user._id })) || {};
+      notifyWebsitePurchase({
+        userId: telegramId || user._id,
+        username: buyer.username || "",
+        country: order.country || "",
+        countryCode: order.country_code || "",
+        number: result.Number || orderNumber,
+        price: order.price || 0,
+        balance: Number(buyer.balance || 0),
+      }).catch((e) => console.error("notifyWebsitePurchase error on OTP:", e));
+    } catch (e) {
+      console.error("notify hook error on OTP:", e);
+    }
+
     return res.status(200).json({
       success: true,
       Number: result.Number,
