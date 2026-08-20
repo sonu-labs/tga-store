@@ -4774,7 +4774,9 @@ async function loadRechargeHistory(){
       `;
     }).join("");
   }catch(e){
-    box.innerHTML = `<div class="loading">Could not load history.</div>`;
+    console.error("Recharge history:", e);
+    const reason = (e && e.message) ? e.message : "Could not load history.";
+    box.innerHTML = `<div class="loading">${escapeHtml(reason)}</div>`;
   }
 }
 
