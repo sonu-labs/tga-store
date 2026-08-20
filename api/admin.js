@@ -21,6 +21,12 @@ const {
   currentDeployId
 } = require("../lib/notify");
 
+const {
+  THEMES,
+  getSiteTheme,
+  setSiteTheme
+} = require("../lib/themes");
+
 const { displayStatus } = require("../lib/orders");
 
 function serialize(value) {
@@ -649,6 +655,30 @@ module.exports = async function handler(req, res) {
         const doc = await db.collection("settings").findOne({ _id: "server_config" });
         return res.status(200).json({ success: true, config: serialize(doc || {}) });
       }
+      return res.status(405).json({ success: false, message: "Method not allowed." });
+    }
+
+    // 🎨 Store theme: admin picks a theme, the USER site restyles itself.
+    // The admin panel intentionally keeps its own look.
+    if (action === "theme" || action === "themes" || action === "site_theme") {
+      if (req.method === "GET") {
+        return res.status(200).json({
+          success: true,
+          theme: await getSiteTheme(db),
+          themes: THEMES
+        });
+      }
+
+      if (req.method === "POST") {
+        const body = readJsonBody(req);
+        const theme = await setSiteTheme(db, body.theme || body.id || "", session.id || "admin");
+        return res.status(200).json({
+          success: true,
+          theme,
+          themes: THEMES
+        });
+      }
+
       return res.status(405).json({ success: false, message: "Method not allowed." });
     }
 

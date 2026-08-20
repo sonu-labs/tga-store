@@ -468,6 +468,94 @@ async def logout_bot(call: CallbackQuery):
     )
 
 # ================ START =================
+
+async def website_otp_lookup(m: Message, number: str):
+    """Handle the website DM's '🔑 Get code' button (?start=otp_<number>).
+
+    Website orders are served by TG-Lion, so this polls TG-Lion's getCode API
+    a few times (SMS can lag a few seconds after purchase) and shows the OTP
+    + password with copy buttons.
+    """
+    number = str(number or "").strip()
+    if not number:
+        await m.answer("❌ <b>Invalid number in the link.</b>", parse_mode="HTML")
+        return
+
+    status_msg = await m.answer("🔎 <i>Fetching your code from TG-Lion…</i>", parse_mode="HTML")
+
+    code = None
+    password = None
+    last_reason = "No code received yet."
+
+    async with aiohttp.ClientSession() as session:
+        for _attempt in range(5):
+            safe_num = urllib.parse.quote(number)
+            url = (
+                "https://TG-Lion.net?action=getCode"
+                f"&number={safe_num}&apiKey={TGLION_API_KEY}&YourID={TGLION_ID}"
+            )
+            try:
+                async with session.get(url, timeout=15) as resp:
+                    text_resp = await resp.text()
+                    try:
+                        data = json.loads(text_resp)
+                        if data.get("status") == "ok":
+                            code = str(data.get("code") or "").strip()
+                            password = str(data.get("pass") or data.get("password") or "").strip()
+                            if code:
+                                break
+                            last_reason = "Code not received yet — Telegram can take a few seconds to send it."
+                        else:
+                            last_reason = str(data.get("msg") or data.get("message") or "Not ready yet.")
+                    except Exception:
+                        if "ok" in text_resp.lower() and '"code"' in text_resp:
+                            c_match = re.search(r'"code"\s*:\s*"?(\d+)"?', text_resp)
+                            p_match = re.search(r'"pass"\s*:\s*"([^"]*)"', text_resp)
+                            if c_match:
+                                code = c_match.group(1).strip()
+                                password = p_match.group(1).strip() if p_match else ""
+                                break
+                        last_reason = "Provider returned an unexpected response. Try again in a moment."
+            except Exception as e:
+                last_reason = f"Network issue while contacting TG-Lion. Try again in a moment."
+                print(f"website_otp_lookup error: {e}")
+            await asyncio.sleep(3)
+
+    retry_url = f"https://t.me/{BOTUSER}?start=otp_{urllib.parse.quote(number)}"
+
+    if code:
+        kb = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(text="Copy OTP", copy_text=CopyTextButton(text=code)),
+                    InlineKeyboardButton(text="Copy Pass", copy_text=CopyTextButton(text=password or "None")),
+                ],
+                [
+                    InlineKeyboardButton(text="🔄 Get Code Again", url=retry_url),
+                ],
+            ]
+        )
+        await status_msg.edit_text(
+            "<pre>Order Completed ✅ (Website)</pre>\n"
+            f"✅ <b>NUMBER</b> - <code>{escape(number)}</code>\n"
+            f"💬 <b>CODE</b> - <code>{escape(code)}</code>\n"
+            f"💬 <b>PASS</b> - <code>{escape(password or 'None')}</code>",
+            parse_mode="HTML",
+            reply_markup=kb,
+        )
+    else:
+        kb = InlineKeyboardMarkup(
+            inline_keyboard=[[InlineKeyboardButton(text="🔄 Try Again", url=retry_url)]]
+        )
+        await status_msg.edit_text(
+            "⏳ <b>No code yet.</b>\n\n"
+            f"<i>{escape(last_reason)}</i>\n\n"
+            "Tap <b>🔄 Try Again</b> in a few seconds.",
+            parse_mode="HTML",
+            reply_markup=kb,
+        )
+
+
 @dp.message(Command("start"))
 async def cmd_start(m: Message):
     args = m.text.split()
@@ -558,6 +646,16 @@ async def cmd_start(m: Message):
             pass
         return
     # ===== END WEBSITE AUTH =====
+
+    # ===== WEBSITE DM "Get code" BUTTON =====
+    # The buyer DM sent after a website purchase has a "🔑 Get code" button
+    # that links here: https://t.me/<bot>?start=otp_<number>. It used to fall
+    # through to the main menu (dead button). Now it fetches the OTP from
+    # TG-Lion and shows it directly.
+    if payload.startswith("otp_"):
+        await website_otp_lookup(m, payload.split("otp_", 1)[1])
+        return
+    # ===== END WEBSITE DM "Get code" BUTTON =====
 
     referred_by = None
     is_ref_link = False
@@ -1401,7 +1499,14 @@ async def srv2_buy_number(cq: CallbackQuery):
 
     if not phone_number:
         kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🔙 Back", callback_data="buy_server2:0")]])
-        return await status_msg.edit_text(f"❌ <b>Purchase failed.</b>\n\nPlease try again later.", parse_mode="HTML", reply_markup=kb)
+        # Show the REAL reason in plain language instead of a generic message.
+        reason = str(last_error or "No number was returned by the provider.")
+        if len(reason) > 300:
+            reason = reason[:300] + "…"
+        return await status_msg.edit_text(
+            f"❌ <b>Purchase failed.</b>\n\n<i>Reason:</i> {escape(reason)}\n\nPlease try again later.",
+            parse_mode="HTML", reply_markup=kb
+        )
         
     new_balance = user.get("balance", 0.0) - inr_price
     users_col.update_one({"_id": user_id}, {"$set": {"balance": new_balance}})
