@@ -50,12 +50,17 @@ tga-store/
 │   ├── payments.js             # UPI, FamPay, Binance, OxaPay integrations
 │   ├── tglion.js               # TG-Lion API wrapper (country/number/code)
 │   ├── server2.js              # Unified country fetch + profit margin
+│   ├── themes.js               # Store theme catalog (22 full-UI themes) + get/set
 │   └── notify.js               # Telegram sales/admin/buyer notifications
 │
 ├── public/                     # Static frontend (served as-is by Vercel)
 │   ├── index.html              # User-facing store (single page app)
+│   ├── theme-ui.css            # Full-UI theme engine (all 22 store themes)
 │   ├── admin.html              # Admin dashboard (single page app)
 │   └── admin_login.html        # Admin login page
+│
+├── dev/                        # Local development helpers (never deployed)
+│   └── preview-server.js       # Static server + mock API for previewing themes
 │
 ├── bot.py                      # Telegram bot (hosted separately; website shares its DB)
 ├── BOT_PATCH_INSTRUCTIONS.md   # Patch notes for website login/register/connect inside the bot
@@ -120,7 +125,7 @@ tga-store/
 - 🤖 **Bot Connect** — generate a Telegram bot link to connect the account (purchase alerts + future features)
 - 🔒 **Change Password** (current + new; min 6 chars)
 - 💱 **Currency** — USD / INR / USDT display
-- 🌙 **Dark / Light theme** (saved in localStorage)
+- 🌙 **Dark / Light theme** (saved in localStorage — only active on the `default` store theme; every other theme ships its own complete look and the row shows which one is live)
 - 📄 Terms & Conditions modal
 - 📢 Telegram Channel link
 - 🎧 Contact Support link
@@ -199,6 +204,11 @@ Below it is a **Recent Activity** feed (last 25 logs) — login, buy, OTP, and r
 - **Profit Margin %** input — added on top of the provider price (e.g. 20 = +20%). It affects both `/api/countries` prices and purchase pricing.
 - Saved to `settings.server_config.s2_profit`
 
+#### 🎨 Store Theme
+- 22 selectable themes; each one is a **full UI redesign** of the user store (layout, shapes, fonts, buttons, animations, backgrounds) — see the [Store Themes](#-store-themes-22-full-ui-themes) section
+- Click a card to apply it instantly for every visitor; 👁 **Live preview** opens the store with that theme in a new tab without saving
+- The admin panel itself never changes its look
+
 #### Logout button
 - Deletes the session token from both DB and browser
 
@@ -206,6 +216,50 @@ Below it is a **Recent Activity** feed (last 25 logs) — login, buy, OTP, and r
 - Below 820px the sidebar converts to a bottom nav (6 tabs)
 - Tables scroll horizontally on small screens
 - Auto-refreshes every 20 seconds on the Overview tab
+
+---
+
+## 🎨 Store Themes (22 full-UI themes)
+
+The admin picks one theme in **Admin → Settings → 🎨 Store Theme** and the whole
+user store rebuilds itself for every visitor. These are **not colour swaps** —
+each theme changes layout, card shapes, typography, navigation style, button
+behaviour, hover/press animations, page transitions, loading spinners and
+background effects.
+
+| # | Theme | What changes |
+|---|---|---|
+| 1 | 🌑 **Default** | Original TGA dark store — rounded cards, floating pill nav |
+| 2 | 💎 **Glass** | Fully transparent frosted UI, heavy blur, drifting light blobs |
+| 3 | 🫧 **Neumorphic** | Borderless puffy cards, soft dual shadows, press-in buttons |
+| 4 | 🧱 **Neo Brutalist** | Zero radius, 3px black borders, offset shadows, snap hovers |
+| 5 | 🖥️ **Terminal** | Monospace console, scanlines, `[ BRACKET ]` buttons, typing caret |
+| 6 | 👾 **Retro Arcade** | Neon grid horizon, pixel edges, blinking labels, chunky press |
+| 7 | 🌈 **Aurora** | Animated mesh gradient, giant soft cards, gradient text, slide pages |
+| 8 | 📒 **Paper** | Ruled notebook texture, dashed borders, tilted taped cards |
+| 9 | 📰 **Editorial** | Magazine serif type, hairline rules, full-width text nav, no shadows |
+| 10 | 📊 **Pro Console** | Dense dashboard, 6-column grid, left side rail nav on desktop |
+| 11 | 🛰️ **Cyber HUD** | Clipped corners, corner ticks, radar sweep, glitch hovers |
+| 12 | 🥂 **Luxe** | Gold hairlines, serif caps, shimmering titles, slow elegant fades |
+| 13 | 🍬 **Candy Pop** | Extra-round cards, spring easing, wiggle hover, bouncy nav |
+| 14 | ◼️ **Swiss** | Strict grid, no radius/shadow, invert-on-hover tiles, huge type |
+| 15 | 🌿 **Organic** | Asymmetric blob radii, earthy palette, gentle sway animation |
+| 16 | 🌴 **Vaporwave** | Chrome sunset, retro grid floor, italic display, glow buttons |
+| 17 | 🟦 **Metro Tiles** | Flat coloured square tiles, 3D tile press, full-width tile nav |
+| 18 | 🧸 **Claymorphism** | Fat 3D clay shapes, inner highlights, squish press |
+| 19 | 🌊 **Deep Abyss** | Rising bubbles, wave glow, floating cards, deep blue depth |
+| 20 | ⚙️ **Industrial** | Brushed metal gradients, rivets, condensed caps, mechanical press |
+| 21 | 🌸 **Zen Sakura** | Falling petals, airy spacing, serif headings, very soft motion |
+| 22 | 🌌 **Midnight Pro** | Gradient hero balance card, indigo glow, modern product feel |
+
+**How it works**
+
+- `lib/themes.js` — the catalog (id, name, emoji, description, UI summary, swatch colours). Old colour-only theme ids (`neon`, `matrix`, `slate`, …) are auto-mapped to their closest new theme, so existing stores keep working.
+- `GET/POST /api/admin?action=theme` — read/save the active theme (`settings.site_config.theme`).
+- `GET /api/status` — returns the active theme to the store front-end.
+- `public/theme-ui.css` — the theme engine: shared `--t-*` design tokens plus one block per theme, all scoped to `body[data-theme="<id>"]`. The default theme sets no attribute, so its original CSS is untouched.
+- `public/index.html` — applies the theme, caches it in `localStorage` (`tga_site_theme`) so there is no flash on reload, and hosts the ambient FX layer (`.theme-fx`) used for bubbles/petals/blobs/grids/scanlines.
+- **Live preview:** every card in the admin theme picker has a 👁 button that opens the store at `/?preview_theme=<id>` — that tab only, nothing is saved for real visitors.
 
 ---
 
@@ -341,6 +395,17 @@ npm install
 vercel dev          # if you have the Vercel CLI
 # or just serve the static files with any static server (api functions need the Vercel env)
 ```
+
+**Theme preview (no database needed)**
+```bash
+node dev/preview-server.js          # http://localhost:3000
+```
+Serves `public/` with an in-memory mock API so the entire user flow
+(login → home → buy → recharge → orders → settings) can be clicked through:
+
+- `http://localhost:3000/?preview_theme=glass` — force any theme in one tab
+- `http://localhost:3000/gallery` — all 22 themes rendered live side by side
+- `http://localhost:3000/admin` — admin panel against the mock API
 
 ---
 
