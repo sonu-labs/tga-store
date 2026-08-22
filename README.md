@@ -286,7 +286,7 @@ background effects.
 | POST | `/api/recharge?action=create` | Create UPI/FamPay/Crypto/Binance invoice |
 | POST | `/api/recharge?action=verify` | Verify payment + credit balance |
 | GET | `/api/qr_proxy?url=&dl=` | QR image proxy (display + download) |
-| GET/POST | `/api/apikey?action=list/generate/revoke` | User API key management (API Docs) |
+| GET/POST | `/api/apikey?action=list/generate/revoke/logs` | User API key management and personal API request logs |
 | GET/POST | `/api/v1?action=…` | Public developer API (see below) |
 
 ### Developer API (`/api/v1`) — "TGA Store API"
@@ -295,29 +295,24 @@ screen top corner). Each user generates their own `apiKey` there.
 
 | Action | Parameters | Returns |
 |---|---|---|
-| `available_countries` | `apiKey`, `YourID` | All countries with stock/price |
-| `country_info` | `apiKey`, `YourID`, `country_code?` | One country (or all) |
-| `get_balance` | `apiKey`, `YourID` | Balance in USD |
-| `getNumber` | `apiKey`, `YourID`, `country_code`, `maxPrice?` | Buys a number (deducts balance) |
-| `getCode` | `apiKey`, `YourID`, `number` | Login code + password for a purchase |
+| `available_countries` | `apiKey` | All countries with stock/price |
+| `country_info` | `apiKey`, `country_code?` | One country (or all) |
+| `get_balance` | `apiKey` | Balance in USD |
+| `getNumber` | `apiKey`, `country_code` | Buys a number (deducts balance) |
+| `getCode` | `apiKey`, `number` | Login code + password for a purchase |
 
-Example: `GET /api/v1?action=getNumber&apiKey=TGA_…&YourID=…&country_code=uz`
+Example: `GET /api/v1?action=getNumber&apiKey=TGA_…&country_code=uz`
 
-### Animated Telegram emoji (Lottie)
-The user UI plays animated emoji with the Lottie web player. Placeholder
-animations ship in `public/emoji/*.json` (keyed by Telegram custom emoji id or
-codepoints — regenerate with `node dev/gen-emoji-lottie.js`). To use the REAL
-Telegram premium animations, download each emoji as `lottie.json` from an emoji
-downloader bot (e.g. @EmojiSaverBot) and save it as
-`public/emoji/<custom_emoji_id>.json` — the site picks it up automatically.
-The emoji id map lives in `public/emoji-map.js`.
+### Emoji
+The user UI uses normal system emoji only. Telegram premium/custom emoji IDs and Lottie assets are not used.
 
 ### Admin APIs (Bearer token required)
 | Method | Endpoint | Purpose |
 |---|---|---|
 | POST | `/api/admin_login` | `{id, password}` → token |
 | GET | `/api/admin?action=overview` | Dashboard stats + recent logs |
-| GET | `/api/admin?action=logs&type=&q=` | Filter/search logs |
+| GET | `/api/admin?action=logs&type=&q=` | Filter/search store logs |
+| GET | `/api/admin?action=api_logs&q=` | API request logs with creator details |
 | GET | `/api/admin?action=users&q=` | User list with stats |
 | GET | `/api/admin?action=orders` | All orders |
 | GET | `/api/admin?action=recharges` | All transactions + crypto |
