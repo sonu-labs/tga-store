@@ -775,7 +775,12 @@ a.setting-item:hover{
   z-index:100;
   bottom:14px;
   left:50%;
-  transform:translateX(-50%);
+  /* translateZ + will-change promote the nav to its own compositor layer.
+     Without it, tapping a button while the bar has backdrop-filter makes
+     mobile Safari/Chrome repaint the fixed bar and it visibly jumps down
+     or flickers out of view ("glitch"). */
+  transform:translateX(-50%) translateZ(0);
+  will-change:transform;
   width:min(720px,calc(100% - 28px));
   background:var(--nav-bg);
   border:1px solid var(--nav-border);
@@ -824,10 +829,10 @@ body.light .bottom-nav{
   outline:none;
   touch-action:manipulation;
   transition:
-    transform .18s ease,
-    background .2s ease,
+    background .18s ease,
     color .2s ease,
-    box-shadow .2s ease;
+    box-shadow .2s ease,
+    filter .18s ease;
 }
 
 .nav-btn:focus,
@@ -838,7 +843,13 @@ body.light .bottom-nav{
 }
 
 .nav-btn:active{
-  transform:scale(.96);
+  /* No transform on :active — a transform inside a backdrop-filter bar
+     triggers the fixed-position repaint glitch on mobile browsers (button
+     vanishes / slides downward). Feedback is given with light/inset styles
+     instead. */
+  background:rgba(var(--green-rgb),.10);
+  box-shadow:inset 0 0 0 1px rgba(var(--green-rgb),.18),inset 0 2px 8px rgba(0,0,0,.25);
+  filter:brightness(1.12);
 }
 
 .nav-icon{
@@ -1212,7 +1223,457 @@ body.light .nav-btn.active{
 }
 
 /* ==================================================
+   HEADER ACTIONS + DROPDOWN MENU
+================================================== */
+
+.header-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-left:auto;
+}
+
+.header-menu{
+  position:fixed;
+  top:calc(var(--header-h,78px) + 6px);
+  right:14px;
+  z-index:120;
+  min-width:230px;
+  background:var(--nav-bg,var(--surface));
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:7px;
+  backdrop-filter:blur(22px);
+  -webkit-backdrop-filter:blur(22px);
+  box-shadow:0 24px 70px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.06);
+  transform-origin:top right;
+  animation:menuIn .16s cubic-bezier(.22,.9,.3,1);
+}
+
+@keyframes menuIn{
+  from{opacity:0;transform:translateY(-6px) scale(.97)}
+  to{opacity:1;transform:none}
+}
+
+.header-menu button,
+.header-menu a{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  text-align:left;
+  border:0;
+  background:transparent;
+  color:var(--text);
+  font-weight:700;
+  font-size:14px;
+  padding:12px 13px;
+  border-radius:12px;
+  text-decoration:none;
+  transition:background .15s ease;
+}
+
+.header-menu button:hover,
+.header-menu a:hover{
+  background:rgba(var(--green-rgb),.12);
+}
+
+.header-menu a{
+  color:var(--muted);
+}
+
+.header-menu .tga-emoji{
+  font-size:18px;
+  width:24px;
+  text-align:center;
+  flex:0 0 24px;
+}
+
+/* ==================================================
+   LOGIN SCREEN — API DOCS LINK (top corner)
+================================================== */
+
+.login-api-link{
+  position:fixed;
+  top:14px;
+  right:14px;
+  z-index:60;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  padding:9px 14px;
+  border-radius:999px;
+  background:var(--surface2, rgba(255,255,255,.08));
+  border:1px solid var(--border);
+  color:var(--text);
+  font-size:13px;
+  font-weight:800;
+  cursor:pointer;
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  transition:transform .15s ease, border-color .15s ease;
+}
+
+.login-api-link:hover{
+  border-color:rgba(var(--green-rgb),.5);
+  transform:translateY(-1px);
+}
+
+/* ==================================================
+   API DOCS + PRICING MODALS
+================================================== */
+
+.docs-modal .modal{
+  width:min(860px,calc(100% - 24px));
+  max-height:calc(100dvh - 40px);
+  display:flex;
+  flex-direction:column;
+  padding:0;
+  overflow:hidden;
+}
+
+.docs-modal .modal-head{
+  padding:18px 22px;
+  margin-bottom:0;
+  flex:0 0 auto;
+  border-bottom:1px solid var(--border);
+}
+
+.docs-scroll{
+  overflow-y:auto;
+  padding:22px;
+  -webkit-overflow-scrolling:touch;
+}
+
+.docs-intro{
+  color:var(--muted);
+  line-height:1.7;
+  font-size:14px;
+  margin:0 0 20px;
+}
+
+.docs-card{
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:16px;
+}
+
+.docs-card-title{
+  font-size:15px;
+  font-weight:900;
+  margin-bottom:6px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.docs-card-sub{
+  color:var(--muted);
+  font-size:12.5px;
+  line-height:1.6;
+  margin-bottom:10px;
+}
+
+.docs-url{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background:rgba(0,0,0,.35);
+  border:1px solid var(--border);
+  border-radius:11px;
+  padding:11px 12px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:12px;
+  word-break:break-all;
+  color:var(--green);
+  line-height:1.5;
+}
+
+body.light .docs-url{
+  background:rgba(0,0,0,.05);
+}
+
+.docs-copy{
+  flex:0 0 auto;
+  border:1px solid var(--border);
+  background:var(--surface2);
+  color:var(--text);
+  border-radius:9px;
+  padding:7px 11px;
+  font-size:12px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.docs-param-table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:6px;
+  font-size:13px;
+}
+
+.docs-param-table th{
+  text-align:left;
+  color:var(--muted);
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.6px;
+  padding:7px 8px;
+  border-bottom:1px solid var(--border);
+}
+
+.docs-param-table td{
+  padding:8px;
+  border-bottom:1px solid var(--border);
+  color:var(--text);
+  vertical-align:top;
+}
+
+.docs-param-table tr:last-child td{
+  border-bottom:0;
+}
+
+.docs-param-table code{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:12px;
+  color:var(--green);
+  background:rgba(var(--green-rgb),.1);
+  padding:2px 6px;
+  border-radius:6px;
+}
+
+.docs-tag{
+  display:inline-block;
+  font-size:10.5px;
+  font-weight:900;
+  letter-spacing:.8px;
+  padding:3px 9px;
+  border-radius:99px;
+  margin-left:6px;
+  vertical-align:2px;
+}
+
+.docs-tag.get{
+  background:rgba(66,232,137,.14);
+  color:var(--green);
+  border:1px solid rgba(66,232,137,.3);
+}
+
+.docs-pre{
+  background:rgba(0,0,0,.42);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:13px 14px;
+  margin:10px 0 0;
+  overflow-x:auto;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:12px;
+  line-height:1.65;
+  color:#b7ffd8;
+  white-space:pre;
+}
+
+body.light .docs-pre{
+  background:rgba(0,0,0,.06);
+  color:#0a6b3a;
+}
+
+.docs-key-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.docs-key-box{
+  flex:1 1 240px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background:rgba(0,0,0,.35);
+  border:1px dashed var(--border);
+  border-radius:11px;
+  padding:10px 12px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:12.5px;
+  word-break:break-all;
+  color:var(--text);
+}
+
+body.light .docs-key-box{
+  background:rgba(0,0,0,.05);
+}
+
+.docs-key-list{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-top:10px;
+}
+
+.docs-key-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:10px 12px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:12px;
+  word-break:break-all;
+}
+
+.docs-key-item .key-meta{
+  color:var(--muted);
+  font-size:11px;
+  margin-left:auto;
+  flex:0 0 auto;
+}
+
+.docs-test-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+@media(max-width:640px){
+  .docs-test-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+.docs-test-grid label{
+  display:block;
+  color:var(--muted);
+  font-size:11.5px;
+  font-weight:800;
+  letter-spacing:.4px;
+  margin-bottom:5px;
+}
+
+.docs-test-grid .field-input,
+.docs-test-grid .select{
+  width:100%;
+  margin-top:0;
+}
+
+.docs-response{
+  margin-top:14px;
+}
+
+.docs-login-hint{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  background:rgba(255,200,87,.08);
+  border:1px solid rgba(255,200,87,.22);
+  border-radius:12px;
+  padding:13px 14px;
+  color:var(--text);
+  font-size:13px;
+  margin-bottom:14px;
+}
+
+.docs-login-hint .primary-btn{
+  margin-top:0;
+  padding:9px 16px;
+  font-size:12.5px;
+  margin-left:auto;
+}
+
+/* pricing modal */
+.pricing-table-wrap{
+  overflow-x:auto;
+  max-height:52vh;
+  overflow-y:auto;
+}
+
+.pricing-table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13.5px;
+}
+
+.pricing-table th{
+  position:sticky;
+  top:0;
+  text-align:left;
+  background:var(--surface2);
+  color:var(--muted);
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.6px;
+  padding:10px 12px;
+  border-bottom:1px solid var(--border);
+}
+
+.pricing-table td{
+  padding:10px 12px;
+  border-bottom:1px solid var(--border);
+  color:var(--text);
+}
+
+.pricing-table tr:hover td{
+  background:rgba(var(--green-rgb),.06);
+}
+
+.pricing-flag{
+  font-size:17px;
+  margin-right:7px;
+}
+
+.pricing-price{
+  color:var(--green);
+  font-weight:900;
+  white-space:nowrap;
+}
+
+.pricing-stock{
+  color:var(--muted);
+  font-size:12.5px;
+}
+
+/* animated emoji */
+.tga-emoji{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  line-height:1;
+  vertical-align:-.12em;
+}
+
+.tga-emoji .tga-emoji-slot{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  line-height:1;
+}
+
+.tga-emoji .tga-emoji-slot svg{
+  display:block;
+  width:1em;
+  height:1em;
+}
+
+.tga-emoji-static{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  line-height:1;
+}
+
+/* ==================================================
    STORE THEMES (admin-selected)
+   Full-UI themes now live in /theme-ui.css — each one
+   rebuilds layout, shapes, fonts, buttons, animations
+   and backgrounds, not just the palette. Applied as
+   body[data-theme="<id>"] (no attribute) keeps the
+   original TGA dark UI defined above.
+================================================== */
+
    Full-UI themes now live in /theme-ui.css — each one
    rebuilds layout, shapes, fonts, buttons, animations
    and backgrounds, not just the palette. Applied as
@@ -1256,6 +1717,14 @@ body.light .nav-btn.active{
 
 <div id="loginScreen">
 
+  <button
+    class="login-api-link"
+    type="button"
+    onclick="openApiDocs()"
+  >
+    <span class="tga-emoji" data-emoji="📖">📖</span> API Docs
+  </button>
+
   <div class="login-card">
 
     <img
@@ -1279,9 +1748,9 @@ body.light .nav-btn.active{
 
     <div id="loginFormArea" style="text-align:left;margin-top:18px">
       <div style="display:flex;gap:6px;margin-bottom:12px">
-        <button type="button" onclick="setLoginMethod('telegram')" id="lmTelegram" class="secondary-btn" style="flex:1;padding:8px;font-size:12px;background:var(--surface2)">✈️ Telegram</button>
-        <button type="button" onclick="setLoginMethod('email')" id="lmEmail" class="secondary-btn" style="flex:1;padding:8px;font-size:12px">📧 Email</button>
-        <button type="button" onclick="setLoginMethod('phone')" id="lmPhone" class="secondary-btn" style="flex:1;padding:8px;font-size:12px">📱 Phone</button>
+        <button type="button" onclick="setLoginMethod('telegram')" id="lmTelegram" class="secondary-btn" style="flex:1;padding:8px;font-size:12px;background:var(--surface2)"><span class="tga-emoji" data-emoji="✈">✈</span> Telegram</button>
+        <button type="button" onclick="setLoginMethod('email')" id="lmEmail" class="secondary-btn" style="flex:1;padding:8px;font-size:12px"><span class="tga-emoji" data-emoji="📧">📧</span> Email</button>
+        <button type="button" onclick="setLoginMethod('phone')" id="lmPhone" class="secondary-btn" style="flex:1;padding:8px;font-size:12px"><span class="tga-emoji" data-emoji="📱">📱</span> Phone</button>
       </div>
       <div id="telegramLoginBox">
         <a href="https://t.me/TGAStore1Bot?start=login" target="_blank" rel="noopener" class="primary-btn" style="display:block;text-align:center;text-decoration:none;margin-top:0">✈️ Login via Telegram Bot</a>
@@ -1305,8 +1774,8 @@ body.light .nav-btn.active{
 
     <div id="registerFormArea" class="hidden" style="text-align:left;margin-top:18px">
       <div style="display:flex;gap:6px;margin-bottom:12px">
-        <button type="button" onclick="setRegisterMethod('email')" id="rmEmail" class="secondary-btn" style="flex:1;padding:8px;font-size:12px;background:var(--surface2)">📧 Email</button>
-        <button type="button" onclick="setRegisterMethod('phone')" id="rmPhone" class="secondary-btn" style="flex:1;padding:8px;font-size:12px">📱 Phone</button>
+        <button type="button" onclick="setRegisterMethod('email')" id="rmEmail" class="secondary-btn" style="flex:1;padding:8px;font-size:12px;background:var(--surface2)"><span class="tga-emoji" data-emoji="📧">📧</span> Email</button>
+        <button type="button" onclick="setRegisterMethod('phone')" id="rmPhone" class="secondary-btn" style="flex:1;padding:8px;font-size:12px"><span class="tga-emoji" data-emoji="📱">📱</span> Phone</button>
         <a href="https://t.me/TGAStore1Bot?start=register" target="_blank" rel="noopener" class="secondary-btn" style="flex:1;padding:8px;font-size:12px;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center">✈️ Telegram</a>
       </div>
       <div class="field-label">Username</div>
@@ -1353,16 +1822,58 @@ body.light .nav-btn.active{
 
   </div>
 
-  <button
-    id="refreshButton"
-    class="header-refresh"
-    type="button"
-    onclick="refreshCurrentPage()"
-    title="Refresh"
-    aria-label="Refresh"
+  <div class="header-actions">
+
+    <button
+      id="menuButton"
+      class="header-refresh"
+      type="button"
+      onclick="toggleHeaderMenu(event)"
+      title="Menu"
+      aria-label="Menu"
+    >
+      ⋯
+    </button>
+
+    <button
+      id="refreshButton"
+      class="header-refresh"
+      type="button"
+      onclick="refreshCurrentPage()"
+      title="Refresh"
+      aria-label="Refresh"
+    >
+      ↻
+    </button>
+
+  </div>
+
+  <div
+    id="headerMenu"
+    class="header-menu hidden"
   >
-    ↻
-  </button>
+
+    <button type="button" onclick="headerMenuAction('pricing')">
+      <span class="tga-emoji" data-emoji="💰">💰</span> Pricing
+    </button>
+
+    <button type="button" onclick="headerMenuAction('api')">
+      <span class="tga-emoji" data-emoji="📖">📖</span> API Docs
+    </button>
+
+    <button type="button" onclick="headerMenuAction('terms')">
+      <span class="tga-emoji" data-emoji="📄">📄</span> Terms &amp; Conditions
+    </button>
+
+    <a href="https://t.me/tgaforu" target="_blank" rel="noopener">
+      <span class="tga-emoji" data-emoji="📢">📢</span> Telegram Channel
+    </a>
+
+    <a href="https://t.me/OfcCuteSmile" target="_blank" rel="noopener">
+      <span class="tga-emoji" data-emoji="🎧">🎧</span> Contact Support
+    </a>
+
+  </div>
 
 </header>
 
@@ -1392,7 +1903,7 @@ body.light .nav-btn.active{
   <div class="announcement">
 
     <div class="announcement-title">
-      📢 TGA Store
+      <span class="tga-emoji" data-emoji="📢">📢</span> TGA Store
     </div>
 
     <div class="announcement-text">
@@ -1407,7 +1918,7 @@ body.light .nav-btn.active{
   <div class="balance-card">
 
     <div class="balance-label">
-      💳 Total Balance
+      <span class="tga-emoji" data-emoji="💳">💳</span> Total Balance
     </div>
 
     <span
@@ -1440,7 +1951,7 @@ body.light .nav-btn.active{
     <div class="stat-card">
 
       <div class="stat-label">
-        ⚡ Total Recharge
+        <span class="tga-emoji" data-emoji="⚡">⚡</span> Total Recharge
       </div>
 
       <div
@@ -1456,7 +1967,7 @@ body.light .nav-btn.active{
     <div class="stat-card">
 
       <div class="stat-label">
-        🔑 Total Orders
+        <span class="tga-emoji" data-emoji="🔑">🔑</span> Total Orders
       </div>
 
       <div
@@ -1561,7 +2072,7 @@ body.light .nav-btn.active{
   >
 
     <div class="balance-label">
-      💳 Current Balance
+      <span class="tga-emoji" data-emoji="💳">💳</span> Current Balance
     </div>
 
     <span
@@ -1606,7 +2117,7 @@ body.light .nav-btn.active{
 
     <div class="recharge-history-head">
       <div class="section-title" style="font-size:18px;margin:0">
-        📜 Recharge History
+        <span class="tga-emoji" data-emoji="📜">📜</span> Recharge History
       </div>
       <button
         class="secondary-btn"
@@ -1889,7 +2400,7 @@ body.light .nav-btn.active{
 
     <div class="setting-item" onclick="openBotConnect()">
       <div class="setting-left">
-        <div class="setting-icon">🤖</div>
+        <div class="setting-icon"><span class="tga-emoji" data-emoji="🤖">🤖</span></div>
         <div>
           <div class="setting-title">Bot Connect <span id="botConnectDot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--red);margin-left:6px;vertical-align:middle"></span></div>
           <div class="setting-sub" id="botConnectSub">Connect Telegram bot for purchase alerts</div>
@@ -1904,7 +2415,7 @@ body.light .nav-btn.active{
       <div class="setting-left">
 
         <div class="setting-icon">
-          🔒
+          <span class="tga-emoji" data-emoji="🔒">🔒</span>
         </div>
 
         <div>
@@ -1933,7 +2444,7 @@ body.light .nav-btn.active{
       <div class="setting-left">
 
         <div class="setting-icon">
-          💱
+          <span class="tga-emoji" data-emoji="💱">💱</span>
         </div>
 
         <div>
@@ -1976,7 +2487,7 @@ body.light .nav-btn.active{
       <div class="setting-left">
 
         <div class="setting-icon">
-          🌙
+          <span class="tga-emoji" data-emoji="🌙">🌙</span>
         </div>
 
         <div>
@@ -2008,13 +2519,45 @@ body.light .nav-btn.active{
 
     <div
       class="setting-item"
+      onclick="openApiDocs()"
+    >
+
+      <div class="setting-left">
+
+        <div class="setting-icon">
+          <span class="tga-emoji" data-emoji="📖">📖</span>
+        </div>
+
+        <div>
+
+          <div class="setting-title">
+            API Docs
+          </div>
+
+          <div class="setting-sub">
+            Developer API documentation & test area
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="setting-arrow">
+        ›
+      </div>
+
+    </div>
+
+
+    <div
+      class="setting-item"
       onclick="openTerms()"
     >
 
       <div class="setting-left">
 
         <div class="setting-icon">
-          📄
+          <span class="tga-emoji" data-emoji="📄">📄</span>
         </div>
 
         <div>
@@ -2048,7 +2591,7 @@ body.light .nav-btn.active{
       <div class="setting-left">
 
         <div class="setting-icon">
-          📢
+          <span class="tga-emoji" data-emoji="📢">📢</span>
         </div>
 
         <div>
@@ -2082,7 +2625,7 @@ body.light .nav-btn.active{
       <div class="setting-left">
 
         <div class="setting-icon">
-          🎧
+          <span class="tga-emoji" data-emoji="🎧">🎧</span>
         </div>
 
         <div>
@@ -2114,7 +2657,7 @@ body.light .nav-btn.active{
       <div class="setting-left">
 
         <div class="setting-icon">
-          🚪
+          <span class="tga-emoji" data-emoji="🚪">🚪</span>
         </div>
 
         <div>
@@ -2166,7 +2709,7 @@ body.light .nav-btn.active{
     type="button"
     onclick="openPage('buy')"
   >
-    <span class="nav-icon">🛒</span>
+    <span class="nav-icon"><span class="tga-emoji" data-emoji="🛒">🛒</span></span>
     Buy
   </button>
 
@@ -2196,11 +2739,450 @@ body.light .nav-btn.active{
     type="button"
     onclick="openPage('settings')"
   >
-    <span class="nav-icon">⚙</span>
+    <span class="nav-icon"><span class="tga-emoji" data-emoji="⚙">⚙</span></span>
     Settings
   </button>
 
 </nav>
+
+</div>
+
+
+<!-- ==================================================
+     API DOCS MODAL
+================================================== -->
+
+<div
+  id="apiDocsModal"
+  class="modal-overlay docs-modal"
+>
+
+  <div class="modal">
+
+    <div class="modal-head">
+
+      <div class="modal-title">
+        <span class="tga-emoji" data-emoji="📖">📖</span> TGA Store API
+      </div>
+
+      <button
+        class="close-btn"
+        type="button"
+        onclick="closeModal('apiDocsModal')"
+      >
+        ×
+      </button>
+
+    </div>
+
+    <div class="docs-scroll">
+
+      <p class="docs-intro">
+        Welcome to the <b>TGA Store API</b> documentation. Integrate your
+        system quickly and securely: check country availability, view live
+        stock &amp; pricing, check your balance, buy numbers and receive the
+        login code — all through simple GET requests. Fast, easy and reliable.
+      </p>
+
+      <!-- BASE URL -->
+      <div class="docs-card">
+
+        <div class="docs-card-title">
+          🔗 Base URL
+        </div>
+
+        <div class="docs-card-sub">
+          Every request goes to this endpoint. Add the <code>action</code>
+          parameter to pick which API function to call.
+        </div>
+
+        <div class="docs-url">
+          <span id="docsBaseUrl">…</span>
+          <button class="docs-copy" type="button" onclick="copyText(docsBaseUrl.textContent)">Copy</button>
+        </div>
+
+      </div>
+
+      <!-- AUTH -->
+      <div class="docs-card">
+
+        <div class="docs-card-title">
+          <span class="tga-emoji" data-emoji="🔑">🔑</span> Authentication
+        </div>
+
+        <div class="docs-card-sub">
+          Two parameters are required on every request:
+          <b>apiKey</b> (your secret key — generate it below) and
+          <b>YourID</b> (your account ID). Never share your API key.
+        </div>
+
+        <div id="docsAuthArea">
+
+          <div class="docs-login-hint hidden" id="docsLoginHint">
+            <span>Login to generate your personal API key and use the test area.</span>
+            <button class="primary-btn" type="button" onclick="handleLoginFromDocs()">Login</button>
+          </div>
+
+          <div class="docs-key-row">
+            <div class="docs-key-box">
+              <span>YourID:</span>
+              <b id="docsYourId">—</b>
+            </div>
+          </div>
+
+          <div class="docs-key-row" style="margin-top:10px">
+            <button
+              class="primary-btn"
+              type="button"
+              id="docsGenKeyBtn"
+              onclick="generateApiKey()"
+            >
+              <span class="tga-emoji" data-emoji="🔑">🔑</span> Generate API Key
+            </button>
+            <span class="docs-card-sub" style="margin:0">You can have up to 3 active keys.</span>
+          </div>
+
+          <div class="docs-key-list" id="docsKeyList"></div>
+
+        </div>
+
+      </div>
+
+      <!-- ENDPOINTS -->
+      <div class="docs-card">
+
+        <div class="docs-card-title">
+          ⚙ API Functions
+        </div>
+
+        <div class="docs-card-sub">
+          The API exposes these functions: <code>country_info</code>,
+          <code>available_countries</code>, <code>get_balance</code>,
+          <code>getNumber</code> and <code>getCode</code>.
+        </div>
+
+      </div>
+
+      <!-- 1. country_info -->
+      <div class="docs-card">
+
+        <div class="docs-card-title">
+          country_info <span class="docs-tag get">GET</span>
+        </div>
+
+        <div class="docs-card-sub">
+          Fetch country information by passing a specific country code, or get
+          every available country by omitting <code>country_code</code>.
+        </div>
+
+        <table class="docs-param-table">
+          <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+          <tr><td><code>apiKey</code></td><td>String</td><td>YES</td><td>Your API key</td></tr>
+          <tr><td><code>YourID</code></td><td>String</td><td>YES</td><td>Your account ID</td></tr>
+          <tr><td><code>country_code</code></td><td>String</td><td>No</td><td>ISO country code, e.g. <code>uz</code></td></tr>
+        </table>
+
+        <div class="docs-url" style="margin-top:10px">
+          <span id="docsUrlCountryInfo">…</span>
+          <button class="docs-copy" type="button" onclick="copyText(docsUrlCountryInfo.textContent)">Copy</button>
+        </div>
+
+        <pre class="docs-pre">{
+  "name": "Uzbekistan 🇺🇿",
+  "code_Num": "40",
+  "code": "UZ",
+  "qty": 6450,
+  "price": "0.80"
+}</pre>
+
+      </div>
+
+      <!-- 2. available_countries -->
+      <div class="docs-card">
+
+        <div class="docs-card-title">
+          available_countries <span class="docs-tag get">GET</span>
+        </div>
+
+        <div class="docs-card-sub">
+          Retrieve the full list of countries where numbers are available,
+          with live stock and pricing.
+        </div>
+
+        <table class="docs-param-table">
+          <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+          <tr><td><code>apiKey</code></td><td>String</td><td>YES</td><td>Your API key</td></tr>
+          <tr><td><code>YourID</code></td><td>String</td><td>YES</td><td>Your account ID</td></tr>
+        </table>
+
+        <div class="docs-url" style="margin-top:10px">
+          <span id="docsUrlCountries">…</span>
+          <button class="docs-copy" type="button" onclick="copyText(docsUrlCountries.textContent)">Copy</button>
+        </div>
+
+        <pre class="docs-pre">{
+  "status": "ok",
+  "countries": {
+    "UA": {
+      "name": "Ukraine 🇺🇦",
+      "code_Num": "1",
+      "code": "UA",
+      "qty": 425,
+      "price": "1.5"
+    },
+    "SA": {
+      "name": "Saudi Arabia 🇸🇦",
+      "code_Num": "53",
+      "code": "SA",
+      "qty": 630,
+      "price": "1.1"
+    }
+  }
+}</pre>
+
+      </div>
+
+      <!-- 3. get_balance -->
+      <div class="docs-card">
+
+        <div class="docs-card-title">
+          get_balance <span class="docs-tag get">GET</span>
+        </div>
+
+        <div class="docs-card-sub">
+          Check your current account balance.
+        </div>
+
+        <table class="docs-param-table">
+          <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+          <tr><td><code>apiKey</code></td><td>String</td><td>YES</td><td>Your API key</td></tr>
+          <tr><td><code>YourID</code></td><td>String</td><td>YES</td><td>Your account ID</td></tr>
+        </table>
+
+        <div class="docs-url" style="margin-top:10px">
+          <span id="docsUrlBalance">…</span>
+          <button class="docs-copy" type="button" onclick="copyText(docsUrlBalance.textContent)">Copy</button>
+        </div>
+
+        <pre class="docs-pre">{
+  "status": "ok",
+  "balance": "260.50 USD"
+}</pre>
+
+      </div>
+
+      <!-- 4. getNumber -->
+      <div class="docs-card">
+
+        <div class="docs-card-title">
+          getNumber <span class="docs-tag get">GET</span>
+        </div>
+
+        <div class="docs-card-sub">
+          Purchase a phone number from a specific country. The selling price is
+          deducted from your balance.
+        </div>
+
+        <table class="docs-param-table">
+          <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+          <tr><td><code>apiKey</code></td><td>String</td><td>YES</td><td>Your API key</td></tr>
+          <tr><td><code>YourID</code></td><td>String</td><td>YES</td><td>Your account ID</td></tr>
+          <tr><td><code>country_code</code></td><td>String</td><td>YES</td><td>ISO country code, e.g. <code>uz</code></td></tr>
+          <tr><td><code>maxPrice</code></td><td>String</td><td>NO</td><td>Optional maximum price</td></tr>
+        </table>
+
+        <div class="docs-url" style="margin-top:10px">
+          <span id="docsUrlNumber">…</span>
+          <button class="docs-copy" type="button" onclick="copyText(docsUrlNumber.textContent)">Copy</button>
+        </div>
+
+        <pre class="docs-pre">{
+  "status": "ok",
+  "name": "Uzbekistan 🇺🇿",
+  "Number": "+99800000000",
+  "price": "0.96",
+  "new_balance": "140.50"
+}</pre>
+
+      </div>
+
+      <!-- 5. getCode -->
+      <div class="docs-card">
+
+        <div class="docs-card-title">
+          getCode <span class="docs-tag get">GET</span>
+        </div>
+
+        <div class="docs-card-sub">
+          Get the login code for a number you purchased. Pass the number
+          exactly as it was returned by <code>getNumber</code>.
+        </div>
+
+        <table class="docs-param-table">
+          <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+          <tr><td><code>apiKey</code></td><td>String</td><td>YES</td><td>Your API key</td></tr>
+          <tr><td><code>YourID</code></td><td>String</td><td>YES</td><td>Your account ID</td></tr>
+          <tr><td><code>number</code></td><td>String</td><td>YES</td><td>The purchased number, e.g. <code>+99800000000</code></td></tr>
+        </table>
+
+        <div class="docs-url" style="margin-top:10px">
+          <span id="docsUrlCode">…</span>
+          <button class="docs-copy" type="button" onclick="copyText(docsUrlCode.textContent)">Copy</button>
+        </div>
+
+        <pre class="docs-pre">{
+  "status": "ok",
+  "Number": "+99800000000",
+  "code": "47607",
+  "pass": "2345GD8R"
+}</pre>
+
+        <div class="docs-card-sub" style="margin-top:12px;margin-bottom:0">
+          <b>Note:</b> by default, once the login code is received the account
+          password is disabled (2FA removed), so the returned <code>pass</code>
+          lets you sign in directly.
+        </div>
+
+      </div>
+
+      <!-- TEST AREA -->
+      <div class="docs-card">
+
+        <div class="docs-card-title">
+          <span class="tga-emoji" data-emoji="⚡">⚡</span> Test Area
+        </div>
+
+        <div class="docs-card-sub">
+          Try any API function right here. Your key and ID are filled in
+          automatically — just pick an action, add the parameters and hit Send.
+        </div>
+
+        <div class="docs-test-grid">
+
+          <div>
+            <label for="docsTestAction">Action</label>
+            <select id="docsTestAction" class="select" onchange="docsTestUrlPreview()">
+              <option value="available_countries">available_countries</option>
+              <option value="country_info">country_info</option>
+              <option value="get_balance">get_balance</option>
+              <option value="getNumber">getNumber</option>
+              <option value="getCode">getCode</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="docsTestApiKey">apiKey</label>
+            <input id="docsTestApiKey" class="field-input" type="text" autocomplete="off" placeholder="TGA_…" oninput="docsTestUrlPreview()">
+          </div>
+
+          <div>
+            <label for="docsTestYourId">YourID</label>
+            <input id="docsTestYourId" class="field-input" type="text" autocomplete="off" placeholder="Your account ID" oninput="docsTestUrlPreview()">
+          </div>
+
+          <div>
+            <label for="docsTestCountry">country_code <span style="opacity:.6">(optional)</span></label>
+            <input id="docsTestCountry" class="field-input" type="text" autocomplete="off" placeholder="uz" oninput="docsTestUrlPreview()">
+          </div>
+
+          <div>
+            <label for="docsTestMaxPrice">maxPrice <span style="opacity:.6">(optional)</span></label>
+            <input id="docsTestMaxPrice" class="field-input" type="text" autocomplete="off" placeholder="1.00" oninput="docsTestUrlPreview()">
+          </div>
+
+          <div>
+            <label for="docsTestNumber">number <span style="opacity:.6">(for getCode)</span></label>
+            <input id="docsTestNumber" class="field-input" type="text" autocomplete="off" placeholder="+99800000000" oninput="docsTestUrlPreview()">
+          </div>
+
+        </div>
+
+        <div class="docs-url" style="margin-top:12px">
+          <span id="docsTestUrlPreview">…</span>
+        </div>
+
+        <button
+          class="primary-btn"
+          type="button"
+          id="docsTestSendBtn"
+          onclick="docsTestSend()"
+          style="margin-top:12px"
+        >
+          <span class="tga-emoji" data-emoji="⚡">⚡</span> Send Request
+        </button>
+
+        <div class="docs-response hidden" id="docsTestResponse">
+          <div class="docs-card-sub" style="margin-bottom:6px">Response</div>
+          <pre class="docs-pre" id="docsTestResponsePre">…</pre>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ==================================================
+     PRICING MODAL
+================================================== -->
+
+<div
+  id="pricingModal"
+  class="modal-overlay"
+>
+
+  <div class="modal">
+
+    <div class="modal-head">
+
+      <div class="modal-title">
+        <span class="tga-emoji" data-emoji="💰">💰</span> Pricing & Availability
+      </div>
+
+      <button
+        class="close-btn"
+        type="button"
+        onclick="closeModal('pricingModal')"
+      >
+        ×
+      </button>
+
+    </div>
+
+    <div class="docs-scroll">
+
+      <div class="docs-card-sub" style="margin-bottom:12px">
+        Live prices per account, updated in real time. Prices are shown in USD.
+      </div>
+
+      <div class="pricing-table-wrap">
+
+        <table class="pricing-table">
+
+          <thead>
+            <tr>
+              <th>Country</th>
+              <th>Price</th>
+              <th>Stock</th>
+            </tr>
+          </thead>
+
+          <tbody id="pricingTableBody">
+            <tr><td colspan="3" style="text-align:center;color:var(--muted)">
+              <div class="loading"><div class="spinner"></div> Loading pricing…</div>
+            </td></tr>
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </div>
 
 </div>
 
@@ -2219,7 +3201,7 @@ body.light .nav-btn.active{
     <div class="modal-head">
 
       <div class="modal-title">
-        📄 Terms & Conditions
+        <span class="tga-emoji" data-emoji="📄">📄</span> Terms & Conditions
       </div>
 
       <button
@@ -2296,7 +3278,7 @@ body.light .nav-btn.active{
     <div class="modal-head">
 
       <div class="modal-title">
-        ⚠️ Purchase Terms
+        <span class="tga-emoji" data-emoji="⚠">⚠</span> Purchase Terms
       </div>
 
       <button
@@ -2422,7 +3404,7 @@ body.light .nav-btn.active{
         id="getOtpButton"
         onclick="getOTP()"
       >
-        📩 Get OTP
+        <span class="tga-emoji" data-emoji="📩">📩</span> Get OTP
       </button>
 
       <button
@@ -2907,6 +3889,10 @@ function switchAuthTab(tab){
   authTab = tab;
   document.getElementById("loginFormArea").classList.toggle("hidden", tab!=="login");
   document.getElementById("registerFormArea").classList.toggle("hidden", tab!=="register");
+  const tabLoginEl = document.getElementById("tabLogin");
+  const tabRegisterEl = document.getElementById("tabRegister");
+  if(tabLoginEl) tabLoginEl.classList.toggle("active", tab==="login");
+  if(tabRegisterEl) tabRegisterEl.classList.toggle("active", tab==="register");
   document.getElementById("tabLogin").style.background = tab==="login" ? "var(--surface2)" : "transparent";
   document.getElementById("tabLogin").style.color = tab==="login" ? "var(--text)" : "var(--muted)";
   document.getElementById("tabRegister").style.background = tab==="register" ? "var(--surface2)" : "transparent";
@@ -2921,6 +3907,7 @@ function setLoginMethod(m){
   ["lmTelegram","lmEmail","lmPhone"].forEach(id=>{
     const el=document.getElementById(id);
     if(!el) return;
+    el.classList.toggle("active", id.toLowerCase().includes(m));
     el.style.background = (id.toLowerCase().includes(m) ? "var(--surface2)" : "transparent");
   });
 }
@@ -2928,6 +3915,10 @@ function setRegisterMethod(m){
   registerMethod=m;
   document.getElementById("regEmailBox").classList.toggle("hidden", m!=="email");
   document.getElementById("regPhoneBox").classList.toggle("hidden", m!=="phone");
+  const rmEmailEl = document.getElementById("rmEmail");
+  const rmPhoneEl = document.getElementById("rmPhone");
+  if(rmEmailEl) rmEmailEl.classList.toggle("active", m==="email");
+  if(rmPhoneEl) rmPhoneEl.classList.toggle("active", m==="phone");
   document.getElementById("rmEmail").style.background = m==="email" ? "var(--surface2)" : "transparent";
   document.getElementById("rmPhone").style.background = m==="phone" ? "var(--surface2)" : "transparent";
 }
@@ -3271,7 +4262,7 @@ function formatPrice(price){
 /*
   Wallet and saved orders are INR.
 
-  Live catalog prices from TG-Lion are USD
+  Live catalog prices from the number provider are USD
   (0.45, 0.80) and go through formatPrice.
 
   Old orders sometimes stored that USD value
@@ -4251,7 +5242,7 @@ async function getOTP(){
     let result=null;
     let lastError=null;
 
-    // TG-Lion often needs a few seconds after purchase to deliver the SMS.
+    // The provider often needs a few seconds after purchase to deliver the SMS.
     // Retry a handful of times so the code appears as soon as it responds.
     for(let attempt=0; attempt<8; attempt++){
 
@@ -4374,7 +5365,7 @@ async function getOrderOTP(index){
 
   if(area){
     area.innerHTML=
-      '<span class="muted">Contacting TG-Lion…</span>';
+      '<span class="muted">Contacting provider…</span>';
   }
 
   try{
@@ -5145,10 +6136,10 @@ function openPage(page){
 
   });
 
-  window.scrollTo({
-    top:0,
-    behavior:"smooth"
-  });
+  // Instant jump, not smooth: smooth scrolling while the bottom nav is
+  // position:fixed (and backdrop-filtered) makes the bar glitch/detach on
+  // mobile browsers. An instant jump is what fixed-page apps use anyway.
+  window.scrollTo(0,0);
 
   if(page==="buy"){
 
@@ -6023,6 +7014,11 @@ window.addEventListener(
 );
 
 </script>
+
+<!-- Lottie player for animated Telegram premium emoji -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.10.2/lottie.min.js"></script>
+<script src="/emoji-map.js"></script>
+<script src="/app-extras.js"></script>
 
 </body>
   </html>
