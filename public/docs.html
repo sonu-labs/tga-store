@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="color-scheme" content="dark light">
+
+<title>TGA Store — API Docs</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+  -webkit-tap-highlight-color:transparent;
+}
+
+:root{
+  --bg:#000;
+  --surface:#0d0d0d;
+  --surface2:#121212;
+  --border:#242424;
+  --text:#fff;
+  --muted:#8d8d8d;
+  --soft:#666;
+  --green:#42e889;
+  --green-rgb:66,232,137;
+  --red:#ff5656;
+  --yellow:#ffc857;
+  --btn:#fff;
+  --btn-text:#000;
+  --header-bg:rgba(0,0,0,.88);
+}
+
+html{
+  scroll-behavior:smooth;
+}
+
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  transition:background .25s ease, color .25s ease;
+}
+
+body.light{
+  --bg:#f5f5f7;
+  --surface:#fff;
+  --surface2:#f0f0f2;
+  --border:#dedee3;
+  --text:#111;
+  --muted:#666;
+  --soft:#888;
+  --btn:#111;
+  --btn-text:#fff;
+  --header-bg:rgba(245,245,247,.9);
+}
+
+button,input,select{
+  font:inherit;
+}
+
+button{
+  cursor:pointer;
+  -webkit-appearance:none;
+  appearance:none;
+  outline:none;
+}
+
+button:disabled{
+  cursor:not-allowed;
+  opacity:.55;
+}
+
+.hidden{
+  display:none!important;
+}
+
+.tga-emoji{
+  display:inline-block;
+  line-height:1;
+}
+
+code{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+
+/* ==================================================
+   TOPBAR
+================================================== */
+
+.docs-topbar{
+  position:sticky;
+  top:0;
+  z-index:40;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:14px 18px;
+  background:var(--header-bg);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  border-bottom:1px solid var(--border);
+}
+
+.docs-back{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  padding:9px 14px;
+  border-radius:999px;
+  background:var(--surface2, rgba(255,255,255,.08));
+  border:1px solid var(--border);
+  color:var(--text);
+  font-size:13px;
+  font-weight:800;
+  text-decoration:none;
+  transition:transform .15s ease, border-color .15s ease;
+}
+
+.docs-back:hover{
+  border-color:rgba(var(--green-rgb),.5);
+  transform:translateY(-1px);
+}
+
+.docs-topbar-title{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:15px;
+  font-weight:900;
+  letter-spacing:.2px;
+  min-width:0;
+}
+
+.docs-topbar-title .tga-emoji{
+  font-size:18px;
+}
+
+.docs-session{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:7px 12px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:800;
+  border:1px solid var(--border);
+  color:var(--muted);
+  background:var(--surface2, rgba(255,255,255,.06));
+  white-space:nowrap;
+}
+
+.docs-session.on{
+  color:var(--green);
+  border-color:rgba(var(--green-rgb),.35);
+  background:rgba(var(--green-rgb),.08);
+}
+
+/* ==================================================
+   LAYOUT
+================================================== */
+
+.docs-wrap{
+  width:min(880px,calc(100% - 28px));
+  margin:0 auto;
+  padding:22px 0 70px;
+}
+
+.docs-intro{
+  color:var(--muted);
+  line-height:1.7;
+  font-size:14px;
+  margin:0 0 20px;
+}
+
+.docs-card{
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:16px;
+}
+
+.docs-card-title{
+  font-size:15px;
+  font-weight:900;
+  margin-bottom:6px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.docs-card-sub{
+  color:var(--muted);
+  font-size:12.5px;
+  line-height:1.6;
+  margin-bottom:10px;
+}
+
+.docs-url{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background:rgba(0,0,0,.35);
+  border:1px solid var(--border);
+  border-radius:11px;
+  padding:11px 12px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:12px;
+  word-break:break-all;
+  color:var(--green);
+  line-height:1.5;
+}
+
+body.light .docs-url{
+  background:rgba(0,0,0,.05);
+}
+
+.docs-copy{
+  flex:0 0 auto;
+  border:1px solid var(--border);
+  background:var(--surface2);
+  color:var(--text);
+  border-radius:9px;
+  padding:7px 11px;
+  font-size:12px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.docs-copy:hover{
+  border-color:rgba(var(--green-rgb),.5);
+}
+
+.docs-param-table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:6px;
+  font-size:13px;
+}
+
+.docs-param-table th{
+  text-align:left;
+  color:var(--muted);
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.6px;
+  padding:7px 8px;
+  border-bottom:1px solid var(--border);
+}
+
+.docs-param-table td{
+  padding:8px;
+  border-bottom:1px solid var(--border);
+  color:var(--text);
+  vertical-align:top;
+}
+
+.docs-param-table tr:last-child td{
+  border-bottom:0;
+}
+
+.docs-param-table code{
+  font-size:12px;
+  color:var(--green);
+  background:rgba(var(--green-rgb),.1);
+  padding:2px 6px;
+  border-radius:6px;
+}
+
+.docs-tag{
+  display:inline-block;
+  font-size:10.5px;
+  font-weight:900;
+  letter-spacing:.8px;
+  padding:3px 9px;
+  border-radius:99px;
+  margin-left:6px;
+  vertical-align:2px;
+}
+
+.docs-tag.get{
+  background:rgba(66,232,137,.14);
+  color:var(--green);
+  border:1px solid rgba(66,232,137,.3);
+}
+
+.docs-pre{
+  background:rgba(0,0,0,.42);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:13px 14px;
+  margin:10px 0 0;
+  overflow-x:auto;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:12px;
+  line-height:1.65;
+  color:#b7ffd8;
+  white-space:pre;
+}
+
+body.light .docs-pre{
+  background:rgba(0,0,0,.06);
+  color:#0a6b3a;
+}
+
+.docs-key-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.docs-key-list{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-top:10px;
+}
+
+.docs-key-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:10px 12px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:12px;
+  word-break:break-all;
+}
+
+.docs-key-item .key-meta{
+  color:var(--muted);
+  font-size:11px;
+  margin-left:auto;
+  flex:0 0 auto;
+  white-space:nowrap;
+}
+
+.docs-key-item small.key-meta{
+  margin-left:8px;
+  white-space:normal;
+}
+
+.docs-test-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+@media(max-width:640px){
+  .docs-test-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+.docs-test-grid label{
+  display:block;
+  color:var(--muted);
+  font-size:11.5px;
+  font-weight:800;
+  letter-spacing:.4px;
+  margin-bottom:5px;
+}
+
+.field-input{
+  width:100%;
+  background:var(--surface2);
+  color:var(--text);
+  border:1px solid var(--border);
+  border-radius:13px;
+  padding:12px;
+  outline:none;
+}
+
+.field-input::placeholder{
+  color:var(--soft);
+}
+
+.field-input:focus{
+  border-color:rgba(var(--green-rgb),.5);
+}
+
+.select{
+  width:100%;
+  background:var(--surface2);
+  color:var(--text);
+  border:1px solid var(--border);
+  border-radius:13px;
+  padding:12px;
+  outline:none;
+}
+
+.primary-btn{
+  width:100%;
+  border:0;
+  border-radius:14px;
+  padding:14px;
+  margin-top:20px;
+  background:var(--btn);
+  color:var(--btn-text);
+  font-weight:800;
+  transition:.2s;
+}
+
+.primary-btn:hover{
+  transform:translateY(-1px);
+}
+
+.docs-response{
+  margin-top:14px;
+}
+
+.docs-login-hint{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  background:rgba(255,200,87,.08);
+  border:1px solid rgba(255,200,87,.22);
+  border-radius:12px;
+  padding:13px 14px;
+  color:var(--text);
+  font-size:13px;
+  margin-bottom:14px;
+}
+
+.docs-login-hint a{
+  margin-left:auto;
+  flex:0 0 auto;
+  text-decoration:none;
+  padding:9px 16px;
+  border-radius:11px;
+  background:var(--btn);
+  color:var(--btn-text);
+  font-weight:800;
+  font-size:12.5px;
+}
+
+/* ==================================================
+   TOAST
+================================================== */
+
+.docs-toast{
+  position:fixed;
+  left:50%;
+  bottom:26px;
+  transform:translateX(-50%) translateY(20px);
+  background:var(--surface);
+  border:1px solid var(--border);
+  color:var(--text);
+  border-radius:14px;
+  padding:12px 18px;
+  font-size:13px;
+  font-weight:700;
+  box-shadow:0 16px 44px rgba(0,0,0,.4);
+  opacity:0;
+  pointer-events:none;
+  transition:.25s;
+  z-index:80;
+  max-width:calc(100% - 32px);
+}
+
+.docs-toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+
+.docs-toast.error{
+  border-color:rgba(255,86,86,.5);
+  color:var(--red);
+}
+
+.docs-footer{
+  margin-top:26px;
+  text-align:center;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.7;
+}
+
+.docs-footer a{
+  color:var(--green);
+  text-decoration:none;
+}
+</style>
+
+<link rel="stylesheet" href="/theme-ui.css">
+
+<script>
+  // Apply the store theme (admin-selected full-UI theme or the user's own
+  // dark/light preference) before first paint. /api/status refreshes it with
+  // the live admin theme shortly after load.
+  (function(){
+    try{
+      var params = new URLSearchParams(location.search);
+      var preview = params.get("preview_theme") || "";
+      var saved = localStorage.getItem("tga_site_theme") || "default";
+      var id = preview || saved;
+      if(id && id !== "default"){
+        document.body.setAttribute("data-theme", id);
+      }else{
+        var pref = localStorage.getItem("tga_theme") || "dark";
+        if(pref === "light") document.body.classList.add("light");
+      }
+    }catch(e){}
+  })();
+</script>
+
+</head>
+<body>
+
+<header class="docs-topbar">
+
+  <a class="docs-back" href="/" aria-label="Back to store">
+    <span aria-hidden="true">←</span> Back to Store
+  </a>
+
+  <div class="docs-topbar-title">
+    <span class="tga-emoji" data-emoji="📖">📖</span> TGA Store API
+  </div>
+
+  <div class="docs-session" id="docsSession">Checking…</div>
+
+</header>
+
+<main class="docs-wrap">
+
+  <p class="docs-intro">
+    Welcome to the <b>TGA Store API</b> documentation. Integrate your system
+    quickly and securely: check country availability, view live stock &amp;
+    pricing, check your balance, buy numbers and receive the login code — all
+    through simple GET requests. Fast, easy and reliable.
+  </p>
+
+  <!-- BASE URL -->
+  <div class="docs-card">
+
+    <div class="docs-card-title">
+      🔗 Base URL
+    </div>
+
+    <div class="docs-card-sub">
+      Every request goes to this endpoint. Add the <code>action</code>
+      parameter to pick which API function to call.
+    </div>
+
+    <div class="docs-url">
+      <span id="docsBaseUrl">…</span>
+      <button class="docs-copy" type="button" onclick="copyText(document.getElementById('docsBaseUrl').textContent)">Copy</button>
+    </div>
+
+  </div>
+
+  <!-- AUTH -->
+  <div class="docs-card">
+
+    <div class="docs-card-title">
+      <span class="tga-emoji" data-emoji="🔑">🔑</span> Authentication
+    </div>
+
+    <div class="docs-card-sub">
+      Every request requires your <b>apiKey</b> (your secret key — generate it
+      below). Your account is identified automatically from this key. Never
+      share your API key.
+    </div>
+
+    <div id="docsAuthArea">
+
+      <div class="docs-login-hint hidden" id="docsLoginHint">
+        <span>Login to generate your personal API key and use the test area.</span>
+        <a href="/" target="_blank" rel="noopener">Login</a>
+      </div>
+
+      <div class="docs-key-row" style="margin-top:10px">
+        <button
+          class="primary-btn"
+          type="button"
+          id="docsGenKeyBtn"
+          style="width:auto;margin-top:0;padding:11px 18px"
+          onclick="generateApiKey()"
+        >
+          <span class="tga-emoji" data-emoji="🔑">🔑</span> Generate API Key
+        </button>
+        <span class="docs-card-sub" style="margin:0">You can have up to 3 active keys.</span>
+      </div>
+
+      <div class="docs-key-list" id="docsKeyList"></div>
+      <div class="docs-card-sub" style="margin-top:16px"><b>My API request logs</b> — recent requests made with your keys.</div>
+      <div class="docs-key-list" id="docsApiLogList"><div class="docs-card-sub">No requests yet.</div></div>
+
+    </div>
+
+  </div>
+
+  <!-- ENDPOINTS -->
+  <div class="docs-card">
+
+    <div class="docs-card-title">
+      ⚙ API Functions
+    </div>
+
+    <div class="docs-card-sub">
+      The API exposes these functions: <code>country_info</code>,
+      <code>available_countries</code>, <code>get_balance</code>,
+      <code>getNumber</code> and <code>getCode</code>.
+    </div>
+
+  </div>
+
+  <!-- 1. country_info -->
+  <div class="docs-card">
+
+    <div class="docs-card-title">
+      country_info <span class="docs-tag get">GET</span>
+    </div>
+
+    <div class="docs-card-sub">
+      Fetch country information by passing a specific country code, or get
+      every available country by omitting <code>country_code</code>.
+    </div>
+
+    <table class="docs-param-table">
+      <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+      <tr><td><code>apiKey</code></td><td>String</td><td>YES</td><td>Your API key</td></tr>
+      <tr><td><code>country_code</code></td><td>String</td><td>No</td><td>ISO country code, e.g. <code>uz</code></td></tr>
+    </table>
+
+    <div class="docs-url" style="margin-top:10px">
+      <span id="docsUrlCountryInfo">…</span>
+      <button class="docs-copy" type="button" onclick="copyText(document.getElementById('docsUrlCountryInfo').textContent)">Copy</button>
+    </div>
+
+    <pre class="docs-pre">{
+  "name": "Uzbekistan 🇺🇿",
+  "code_Num": "40",
+  "code": "UZ",
+  "qty": 6450,
+  "price": "0.80"
+}</pre>
+
+  </div>
+
+  <!-- 2. available_countries -->
+  <div class="docs-card">
+
+    <div class="docs-card-title">
+      available_countries <span class="docs-tag get">GET</span>
+    </div>
+
+    <div class="docs-card-sub">
+      Retrieve the full list of countries where numbers are available, with
+      live stock and pricing.
+    </div>
+
+    <table class="docs-param-table">
+      <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+      <tr><td><code>apiKey</code></td><td>String</td><td>YES</td><td>Your API key</td></tr>
+    </table>
+
+    <div class="docs-url" style="margin-top:10px">
+      <span id="docsUrlCountries">…</span>
+      <button class="docs-copy" type="button" onclick="copyText(document.getElementById('docsUrlCountries').textContent)">Copy</button>
+    </div>
+
+    <pre class="docs-pre">{
+  "status": "ok",
+  "countries": {
+    "UA": {
+      "name": "Ukraine 🇺",
+      "code_Num": "1",
+      "code": "UA",
+      "qty": 425,
+      "price": "1.5"
+    },
+    "SA": {
+      "name": "Saudi Arabia 🇸🇦",
+      "code_Num": "53",
+      "code": "SA",
+      "qty": 630,
+      "price": "1.1"
+    }
+  }
+}</pre>
+
+  </div>
+
+  <!-- 3. get_balance -->
+  <div class="docs-card">
+
+    <div class="docs-card-title">
+      get_balance <span class="docs-tag get">GET</span>
+    </div>
+
+    <div class="docs-card-sub">
+      Check your current account balance.
+    </div>
+
+    <table class="docs-param-table">
+      <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+      <tr><td><code>apiKey</code></td><td>String</td><td>YES</td><td>Your API key</td></tr>
+    </table>
+
+    <div class="docs-url" style="margin-top:10px">
+      <span id="docsUrlBalance">…</span>
+      <button class="docs-copy" type="button" onclick="copyText(document.getElementById('docsUrlBalance').textContent)">Copy</button>
+    </div>
+
+    <pre class="docs-pre">{
+  "status": "ok",
+  "balance": "260.50 USD"
+}</pre>
+
+  </div>
+
+  <!-- 4. getNumber -->
+  <div class="docs-card">
+
+    <div class="docs-card-title">
+      getNumber <span class="docs-tag get">GET</span>
+    </div>
+
+    <div class="docs-card-sub">
+      Purchase a phone number from a specific country. The selling price is
+      deducted from your balance.
+    </div>
+
+    <table class="docs-param-table">
+      <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+      <tr><td><code>apiKey</code></td><td>String</td><td>YES</td><td>Your API key</td></tr>
+      <tr><td><code>country_code</code></td><td>String</td><td>YES</td><td>ISO country code, e.g. <code>uz</code></td></tr>
+    </table>
+
+    <div class="docs-url" style="margin-top:10px">
+      <span id="docsUrlNumber">…</span>
+      <button class="docs-copy" type="button" onclick="copyText(document.getElementById('docsUrlNumber').textContent)">Copy</button>
+    </div>
+
+    <pre class="docs-pre">{
+  "status": "ok",
+  "name": "Uzbekistan 🇺",
+  "Number": "+99800000000",
+  "price": "0.96",
+  "new_balance": "140.50"
+}</pre>
+
+  </div>
+
+  <!-- 5. getCode -->
+  <div class="docs-card">
+
+    <div class="docs-card-title">
+      getCode <span class="docs-tag get">GET</span>
+    </div>
+
+    <div class="docs-card-sub">
+      Get the login code for a number you purchased. Pass the number exactly
+      as it was returned by <code>getNumber</code>.
+    </div>
+
+    <table class="docs-param-table">
+      <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+      <tr><td><code>apiKey</code></td><td>String</td><td>YES</td><td>Your API key</td></tr>
+      <tr><td><code>number</code></td><td>String</td><td>YES</td><td>The purchased number, e.g. <code>+99800000000</code></td></tr>
+    </table>
+
+    <div class="docs-url" style="margin-top:10px">
+      <span id="docsUrlCode">…</span>
+      <button class="docs-copy" type="button" onclick="copyText(document.getElementById('docsUrlCode').textContent)">Copy</button>
+    </div>
+
+    <pre class="docs-pre">{
+  "status": "ok",
+  "Number": "+99800000000",
+  "code": "47607",
+  "pass": "2345GD8R"
+}</pre>
+
+    <div class="docs-card-sub" style="margin-top:12px;margin-bottom:0">
+      <b>Note:</b> by default, once the login code is received the account
+      password is disabled (2FA removed), so the returned <code>pass</code>
+      lets you sign in directly.
+    </div>
+
+  </div>
+
+  <!-- TEST AREA -->
+  <div class="docs-card">
+
+    <div class="docs-card-title">
+      <span class="tga-emoji" data-emoji="⚡">⚡</span> Test Area
+    </div>
+
+    <div class="docs-card-sub">
+      Try any API function right here. Your key is filled in automatically —
+      just pick an action, add the parameters and hit Send.
+    </div>
+
+    <div class="docs-test-grid">
+
+      <div>
+        <label for="docsTestAction">Action</label>
+        <select id="docsTestAction" class="select" onchange="docsTestUrlPreview()">
+          <option value="available_countries">available_countries</option>
+          <option value="country_info">country_info</option>
+          <option value="get_balance">get_balance</option>
+          <option value="getNumber">getNumber</option>
+          <option value="getCode">getCode</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="docsTestApiKey">apiKey</label>
+        <input id="docsTestApiKey" class="field-input" type="text" autocomplete="off" placeholder="TGA_…" oninput="docsTestUrlPreview()">
+      </div>
+
+      <div>
+        <label for="docsTestCountry">country_code <span style="opacity:.6">(optional)</span></label>
+        <input id="docsTestCountry" class="field-input" type="text" autocomplete="off" placeholder="uz" oninput="docsTestUrlPreview()">
+      </div>
+
+      <div>
+        <label for="docsTestNumber">number <span style="opacity:.6">(for getCode)</span></label>
+        <input id="docsTestNumber" class="field-input" type="text" autocomplete="off" placeholder="+99800000000" oninput="docsTestUrlPreview()">
+      </div>
+
+    </div>
+
+    <div class="docs-url" style="margin-top:12px">
+      <span id="docsTestUrlPreview">…</span>
+    </div>
+
+    <button
+      class="primary-btn"
+      type="button"
+      id="docsTestSendBtn"
+      onclick="docsTestSend()"
+    >
+      <span class="tga-emoji" data-emoji="⚡">⚡</span> Send Request
+    </button>
+
+    <div class="docs-response hidden" id="docsTestResponse">
+      <div class="docs-card-sub" style="margin-bottom:6px">Response</div>
+      <pre class="docs-pre" id="docsTestResponsePre">…</pre>
+    </div>
+
+  </div>
+
+  <div class="docs-footer">
+    TGA Store Developer API · base <code id="docsFooterBase">…</code><br>
+    Need a key? Generate one above after logging in from the
+    <a href="/" target="_blank" rel="noopener">store</a>.
+  </div>
+
+</main>
+
+<div class="docs-toast" id="docsToast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- helpers ---------------- */
+
+  function escapeHtml(value) {
+    return String(value == null ? "" : value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function currentUserId() {
+    return (
+      localStorage.getItem("tga_user_id") ||
+      localStorage.getItem("tga_telegram_id") ||
+      ""
+    );
+  }
+
+  function apiBaseUrl() {
+    return location.origin + "/api/v1";
+  }
+
+  function apiKeyForDocs() {
+    const input = document.getElementById("docsTestApiKey");
+    return input && input.value ? input.value : "YOUR_API_KEY";
+  }
+
+  window.copyText = function (text) {
+    const value = String(text || "");
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(value).then(
+        function () { toast("📋 Copied to clipboard."); },
+        function () { fallbackCopy(value); }
+      );
+    } else {
+      fallbackCopy(value);
+    }
+  };
+
+  function fallbackCopy(text) {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand("copy");
+      toast("📋 Copied to clipboard.");
+    } catch (e) {
+      toast("Could not copy.", true);
+    }
+    document.body.removeChild(ta);
+  }
+
+  let toastTimer = null;
+  function toast(message, isError) {
+    const box = document.getElementById("docsToast");
+    if (!box) return;
+    box.textContent = message;
+    box.classList.toggle("error", Boolean(isError));
+    box.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () {
+      box.classList.remove("show");
+    }, 3200);
+  }
+  window.__docsToast = toast;
+
+  /* ---------------- theme (live refresh) ---------------- */
+
+  function applyTheme(id) {
+    const body = document.body;
+    const custom = Boolean(id) && id !== "default";
+    if (custom) {
+      body.setAttribute("data-theme", id);
+      body.classList.remove("light");
+    } else {
+      body.removeAttribute("data-theme");
+      let pref = "dark";
+      try { pref = localStorage.getItem("tga_theme") || "dark"; } catch (e) {}
+      body.classList.toggle("light", pref === "light");
+    }
+  }
+
+  function refreshTheme() {
+    fetch("/api/status", { cache: "no-store" })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d && d.theme) {
+          const preview = new URLSearchParams(location.search).get("preview_theme");
+          applyTheme(preview || d.theme);
+          if (!preview) {
+            try { localStorage.setItem("tga_site_theme", d.theme); } catch (e) {}
+          }
+        }
+      })
+      .catch(function () {});
+  }
+
+  /* ---------------- session + example URLs ---------------- */
+
+  function fillExampleUrls() {
+    const base = apiBaseUrl();
+    const set = function (id, text) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = text;
+    };
+
+    const key = apiKeyForDocs();
+    set("docsBaseUrl", base);
+    set("docsFooterBase", base);
+    set("docsUrlCountryInfo",
+      base + "?action=country_info&apiKey=" + encodeURIComponent(key) + "&country_code=uz");
+    set("docsUrlCountries",
+      base + "?action=available_countries&apiKey=" + encodeURIComponent(key));
+    set("docsUrlBalance",
+      base + "?action=get_balance&apiKey=" + encodeURIComponent(key));
+    set("docsUrlNumber",
+      base + "?action=getNumber&apiKey=" + encodeURIComponent(key) + "&country_code=uz");
+    set("docsUrlCode",
+      base + "?action=getCode&apiKey=" + encodeURIComponent(key) + "&number=+99800000000");
+  }
+
+  function updateSessionBadge() {
+    const badge = document.getElementById("docsSession");
+    const uid = currentUserId();
+    if (badge) {
+      badge.classList.toggle("on", Boolean(uid));
+      badge.textContent = uid ? "● Logged in" : "○ Not logged in";
+    }
+    return uid;
+  }
+
+  /* ---------------- API key management ---------------- */
+
+  window.loadApiKeys = async function () {
+    const uid = currentUserId();
+    const hint = document.getElementById("docsLoginHint");
+    const genBtn = document.getElementById("docsGenKeyBtn");
+    const list = document.getElementById("docsKeyList");
+    if (!hint || !genBtn || !list) return;
+
+    if (!uid) {
+      hint.classList.remove("hidden");
+      genBtn.classList.add("hidden");
+      list.innerHTML = "";
+      return;
+    }
+    hint.classList.add("hidden");
+    genBtn.classList.remove("hidden");
+
+    try {
+      const resp = await fetch("/api/apikey?action=list&userId=" + encodeURIComponent(uid));
+      const data = await resp.json();
+      const keys = (data && data.keys) || [];
+      if (!keys.length) {
+        list.innerHTML =
+          '<div class="docs-card-sub" style="margin:6px 0 0">No API keys yet. Tap ' +
+          '<b>Generate API Key</b> above to create one.</div>';
+        return;
+      }
+      list.innerHTML = keys.map(function (k) {
+        const meta = (k.created_at || "").toString().slice(0, 10);
+        const keyId = escapeHtml(String(k._id || ""));
+        return (
+          '<div class="docs-key-item">' +
+          "<span>" + keyId + "</span>" +
+          '<span class="key-meta">created ' + escapeHtml(meta || "—") + "</span>" +
+          '<button class="docs-copy" type="button" onclick="copyText(\'' + keyId + '\')">Copy</button>' +
+          '<button class="docs-copy" type="button" style="color:var(--red)" onclick="revokeApiKey(\'' + keyId + '\')">Revoke</button>' +
+          "</div>"
+        );
+      }).join("");
+    } catch (e) {
+      list.innerHTML = '<div class="docs-card-sub">Could not load keys.</div>';
+    }
+  };
+
+  window.loadApiLogs = async function () {
+    const uid = currentUserId();
+    const list = document.getElementById("docsApiLogList");
+    if (!list) return;
+    if (!uid) { list.innerHTML = ""; return; }
+    try {
+      const resp = await fetch("/api/apikey?action=logs&userId=" + encodeURIComponent(uid));
+      const data = await resp.json();
+      const logs = data.logs || [];
+      if (!logs.length) { list.innerHTML = '<div class="docs-card-sub">No API requests yet.</div>'; return; }
+      list.innerHTML = logs.map(function (log) {
+        const time = String(log.created_at || "").slice(0, 19).replace("T", " ");
+        const query = Object.keys(log.query || {}).map(function (k) { return k + "=" + log.query[k]; }).join("&");
+        return '<div class="docs-key-item"><span><b>' + escapeHtml(log.method || "GET") + "</b> " +
+          escapeHtml(log.action || "") +
+          '<small class="key-meta">' + escapeHtml(query) + "</small></span><span class=\"key-meta\">" +
+          escapeHtml(time) + " · " + escapeHtml(String(log.status_code || "")) + "</span></div>";
+      }).join("");
+    } catch (e) {
+      list.innerHTML = '<div class="docs-card-sub">Could not load API logs.</div>';
+    }
+  };
+
+  window.generateApiKey = async function () {
+    const uid = currentUserId();
+    if (!uid) { toast("Login required. Please login first.", true); return; }
+    const btn = document.getElementById("docsGenKeyBtn");
+    if (btn) { btn.disabled = true; btn.textContent = "Generating…"; }
+    try {
+      const resp = await fetch("/api/apikey", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "generate", userId: uid })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        toast("🔑 API key generated. Copy it now from the list above.");
+      } else {
+        toast(data.message || "Could not generate key.", true);
+      }
+    } catch (e) {
+      toast("Could not reach the server.", true);
+    }
+    if (btn) { btn.disabled = false; btn.innerHTML = '<span class="tga-emoji" data-emoji="🔑">🔑</span> Generate API Key'; }
+    await loadApiKeys();
+    await loadApiLogs();
+    docsTestUrlPreview();
+  };
+
+  window.revokeApiKey = async function (key) {
+    const uid = currentUserId();
+    if (!uid || !key) return;
+    if (!window.confirm("Revoke this API key? Requests using it will stop working.")) return;
+    try {
+      const resp = await fetch("/api/apikey", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "revoke", userId: uid, key: key })
+      });
+      const data = await resp.json();
+      toast(data.success ? "Key revoked." : (data.message || "Could not revoke key."), !data.success);
+    } catch (e) {
+      toast("Could not reach the server.", true);
+    }
+    await loadApiKeys();
+    docsTestUrlPreview();
+  };
+
+  /* ---------------- test area ---------------- */
+
+  window.docsTestUrlPreview = function () {
+    const action = (document.getElementById("docsTestAction") || {}).value || "";
+    const apiKey = (document.getElementById("docsTestApiKey") || {}).value || apiKeyForDocs();
+    const country = (document.getElementById("docsTestCountry") || {}).value || "";
+    const number = (document.getElementById("docsTestNumber") || {}).value || "";
+
+    const parts = ["action=" + encodeURIComponent(action), "apiKey=" + encodeURIComponent(apiKey)];
+    if (action === "country_info" || action === "getNumber") {
+      if (country) parts.push("country_code=" + encodeURIComponent(country));
+    }
+    if (action === "getCode" && number) parts.push("number=" + encodeURIComponent(number));
+
+    const url = apiBaseUrl() + "?" + parts.join("&");
+    const el = document.getElementById("docsTestUrlPreview");
+    if (el) el.textContent = url;
+    return url;
+  };
+
+  window.docsTestSend = async function () {
+    const url = docsTestUrlPreview();
+    const btn = document.getElementById("docsTestSendBtn");
+    const box = document.getElementById("docsTestResponse");
+    const pre = document.getElementById("docsTestResponsePre");
+    if (btn) { btn.disabled = true; btn.textContent = "Sending…"; }
+    try {
+      const resp = await fetch(url);
+      let text = "";
+      try { text = JSON.stringify(await resp.json(), null, 2); }
+      catch (e) { text = await resp.text(); }
+      if (!resp.ok && !/^[\s{[]/.test(text)) {
+        text = JSON.stringify({ status: "error", message: text }, null, 2);
+      }
+      if (pre) pre.textContent = text;
+      if (box) box.classList.remove("hidden");
+    } catch (e) {
+      if (pre) pre.textContent = JSON.stringify({ status: "error", message: "Network error: " + (e.message || e) }, null, 2);
+      if (box) box.classList.remove("hidden");
+    }
+    await loadApiLogs();
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<span class="tga-emoji" data-emoji="⚡">⚡</span> Send Request';
+    }
+  };
+
+  /* ---------------- init ---------------- */
+
+  function init() {
+    updateSessionBadge();
+    fillExampleUrls();
+    docsTestUrlPreview();
+    loadApiKeys();
+    loadApiLogs();
+    refreshTheme();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+</body>
+</html>

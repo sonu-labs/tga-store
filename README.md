@@ -3,6 +3,7 @@
 TGA Store is a dark-themed, mobile-friendly web store where users can buy Telegram accounts (phone numbers + OTP), top up their wallet (UPI / FamPay / Binance Pay / Crypto), and an admin can control the entire store from one panel. The website shares the same MongoDB database used by the Telegram bot (`bot.py`).
 
 > **Live URL:** https://tga-store.vercel.app
+> **API Docs:** https://tga-store.vercel.app/docs
 > **Admin Panel:** https://tga-store.vercel.app/admin
 > **Admin Login:** https://tga-store.vercel.app/admin_login
 
@@ -59,6 +60,8 @@ tga-store/
 │
 ├── public/                     # Static frontend (served as-is by Vercel)
 │   ├── index.html              # User-facing store (single page app)
+│   ├── docs.html               # Standalone API Docs page (served at /docs)
+│   ├── app-extras.js           # Emoji, header menu, /docs redirect, pricing modal
 │   ├── theme-ui.css            # Full-UI theme engine (all 22 store themes)
 │   ├── admin.html              # Admin dashboard (single page app)
 │   └── admin_login.html        # Admin login page
@@ -126,6 +129,7 @@ tga-store/
 - Dates shown in IST (`Asia/Kolkata`)
 
 ### 7. Settings Page
+- 📖 **API Docs** — opens the standalone developer API page at **`/docs`** (key generation, request logs, live test area). Also linked from the login screen top corner and the header ⋯ menu
 - 🤖 **Bot Connect** — generate a Telegram bot link to connect the account (purchase alerts + future features)
 - 🔒 **Change Password** (current + new; min 6 chars)
 - 💱 **Currency** — USD / INR / USDT display
@@ -166,10 +170,10 @@ Real-time dashboard with 9 stat cards:
 Below it is a **Recent Activity** feed (last 25 logs) — login, buy, OTP, and recharge events.
 
 ### 2. ≡ Activity Logs Tab
-- Filter by type: All / Logins / Login Success / Login Failed / Buys / Buy Success / Buy Failed / OTP / Recharges
-- 🔍 Search by username, number, country, message
-- Table columns: Time (IST), Event pill, User, Details, Status
-- Pagination via `limit`/`skip` (default 200, max 1000)
+- **← Back** button at the top (returns to Overview)
+- Two tabs — **👥 User Logs** (default) and **⌁ API Logs** — whichever the admin selects is the log that shows:
+  - **User Logs:** filter by type (All / Logins / Login Success / Login Failed / Buys / Buy Success / Buy Failed / OTP / Recharges) + 🔍 search by username, number, country, message. Columns: Time (IST), Event pill, User, Details, Status. Pagination via `limit`/`skip` (default 200, max 1000).
+  - **API Logs:** developer API request audit trail with the creator details (username/email/phone/Telegram ID), masked API key, action, request params and status code. 🔍 Search by username, email, phone, action or key prefix.
 
 ### 3. 👥 Users Tab
 - For every user: Username, Telegram ID, Balance, Total Logins, Last Login, Total Orders, Buying Now (active), Failed Buys, Total Spent
@@ -207,6 +211,11 @@ Below it is a **Recent Activity** feed (last 25 logs) — login, buy, OTP, and r
 - The active provider is always **TG-Lion** (TGPVA is no longer supported)
 - **Profit Margin %** input — added on top of the provider price (e.g. 20 = +20%). It affects both `/api/countries` prices and purchase pricing.
 - Saved to `settings.server_config.s2_profit`
+
+#### 🔑 API Keys
+- Lists **every API key created by every user** — full key (with copy button), owner (username + Telegram/account ID), how many keys that user has, total requests made with the key, created + last-used times
+- Summary pill up top: total users, total keys, total requests
+- Backed by `GET /api/admin?action=api_keys` (joins `api_keys` + `users` + `api_logs` request counts)
 
 #### 🎨 Store Theme
 - 22 selectable themes; each one is a **full UI redesign** of the user store (layout, shapes, fonts, buttons, animations, backgrounds) — see the [Store Themes](#-store-themes-22-full-ui-themes) section
@@ -290,8 +299,10 @@ background effects.
 | GET/POST | `/api/v1?action=…` | Public developer API (see below) |
 
 ### Developer API (`/api/v1`) — "TGA Store API"
-Exposed to users through **Settings → API Docs** (also linked from the login
-screen top corner). Each user generates their own `apiKey` there.
+Documented on the standalone **API Docs page at `/docs`** (linked from the
+login screen top corner, the header ⋯ menu, and Settings → API Docs). Every
+"API Docs" entry point opens that page. Each user generates their own
+`apiKey` on the page (key management + live test area included).
 
 | Action | Parameters | Returns |
 |---|---|---|
@@ -312,7 +323,8 @@ The user UI uses normal system emoji only. Telegram premium/custom emoji IDs and
 | POST | `/api/admin_login` | `{id, password}` → token |
 | GET | `/api/admin?action=overview` | Dashboard stats + recent logs |
 | GET | `/api/admin?action=logs&type=&q=` | Filter/search store logs |
-| GET | `/api/admin?action=api_logs&q=` | API request logs with creator details |
+| GET | `/api/admin?action=api_logs&q=` | API request logs with creator details (shown in Activity Logs → API Logs tab) |
+| GET | `/api/admin?action=api_keys` | Every API key of every user (key, owner, created/last-used, request counts) — Settings tab |
 | GET | `/api/admin?action=users&q=` | User list with stats |
 | GET | `/api/admin?action=orders` | All orders |
 | GET | `/api/admin?action=recharges` | All transactions + crypto |

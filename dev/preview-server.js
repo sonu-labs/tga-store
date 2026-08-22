@@ -152,6 +152,23 @@ async function api(req, res, url) {
       }
       return json(res, 200, { success: true, theme: activeTheme, themes: THEMES });
     }
+    if (action === "api_keys") {
+      const now = Date.now();
+      const iso = (daysAgo) => new Date(now - daysAgo * 864e5).toISOString();
+      return json(res, 200, {
+        success: true,
+        data: {
+          total: 3,
+          users: 2,
+          totalRequests: 47,
+          keys: [
+            { key: "TGA_9f2c4e8a1b6d70354c2f8e9a0b1c2d3e", username: "demo_dev", user_id: "7888066934", telegram_id: "7888066934", created_at: iso(6), last_used_at: iso(0, 22), requests: 31, user_keys: 2 },
+            { key: "TGA_1a7b3c9d5e2f68044b1c8d7e6a5f4c3b", username: "demo_dev", user_id: "7888066934", telegram_id: "7888066934", created_at: iso(2), last_used_at: iso(1, 4), requests: 12, user_keys: 2 },
+            { key: "TGA_0e8d7c6b5a4938271605f4e3d2c1b0a9", username: "another_user", user_id: "5511223344", telegram_id: "5511223344", created_at: iso(4), last_used_at: null, requests: 4, user_keys: 1 }
+          ]
+        }
+      });
+    }
     return json(res, 200, { success: true });
   }
 
@@ -249,6 +266,7 @@ const server = http.createServer((req, res) => {
   }
 
   let rel = url.pathname === "/" ? "/index.html" : url.pathname;
+  if (rel === "/docs" || rel === "/docs/") rel = "/docs.html";
   if (rel === "/admin" || rel === "/admin/") rel = "/admin.html";
   if (rel === "/admin_login" || rel === "/admin_login/") rel = "/admin_login.html";
 
