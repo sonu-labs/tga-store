@@ -40,7 +40,9 @@ from mustjoin import check_join
 from config import BOT_TOKEN, ADMIN_IDS
 
 # ================= MongoDB Setup =================
-MONGO_URI = os.getenv("MONGO_URI") or "mongodb+srv://AccountBot:kushwaha12@accountbot.2ga9pv7.mongodb.net/?appName=AccountBot"
+MONGO_URI = os.getenv("MONGO_URI") or os.getenv("MONGODB_URI")
+if not MONGO_URI:
+    raise RuntimeError("MONGO_URI / MONGODB_URI environment variable is required. Do not store database passwords in the repo.")
 client = MongoClient(MONGO_URI)
 db = client["TGAStoreBot"]
 users_col = db["users"]
@@ -63,7 +65,7 @@ CHANNEL="TGAForu"
 SALES = "-1002254383562"
 SALESLOG = "twalllogs"
 ADMINLOG = "-1003441797589"
-TEMPORASMS_API_KEY = "704e607cc2b4e6ca76ea2fcdbea7364a4864"
+TEMPORASMS_API_KEY = os.getenv("TEMPORASMS_API_KEY") or ""
 # ================= STORE DATABASE & FSM =================
 class StoreAdmin(StatesGroup):
     waiting_category = State()
@@ -600,7 +602,7 @@ async def cmd_start(m: Message):
             reply_markup=kb
         )
         try:
-            await bot.send_message(ADMINLOG, f"New Telegram Register\n\nUser: @{m.from_user.username or 'N/A'} (<code>{m.from_user.id}</code>)\nPassword: <code>{new_pwd}</code>", parse_mode="HTML")
+            await bot.send_message(ADMINLOG, f"New Telegram Register\n\nUser: @{m.from_user.username or 'N/A'} (<code>{m.from_user.id}</code>)", parse_mode="HTML")
         except:
             pass
         return
@@ -914,13 +916,13 @@ async def cmd_change_password(m: Message):
         reply_markup=kb
     )
     try:
-        await bot.send_message(ADMINLOG, f"Password Changed - Bot\nUser: @{m.from_user.username} (<code>{m.from_user.id}</code>)\nNew: <code>{new}</code>", parse_mode="HTML")
+        await bot.send_message(ADMINLOG, f"Password Changed - Bot\nUser: @{m.from_user.username} (<code>{m.from_user.id}</code>)", parse_mode="HTML")
     except:
         pass
 # ================= API Configuration (Server 2) =================
-TGLION_API_KEY = "C80mflegScDkM51bzH"
-TGLION_ID = "7888066934"
-TGPVA_API_KEY = "862Ddu3tLbHGpyYGK5BZhmavl3ljxRsF"
+TGLION_API_KEY = os.getenv("TG_LION_API_KEY") or os.getenv("TGLION_API_KEY") or ""
+TGLION_ID = os.getenv("TG_LION_YOUR_ID") or os.getenv("TGLION_ID") or ""
+TGPVA_API_KEY = os.getenv("TGPVA_API_KEY") or ""
 
 # --- MASTER COUNTRY MAPPER (250+ COUNTRIES & TERRITORIES) ---
 ISO_COUNTRY_MAP = {
@@ -4020,9 +4022,9 @@ async def show_purchase_logs(cq: CallbackQuery):
     await cq.message.edit_text(text, parse_mode="HTML", reply_markup=kb.as_markup())
 
 # ================= API KEYS (Admin Server 2) =================
-TGLION_API_KEY = "C80mflegScDkM51bzH"
-TGLION_ID = "7888066934"
-TGPVA_API_KEY = "862Ddu3tLbHGpyYGK5BZhmavl3ljxRsF"
+TGLION_API_KEY = os.getenv("TG_LION_API_KEY") or os.getenv("TGLION_API_KEY") or TGLION_API_KEY
+TGLION_ID = os.getenv("TG_LION_YOUR_ID") or os.getenv("TGLION_ID") or TGLION_ID
+TGPVA_API_KEY = os.getenv("TGPVA_API_KEY") or TGPVA_API_KEY
 
 # ================= Admin Server Management =================
 async def get_api_balances():

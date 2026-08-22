@@ -59,6 +59,11 @@ tga-store/
 │   └── notify.js               # Telegram sales/admin/buyer notifications
 │
 ├── public/                     # Static frontend (served as-is by Vercel)
+│   ├── assets/                 # Logo + payment photos (circle-cropped in CSS)
+│   │   ├── logo.png            # TGA Store logo
+│   │   ├── upi.png             # UPI recharge icon
+│   │   ├── binance.png         # Binance Pay icon
+│   │   └── crypto.png          # Crypto / USDT icon
 │   ├── index.html              # User-facing store (single page app)
 │   ├── docs.html               # Standalone API Docs page (served at /docs)
 │   ├── app-extras.js           # Emoji, header menu, /docs redirect, pricing modal
@@ -151,7 +156,7 @@ tga-store/
 
 ## 🛡️ Admin Panel Features (A to Z)
 
-The admin panel is at `/admin`. Login is at `/admin_login`. Admin credentials are set via environment variables (`ADMIN_ID`, `ADMIN_PASSWORD`) — **do not share the password with anyone, and replace the default in production**.
+The admin panel is at `/admin`. Login is at `/admin_login`. Admin credentials are set via environment variables (`ADMIN_ID`, `ADMIN_PASSWORD`) — **there is no default password in the code. If these env vars are missing, admin login is disabled.**
 
 An admin session is a 7-day Bearer token stored in the MongoDB `sessions` collection.
 
@@ -364,7 +369,7 @@ Set all of these in the Vercel project. **No real password or API key is written
 ### Admin Login
 | Var | Description |
 |---|---|
-| `ADMIN_ID` | Admin username (default `admin`) |
+| `ADMIN_ID` | Admin username — required, no fallback |
 | `ADMIN_PASSWORD` | Admin password — **use a strong password in production, never keep the default** |
 
 ### Telegram Bot
@@ -487,15 +492,28 @@ The bot must be restarted after pasting the patches.
 
 ## 🔒 Security Notes
 
-- User passwords are always hashed with bcrypt (`SALT_ROUNDS = 10`); plain text is never stored (legacy passwords are auto-migrated).
-- Admin session tokens are 32-byte random hex; they expire after 7 days.
-- All APIs allow CORS `*` (public read APIs), but admin actions require a Bearer token.
+- **No passwords, API keys, Mongo URIs, or admin credentials are stored in this repo.** If any were ever committed, rotate them immediately (Mongo password, admin password, TG-Lion / TGPVA / bot keys).
+- Admin login **requires** `ADMIN_ID` + `ADMIN_PASSWORD` (or `ADMIN_PASSWORD_HASH`) in the host environment. There is no fallback password in the code.
+- Admin login is rate-limited (5 tries / 15 min per IP) and uses timing-safe comparison. A new admin login invalidates previous admin sessions. Admin sessions last 24 hours.
+- User login/register is rate-limited. Failed login always returns the same generic message (no “user not found” leak).
+- After login the website issues a **Bearer session token**. Dashboard, buy, OTP, recharge, password change, bot-connect and API-key routes no longer accept a raw `userId` from the client.
+- User passwords are hashed with bcrypt (`SALT_ROUNDS = 12`). Legacy plaintext passwords are migrated on next successful login. Telegram notifications never include the user’s password.
+- Admin session tokens are 32-byte random hex. User sessions last 7 days.
+- Security headers (`X-Frame-Options: DENY`, `nosniff`, etc.) are set in `vercel.json`.
 - The QR proxy only fetches `http`/`https` URLs; the content-type must be an image.
 - When maintenance mode is on, login/buy/recharge/dashboard all return 503 — only the admin panel and `/api/status` stay live.
-- **Always in production:** use a strong `ADMIN_PASSWORD`, replace the default `adminlogin123`, and keep MONGODB_URI in Vercel env only (never commit it in code).
+
+### After a leak (do this now)
+
+1. Vercel → Project → Settings → Environment Variables: set a **new** `ADMIN_ID` and a **long new** `ADMIN_PASSWORD`. Redeploy.
+2. Change the MongoDB Atlas user password and update `MONGODB_URI`.
+3. Rotate `BOT_TOKEN`, `TG_LION_API_KEY`, `TGPVA_API_KEY`, Binance / OxaPay / UPI keys.
+4. On the bot host, set `MONGO_URI`, `TG_LION_API_KEY`, `TG_LION_YOUR_ID`, `TGPVA_API_KEY` as env vars (they are no longer in `bot.py`).
+5. Ask every user to log in again (old “just userId in localStorage” sessions no longer work).
 
 ---
 
 ## 📝 Editing This README
 
 Feel free to edit this file as needed — update URLs, support links, the Telegram channel (@tgaforu / @OfcCuteSmile / @TGAStore1Bot), prices, or add new features here. **Never write passwords / API keys / the bot token in this file** — always keep them in Vercel environment variables.
+Vercel environment variables.
