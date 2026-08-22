@@ -2811,9 +2811,8 @@ body.light .docs-key-box{
         </div>
 
         <div class="docs-card-sub">
-          Two parameters are required on every request:
-          <b>apiKey</b> (your secret key — generate it below) and
-          <b>YourID</b> (your account ID). Never share your API key.
+          Every request requires your <b>apiKey</b> (your secret key — generate it below).
+          Your account is identified automatically from this key. Never share your API key.
         </div>
 
         <div id="docsAuthArea">
@@ -2821,13 +2820,6 @@ body.light .docs-key-box{
           <div class="docs-login-hint hidden" id="docsLoginHint">
             <span>Login to generate your personal API key and use the test area.</span>
             <button class="primary-btn" type="button" onclick="handleLoginFromDocs()">Login</button>
-          </div>
-
-          <div class="docs-key-row">
-            <div class="docs-key-box">
-              <span>YourID:</span>
-              <b id="docsYourId">—</b>
-            </div>
           </div>
 
           <div class="docs-key-row" style="margin-top:10px">
@@ -2843,6 +2835,8 @@ body.light .docs-key-box{
           </div>
 
           <div class="docs-key-list" id="docsKeyList"></div>
+          <div class="docs-card-sub" style="margin-top:16px"><b>My API request logs</b> — recent requests made with your keys.</div>
+          <div class="docs-key-list" id="docsApiLogList"><div class="docs-card-sub">No requests yet.</div></div>
 
         </div>
 
@@ -2878,7 +2872,6 @@ body.light .docs-key-box{
         <table class="docs-param-table">
           <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
           <tr><td><code>apiKey</code></td><td>String</td><td>YES</td><td>Your API key</td></tr>
-          <tr><td><code>YourID</code></td><td>String</td><td>YES</td><td>Your account ID</td></tr>
           <tr><td><code>country_code</code></td><td>String</td><td>No</td><td>ISO country code, e.g. <code>uz</code></td></tr>
         </table>
 
@@ -2912,7 +2905,6 @@ body.light .docs-key-box{
         <table class="docs-param-table">
           <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
           <tr><td><code>apiKey</code></td><td>String</td><td>YES</td><td>Your API key</td></tr>
-          <tr><td><code>YourID</code></td><td>String</td><td>YES</td><td>Your account ID</td></tr>
         </table>
 
         <div class="docs-url" style="margin-top:10px">
@@ -2956,7 +2948,6 @@ body.light .docs-key-box{
         <table class="docs-param-table">
           <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
           <tr><td><code>apiKey</code></td><td>String</td><td>YES</td><td>Your API key</td></tr>
-          <tr><td><code>YourID</code></td><td>String</td><td>YES</td><td>Your account ID</td></tr>
         </table>
 
         <div class="docs-url" style="margin-top:10px">
@@ -2986,9 +2977,7 @@ body.light .docs-key-box{
         <table class="docs-param-table">
           <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
           <tr><td><code>apiKey</code></td><td>String</td><td>YES</td><td>Your API key</td></tr>
-          <tr><td><code>YourID</code></td><td>String</td><td>YES</td><td>Your account ID</td></tr>
           <tr><td><code>country_code</code></td><td>String</td><td>YES</td><td>ISO country code, e.g. <code>uz</code></td></tr>
-          <tr><td><code>maxPrice</code></td><td>String</td><td>NO</td><td>Optional maximum price</td></tr>
         </table>
 
         <div class="docs-url" style="margin-top:10px">
@@ -3021,7 +3010,6 @@ body.light .docs-key-box{
         <table class="docs-param-table">
           <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
           <tr><td><code>apiKey</code></td><td>String</td><td>YES</td><td>Your API key</td></tr>
-          <tr><td><code>YourID</code></td><td>String</td><td>YES</td><td>Your account ID</td></tr>
           <tr><td><code>number</code></td><td>String</td><td>YES</td><td>The purchased number, e.g. <code>+99800000000</code></td></tr>
         </table>
 
@@ -3053,7 +3041,7 @@ body.light .docs-key-box{
         </div>
 
         <div class="docs-card-sub">
-          Try any API function right here. Your key and ID are filled in
+          Try any API function right here. Your key is filled in
           automatically — just pick an action, add the parameters and hit Send.
         </div>
 
@@ -3076,18 +3064,8 @@ body.light .docs-key-box{
           </div>
 
           <div>
-            <label for="docsTestYourId">YourID</label>
-            <input id="docsTestYourId" class="field-input" type="text" autocomplete="off" placeholder="Your account ID" oninput="docsTestUrlPreview()">
-          </div>
-
-          <div>
             <label for="docsTestCountry">country_code <span style="opacity:.6">(optional)</span></label>
             <input id="docsTestCountry" class="field-input" type="text" autocomplete="off" placeholder="uz" oninput="docsTestUrlPreview()">
-          </div>
-
-          <div>
-            <label for="docsTestMaxPrice">maxPrice <span style="opacity:.6">(optional)</span></label>
-            <input id="docsTestMaxPrice" class="field-input" type="text" autocomplete="off" placeholder="1.00" oninput="docsTestUrlPreview()">
           </div>
 
           <div>
@@ -7015,9 +6993,9 @@ window.addEventListener(
 
 </script>
 
-<!-- Lottie player for animated Telegram premium emoji -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.10.2/lottie.min.js"></script>
-<script src="/emoji-map.js"></script>
+<!-- Static system emoji (no Telegram premium emoji IDs) -->
+
+
 <script src="/app-extras.js"></script>
 
 </body>

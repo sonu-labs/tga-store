@@ -955,6 +955,10 @@ tbody tr:hover{
       <span class="ic">≡</span> Activity Logs
     </button>
 
+    <button class="nav-item" data-tab="api_logs" type="button" onclick="switchTab('api_logs')">
+      <span class="ic">⌁</span> API Logs
+    </button>
+
     <button class="nav-item" data-tab="users" type="button" onclick="switchTab('users')">
       <span class="ic">👥</span> Users
     </button>
@@ -1031,6 +1035,20 @@ tbody tr:hover{
             <tbody id="logsBody"></tbody>
           </table>
         </div>
+      </div>
+    </section>
+
+    <!-- ============ API LOGS ============ -->
+    <section id="page-api_logs" class="page">
+      <div class="page-title">API Request Logs</div>
+      <div class="page-sub">Separate audit trail for developer API calls, including the account that created each API key.</div>
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title">API Users &amp; Requests</div>
+          <input id="apiLogSearch" class="tool-input" type="search" placeholder="Search username, email, phone, action…" oninput="loadApiLogs()">
+        </div>
+        <div class="table-wrap"><table><thead><tr>
+          <th>Time</th><th>Creator details</th><th>API key</th><th>Action</th><th>Request</th><th>Status</th>
+        </tr></thead><tbody id="apiLogsBody"></tbody></table></div>
       </div>
     </section>
 
@@ -1277,6 +1295,7 @@ tbody tr:hover{
 <nav class="admin-bottom-nav" aria-label="Admin navigation">
   <button class="admin-nav-btn active" data-tab="overview" type="button" onclick="switchTab('overview')"><span>◧</span>Overview</button>
   <button class="admin-nav-btn" data-tab="logs" type="button" onclick="switchTab('logs')"><span>≡</span>Logs</button>
+  <button class="admin-nav-btn" data-tab="api_logs" type="button" onclick="switchTab('api_logs')"><span>⌁</span>API Logs</button>
   <button class="admin-nav-btn" data-tab="users" type="button" onclick="switchTab('users')"><span>👥</span>Users</button>
   <button class="admin-nav-btn" data-tab="orders" type="button" onclick="switchTab('orders')"><span>🛒</span>Orders</button>
   <button class="admin-nav-btn" data-tab="recharge" type="button" onclick="switchTab('recharge')"><span>💳</span>Recharge</button>
@@ -1458,6 +1477,7 @@ function switchTab(tab){
 
   if(tab === "overview"){ loadOverview(); }
   else if(tab === "logs"){ loadLogs(); }
+  else if(tab === "api_logs"){ loadApiLogs(); }
   else if(tab === "users"){ loadUsers(); }
   else if(tab === "orders"){ loadOrders(); }
   else if(tab === "recharge"){ loadRecharges(); }
@@ -1619,6 +1639,28 @@ async function loadLogs(){
     console.error("Logs:", error);
     document.getElementById("logsBody").innerHTML = '<tr><td colspan="5"><div class="empty">Failed to load logs.</div></td></tr>';
   }
+}
+
+/* ================= API REQUEST LOGS ================= */
+async function loadApiLogs(){
+  var q = (document.getElementById("apiLogSearch") || {}).value || "";
+  try {
+    var result = await api("api_logs", { query: { q: q.trim() } });
+    var logs = (result.data && result.data.logs) || [];
+    var body = document.getElementById("apiLogsBody");
+    if(!logs.length){ body.innerHTML = '<tr><td colspan="6"><div class="empty">No API requests found.</div></td></tr>'; return; }
+    body.innerHTML = logs.map(function(log){
+      var c = log.creator || {};
+      var details = [c.username || "User", c.email, c.phone, c.telegram_id ? "TG " + c.telegram_id : ""].filter(Boolean).join(" · ");
+      var query = Object.keys(log.query || {}).map(function(k){ return k + "=" + log.query[k]; }).join("&");
+      return '<tr><td class="muted">' + esc(fmtDate(log.created_at)) + '</td>' +
+        '<td><span class="strong">' + esc(details) + '</span></td>' +
+        '<td class="muted">' + esc(log.api_key || "—") + '</td>' +
+        '<td><span class="pill pill-login">' + esc(log.method || "GET") + ' ' + esc(log.action || "") + '</span></td>' +
+        '<td class="muted">' + esc(query || "—") + '</td>' +
+        '<td><span class="pill ' + (log.success ? "pill-success" : "pill-failed") + '">' + esc(String(log.status_code || "info")) + '</span></td></tr>';
+    }).join("");
+  } catch(error){ document.getElementById("apiLogsBody").innerHTML = '<tr><td colspan="6"><div class="empty">Failed to load API logs.</div></td></tr>'; }
 }
 
 /* ================= USERS ================= */

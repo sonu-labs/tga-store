@@ -1,7 +1,7 @@
 /* ==========================================================================
    TGA STORE — APP EXTRAS
    ==========================================================================
-   • Animated Telegram emoji engine (Lottie)
+   • Static system emoji (no Telegram premium IDs)
    • Header 3-dot menu
    • TGA Store API documentation modal + API key management + test area
    • Pricing modal
@@ -13,158 +13,11 @@
   "use strict";
 
   /* ----------------------------------------------------------------
-     1. ANIMATED EMOJI ENGINE (Lottie)
+     1. STATIC EMOJI
      ---------------------------------------------------------------- */
-  const customMap = (typeof TGA_CUSTOM_EMOJI !== "undefined") ? TGA_CUSTOM_EMOJI : {};
-  const animatedSet = (typeof TGA_EMOJI_ANIMATED !== "undefined")
-    ? new Set(TGA_EMOJI_ANIMATED)
-    : new Set();
-
-  function normEmoji(ch) {
-    return String(ch || "").replace(/\uFE0F/g, "").trim();
-  }
-
-  function emojiFileKey(ch) {
-    const n = normEmoji(ch);
-    if (customMap[n]) return customMap[n];
-    return [...n].map((c) => c.codePointAt(0).toString(16)).join("-");
-  }
-
-  function isAllRegionalIndicators(ch) {
-    const pts = [...ch];
-    if (!pts.length) return false;
-    return pts.every((c) => {
-      const cp = c.codePointAt(0);
-      return cp >= 0x1f1e6 && cp <= 0x1f1ff;
-    });
-  }
-
-  function isFlagEmoji(ch) {
-    const pts = [...ch];
-    return (
-      pts.length >= 2 &&
-      pts.every((c) => {
-        const cp = c.codePointAt(0);
-        return cp >= 0x1f1e6 && cp <= 0x1f1ff;
-      })
-    );
-  }
-
-  function isAnimatedEmoji(ch) {
-    const n = normEmoji(ch);
-    if (isFlagEmoji(n) || isAllRegionalIndicators(n)) return false;
-    return animatedSet.has(n) || animatedSet.has(ch);
-  }
-
-  function mountEmoji(el) {
-    if (!el || el.dataset.tgaMounted) return;
-    el.dataset.tgaMounted = "1";
-    const raw = (el.getAttribute("data-emoji") || el.textContent || "").trim();
-    if (!raw || !isAnimatedEmoji(raw) || typeof window.lottie === "undefined") {
-      return;
-    }
-    const slot = document.createElement("span");
-    slot.className = "tga-emoji-slot";
-    const stat = document.createElement("span");
-    stat.className = "tga-emoji-static";
-    stat.textContent = raw;
-    slot.appendChild(stat);
-    el.textContent = "";
-    el.appendChild(slot);
-
-    try {
-      const anim = window.lottie.loadAnimation({
-        container: slot,
-        renderer: "svg",
-        loop: true,
-        autoplay: true,
-        path: "emoji/" + emojiFileKey(raw) + ".json"
-      });
-      // Hide the static glyph ONLY once the SVG animation has actually
-      // painted a text layer — otherwise the plain emoji stays visible as a
-      // safe fallback (missing JSON, renderer failure, offline CDN, …).
-      const hideStatic = function () {
-        const svg = slot.querySelector("svg");
-        if (svg && svg.querySelector("text")) stat.style.display = "none";
-      };
-      if (anim && typeof anim.addEventListener === "function") {
-        anim.addEventListener("DOMLoaded", hideStatic);
-      }
-      setTimeout(hideStatic, 250);
-      setTimeout(hideStatic, 900);
-      setTimeout(hideStatic, 3000);
-    } catch (e) { /* keep the static glyph */ }
-  }
-
-  // Country flags (regional indicator pairs) are matched as one unit first so
-  // they never get split into single letters; they are kept static anyway.
-  const EMOJI_RUN = /([\u{1F1E6}-\u{1F1FF}]{2}|[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{2190}-\u{21FF}\u{2300}-\u{23FF}\u{25A0}-\u{25FF}\u{2934}-\u{2935}\u{2B05}-\u{2B07}]\uFE0F?)+/gu;
-
-  function isSkippedNode(node) {
-    if (!node || node.nodeType !== 1) return false;
-    const tag = node.tagName;
-    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || tag === "PRE" ||
-        tag === "CODE" || tag === "SCRIPT" || tag === "STYLE" || tag === "SVG") {
-      return true;
-    }
-    // never touch Lottie's rendered SVG text or already-mounted emoji slots
-    return Boolean(
-      node.closest &&
-      (node.closest("svg") || node.closest("[data-tga-mounted]"))
-    );
-  }
-
-  /**
-   * Walk the text nodes of a freshly-rendered container and wrap animated
-   * emoji characters in <span class="tga-emoji">. Country flags stay static
-   * so country lists never bounce.
-   */
-  function enhanceEmojis(container) {
-    if (!container || !container.querySelectorAll) return;
-    // mount any explicit .tga-emoji spans first
-    container.querySelectorAll(".tga-emoji").forEach(mountEmoji);
-    // then wrap emoji runs found inside plain text
-    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
-    const textNodes = [];
-    while (walker.nextNode()) textNodes.push(walker.currentNode);
-
-    for (const node of textNodes) {
-      const value = node.nodeValue || "";
-      if (!value || isSkippedNode(node.parentNode)) continue;
-      let matched = false;
-      const parts = value.split(EMOJI_RUN);
-      for (let i = 1; i < parts.length; i += 2) {
-        if (parts[i] && isAnimatedEmoji(parts[i])) { matched = true; break; }
-      }
-      if (!matched) continue;
-
-      const frag = document.createDocumentFragment();
-      const chunks = value.split(EMOJI_RUN);
-      chunks.forEach(function (chunk, idx) {
-        if (!chunk) return;
-        if (idx % 2 === 1 && isAnimatedEmoji(chunk)) {
-          const span = document.createElement("span");
-          span.className = "tga-emoji";
-          span.setAttribute("data-emoji", chunk);
-          span.textContent = chunk;
-          frag.appendChild(span);
-        } else {
-          frag.appendChild(document.createTextNode(chunk));
-        }
-      });
-      node.parentNode.replaceChild(frag, node);
-    }
-    container.querySelectorAll(".tga-emoji").forEach(mountEmoji);
-  }
-
-  window.TGA_EMOJI = {
-    mount: mountEmoji,
-    enhance: enhanceEmojis
-  };
-
-  document.addEventListener("DOMContentLoaded", function () {
-    setTimeout(function () { enhanceEmojis(document.body); }, 120);
-  });
+  // Telegram premium/custom emoji IDs are intentionally not used. Keep the
+  // public hook as a no-op for older dynamic UI calls.
+  window.TGA_EMOJI = { mount: function () {}, enhance: function () {} };
 
   /* ----------------------------------------------------------------
      2. HEADER 3-DOT MENU
@@ -222,11 +75,6 @@
     return input && input.value ? input.value : "YOUR_API_KEY";
   }
 
-  function yourIdForDocs() {
-    const uid = currentUserId();
-    const input = document.getElementById("docsTestYourId");
-    return input && input.value ? input.value : (uid || "YOUR_ID");
-  }
 
   /* ----------------------------------------------------------------
      4. API DOCS MODAL
@@ -243,15 +91,15 @@
     const key = apiKeyForDocs();
 
     set("docsUrlCountryInfo",
-      base + "?action=country_info&apiKey=" + key + "&YourID=" + (uid || "YOUR_ID") + "&country_code=uz");
+      base + "?action=country_info&apiKey=" + encodeURIComponent(key) + "&country_code=uz");
     set("docsUrlCountries",
-      base + "?action=available_countries&apiKey=" + key + "&YourID=" + (uid || "YOUR_ID"));
+      base + "?action=available_countries&apiKey=" + encodeURIComponent(key));
     set("docsUrlBalance",
-      base + "?action=get_balance&apiKey=" + key + "&YourID=" + (uid || "YOUR_ID"));
+      base + "?action=get_balance&apiKey=" + encodeURIComponent(key));
     set("docsUrlNumber",
-      base + "?action=getNumber&apiKey=" + key + "&YourID=" + (uid || "YOUR_ID") + "&country_code=uz");
+      base + "?action=getNumber&apiKey=" + encodeURIComponent(key) + "&country_code=uz");
     set("docsUrlCode",
-      base + "?action=getCode&apiKey=" + key + "&YourID=" + (uid || "YOUR_ID") + "&number=+99800000000");
+      base + "?action=getCode&apiKey=" + encodeURIComponent(key) + "&number=+99800000000");
 
     const modal = document.getElementById("apiDocsModal");
     if (modal) {
@@ -260,6 +108,7 @@
     }
     docsTestUrlPreview();
     loadApiKeys();
+    loadApiLogs();
   };
 
   window.handleLoginFromDocs = function () {
@@ -276,12 +125,10 @@
     const uid = currentUserId();
     const hint = document.getElementById("docsLoginHint");
     const genBtn = document.getElementById("docsGenKeyBtn");
-    const yourId = document.getElementById("docsYourId");
     const list = document.getElementById("docsKeyList");
     if (!hint || !list) return;
 
     if (!uid) {
-      if (yourId) yourId.textContent = "—";
       hint.classList.remove("hidden");
       if (genBtn) genBtn.classList.add("hidden");
       list.innerHTML = "";
@@ -289,7 +136,6 @@
     }
     hint.classList.add("hidden");
     if (genBtn) genBtn.classList.remove("hidden");
-    if (yourId) yourId.textContent = uid;
 
     try {
       const resp = await fetch("/api/apikey?action=list&userId=" + encodeURIComponent(uid));
@@ -317,6 +163,23 @@
     }
   };
 
+  window.loadApiLogs = async function () {
+    const uid = currentUserId();
+    const list = document.getElementById("docsApiLogList");
+    if (!list || !uid) { if (list) list.innerHTML = ""; return; }
+    try {
+      const resp = await fetch("/api/apikey?action=logs&userId=" + encodeURIComponent(uid));
+      const data = await resp.json();
+      const logs = data.logs || [];
+      if (!logs.length) { list.innerHTML = '<div class="docs-card-sub">No API requests yet.</div>'; return; }
+      list.innerHTML = logs.map(function (log) {
+        const time = String(log.created_at || "").slice(0, 19).replace("T", " ");
+        const query = Object.keys(log.query || {}).map(function(k){ return k + "=" + log.query[k]; }).join("&");
+        return '<div class="docs-key-item"><span><b>' + escapeHtml(log.method || "GET") + '</b> ' + escapeHtml(log.action || "") + '<small class="key-meta">' + escapeHtml(query) + '</small></span><span class="key-meta">' + escapeHtml(time) + ' · ' + escapeHtml(String(log.status_code || "")) + '</span></div>';
+      }).join("");
+    } catch (e) { list.innerHTML = '<div class="docs-card-sub">Could not load API logs.</div>'; }
+  };
+
   window.generateApiKey = async function () {
     const uid = currentUserId();
     if (!uid) { showMessage("Login required", "Please login first."); return; }
@@ -339,6 +202,7 @@
     }
     if (btn) { btn.disabled = false; btn.innerHTML = '<span class="tga-emoji" data-emoji="🔑">🔑</span> Generate API Key'; }
     await loadApiKeys();
+    await loadApiLogs();
     docsTestUrlPreview();
   };
 
@@ -365,16 +229,13 @@
   window.docsTestUrlPreview = function () {
     const action = (document.getElementById("docsTestAction") || {}).value || "";
     const apiKey = (document.getElementById("docsTestApiKey") || {}).value || apiKeyForDocs();
-    const yourId = (document.getElementById("docsTestYourId") || {}).value || yourIdForDocs();
     const country = (document.getElementById("docsTestCountry") || {}).value || "";
-    const maxPrice = (document.getElementById("docsTestMaxPrice") || {}).value || "";
     const number = (document.getElementById("docsTestNumber") || {}).value || "";
 
-    const parts = ["action=" + encodeURIComponent(action), "apiKey=" + encodeURIComponent(apiKey), "YourID=" + encodeURIComponent(yourId)];
+    const parts = ["action=" + encodeURIComponent(action), "apiKey=" + encodeURIComponent(apiKey)];
     if (action === "country_info" || action === "getNumber") {
       if (country) parts.push("country_code=" + encodeURIComponent(country));
     }
-    if (action === "getNumber" && maxPrice) parts.push("maxPrice=" + encodeURIComponent(maxPrice));
     if (action === "getCode" && number) parts.push("number=" + encodeURIComponent(number));
 
     const url = apiBaseUrl() + "?" + parts.join("&");
@@ -403,6 +264,7 @@
       if (pre) pre.textContent = JSON.stringify({ status: "error", message: "Network error: " + (e.message || e) }, null, 2);
       if (box) box.classList.remove("hidden");
     }
+    await loadApiLogs();
     if (btn) {
       btn.disabled = false;
       btn.innerHTML = '<span class="tga-emoji" data-emoji="⚡">⚡</span> Send Request';
