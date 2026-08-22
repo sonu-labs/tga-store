@@ -7,6 +7,7 @@
 <meta name="color-scheme" content="dark light">
 
 <title>TGA Store — API Docs</title>
+<link rel="icon" href="/assets/logo.png" type="image/png">
 
 <style>
 *{
@@ -884,6 +885,22 @@ body.light .docs-pre{
     );
   }
 
+  function sessionToken() {
+    try { return localStorage.getItem("tga_session") || ""; } catch (e) { return ""; }
+  }
+
+  function isLoggedIn() {
+    return Boolean(sessionToken() && currentUserId());
+  }
+
+  function authHeaders(json) {
+    const headers = {};
+    if (json) headers["Content-Type"] = "application/json";
+    const token = sessionToken();
+    if (token) headers.Authorization = "Bearer " + token;
+    return headers;
+  }
+
   function apiBaseUrl() {
     return location.origin + "/api/v1";
   }
@@ -992,7 +1009,7 @@ body.light .docs-pre{
 
   function updateSessionBadge() {
     const badge = document.getElementById("docsSession");
-    const uid = currentUserId();
+    const uid = isLoggedIn() ? currentUserId() : "";
     if (badge) {
       badge.classList.toggle("on", Boolean(uid));
       badge.textContent = uid ? "● Logged in" : "○ Not logged in";
@@ -1003,7 +1020,7 @@ body.light .docs-pre{
   /* ---------------- API key management ---------------- */
 
   window.loadApiKeys = async function () {
-    const uid = currentUserId();
+    const uid = isLoggedIn() ? currentUserId() : "";
     const hint = document.getElementById("docsLoginHint");
     const genBtn = document.getElementById("docsGenKeyBtn");
     const list = document.getElementById("docsKeyList");
@@ -1019,7 +1036,7 @@ body.light .docs-pre{
     genBtn.classList.remove("hidden");
 
     try {
-      const resp = await fetch("/api/apikey?action=list&userId=" + encodeURIComponent(uid));
+      const resp = await fetch("/api/apikey?action=list", { headers: authHeaders(false), cache: "no-store" });
       const data = await resp.json();
       const keys = (data && data.keys) || [];
       if (!keys.length) {
@@ -1046,12 +1063,12 @@ body.light .docs-pre{
   };
 
   window.loadApiLogs = async function () {
-    const uid = currentUserId();
+    const uid = isLoggedIn() ? currentUserId() : "";
     const list = document.getElementById("docsApiLogList");
     if (!list) return;
     if (!uid) { list.innerHTML = ""; return; }
     try {
-      const resp = await fetch("/api/apikey?action=logs&userId=" + encodeURIComponent(uid));
+      const resp = await fetch("/api/apikey?action=logs", { headers: authHeaders(false), cache: "no-store" });
       const data = await resp.json();
       const logs = data.logs || [];
       if (!logs.length) { list.innerHTML = '<div class="docs-card-sub">No API requests yet.</div>'; return; }
@@ -1069,15 +1086,15 @@ body.light .docs-pre{
   };
 
   window.generateApiKey = async function () {
-    const uid = currentUserId();
+    const uid = isLoggedIn() ? currentUserId() : "";
     if (!uid) { toast("Login required. Please login first.", true); return; }
     const btn = document.getElementById("docsGenKeyBtn");
     if (btn) { btn.disabled = true; btn.textContent = "Generating…"; }
     try {
       const resp = await fetch("/api/apikey", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "generate", userId: uid })
+        headers: authHeaders(true),
+        body: JSON.stringify({ action: "generate" })
       });
       const data = await resp.json();
       if (data.success) {
@@ -1095,7 +1112,7 @@ body.light .docs-pre{
   };
 
   window.revokeApiKey = async function (key) {
-    const uid = currentUserId();
+    const uid = isLoggedIn() ? currentUserId() : "";
     if (!uid || !key) return;
     if (!window.confirm("Revoke this API key? Requests using it will stop working.")) return;
     try {

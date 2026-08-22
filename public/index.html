@@ -7,6 +7,7 @@
 <meta name="color-scheme" content="dark light">
 
 <title>TGA Store</title>
+<link rel="icon" href="/assets/logo.png" type="image/png">
 
 <style>
 *{
@@ -115,8 +116,17 @@ button:disabled{
 .login-logo{
   width:90px;
   height:90px;
-  object-fit:contain;
+  object-fit:cover;
+  object-position:center;
   margin-bottom:12px;
+  border-radius:50%;
+  background:#fff;
+  box-shadow:0 0 0 2px var(--border);
+}
+
+body.light .login-logo{
+  background:#fff;
+  box-shadow:0 0 0 2px rgba(17,17,17,.08), 0 8px 22px rgba(0,0,0,.08);
 }
 
 .brand-title{
@@ -235,7 +245,16 @@ button:disabled{
 .header-logo{
   width:43px;
   height:43px;
-  object-fit:contain;
+  object-fit:cover;
+  object-position:center;
+  border-radius:50%;
+  background:#fff;
+  box-shadow:0 0 0 2px var(--border);
+}
+
+body.light .header-logo{
+  background:#fff;
+  box-shadow:0 0 0 2px rgba(17,17,17,.08);
 }
 
 .header-title{
@@ -1483,7 +1502,7 @@ body.light .nav-btn.active{
 
     <img
       class="login-logo"
-      src="https://files.catbox.moe/zsgsqb.png"
+      src="/assets/logo.png"
       alt="TGA Store"
     >
 
@@ -1566,7 +1585,7 @@ body.light .nav-btn.active{
 
     <img
       class="header-logo"
-      src="https://files.catbox.moe/zsgsqb.png"
+      src="/assets/logo.png"
       alt="TGA"
     >
 
@@ -1948,6 +1967,24 @@ body.light .nav-btn.active{
 .recharge-method-icon{
   font-size:32px;
   line-height:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.pay-icon{
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  object-fit:cover;
+  object-position:center;
+  display:block;
+  background:#fff;
+  box-shadow:0 0 0 2px var(--border);
+}
+
+body.light .pay-icon{
+  box-shadow:0 0 0 2px rgba(17,17,17,.08), 0 4px 12px rgba(0,0,0,.08);
 }
 
 .recharge-method-title{
@@ -2885,8 +2922,16 @@ body.maintenance-active #dashboardScreen{
 .maintenance-logo{
   width:76px;
   height:76px;
-  object-fit:contain;
+  object-fit:cover;
+  object-position:center;
   margin-bottom:16px;
+  border-radius:50%;
+  background:#fff;
+  box-shadow:0 0 0 2px var(--border);
+}
+
+body.light .maintenance-logo{
+  box-shadow:0 0 0 2px rgba(17,17,17,.08), 0 8px 22px rgba(0,0,0,.08);
 }
 
 .maintenance-icon{
@@ -2932,7 +2977,7 @@ body.maintenance-active #dashboardScreen{
 
     <img
       class="maintenance-logo"
-      src="https://files.catbox.moe/zsgsqb.png"
+      src="/assets/logo.png"
       alt="TGA Store"
     >
 
@@ -2985,8 +3030,79 @@ const INR_PER_USDT = 100;
 */
 const SELLING_MARKUP = 1.20;
 
-const LOGO_URL =
-  "https://files.catbox.moe/zsgsqb.png";
+const LOGO_URL = "/assets/logo.png";
+const PAY_ICONS = {
+  upi: "/assets/upi.png",
+  binance: "/assets/binance.png",
+  crypto: "/assets/crypto.png"
+};
+
+function getSessionToken(){
+  try{ return localStorage.getItem("tga_session") || ""; }catch(e){ return ""; }
+}
+
+function authHeaders(json){
+  const headers = {};
+  if(json) headers["Content-Type"] = "application/json";
+  const token = getSessionToken();
+  if(token) headers["Authorization"] = "Bearer " + token;
+  return headers;
+}
+
+function saveSession(token, user){
+  try{
+    if(token) localStorage.setItem("tga_session", token);
+    if(user){
+      const uid = String(user.userId || user.telegramId || "");
+      if(uid) localStorage.setItem("tga_user_id", uid);
+      if(user.telegramId) localStorage.setItem("tga_telegram_id", String(user.telegramId));
+      else if(uid) localStorage.setItem("tga_telegram_id", uid);
+      if(user.username) localStorage.setItem("tga_username", user.username);
+    }
+  }catch(e){}
+}
+
+function clearSession(){
+  try{
+    localStorage.removeItem("tga_session");
+    localStorage.removeItem("tga_user_id");
+    localStorage.removeItem("tga_telegram_id");
+    localStorage.removeItem("tga_username");
+  }catch(e){}
+}
+
+function forceLogin(message){
+  clearSession();
+  currentUserId = null;
+  currentTelegramId = null;
+  dashboardData = null;
+  currentOrders = [];
+  selectedCountry = null;
+  currentAccount = null;
+  closeAllModals();
+  const dash = document.getElementById("dashboardScreen");
+  const login = document.getElementById("loginScreen");
+  if(dash) dash.style.display = "none";
+  if(login) login.style.display = "flex";
+  if(message) showLoginError(message);
+}
+
+async function apiRequest(url, options){
+  const opts = options || {};
+  const hasBody = opts.body != null;
+  opts.headers = Object.assign(authHeaders(hasBody), opts.headers || {});
+  opts.cache = opts.cache || "no-store";
+  const response = await fetch(url, opts);
+  let result = {};
+  try{ result = await response.json(); }catch(e){}
+  if(response.status === 401 && result && result.auth === false){
+    forceLogin(result.message || "Please login again.");
+    const err = new Error(result.message || "Please login again.");
+    err.auth = false;
+    throw err;
+  }
+  return { response, result };
+}
 
 
 /* ==================================================
@@ -3314,8 +3430,7 @@ async function handleRegister(){
     const body={ method: registerMethod, username, password };
     if(registerMethod==="email") body.email=email;
     else body.phone=phone;
-    const response = await fetch("/api/account?action=register",{ method:"POST", headers:{"Content-Type":"application/json"}, cache:"no-store", body:JSON.stringify(body)});
-    const result=await response.json();
+    const { response, result } = await apiRequest("/api/account?action=register",{ method:"POST", body:JSON.stringify(body)});
     if(!response.ok || !result.success){ showLoginError(result.message||"Register failed."); return; }
     showMessage("✅ Registered", "Account created! Now login with your credentials.");
     switchAuthTab("login");
@@ -3363,22 +3478,15 @@ async function handleLogin(){
 
   try{
 
-    const response =
-      await fetch("/api/login",{
+    const { response, result } =
+      await apiRequest("/api/login",{
         method:"POST",
-        headers:{
-          "Content-Type":"application/json"
-        },
-        cache:"no-store",
         body:JSON.stringify({
           identifier,
           method: loginMethod,
           password
         })
       });
-
-    const result =
-      await response.json();
 
     if(result && result.maintenance){
 
@@ -3404,9 +3512,7 @@ async function handleLogin(){
 
     currentUserId = String(result.user.userId || result.user.telegramId);
     currentTelegramId = result.user.telegramId ? String(result.user.telegramId) : currentUserId;
-    localStorage.setItem("tga_user_id", currentUserId);
-    localStorage.setItem("tga_telegram_id", currentTelegramId);
-    localStorage.setItem("tga_username", result.user.username || "User");
+    saveSession(result.token, result.user);
 
     showDashboard();
 
@@ -3442,20 +3548,11 @@ async function loadDashboardData(){
 
   try{
 
-    const uid = currentUserId || currentTelegramId;
-    const response =
-      await fetch(
-        "/api/dashboard?userId="+
-        encodeURIComponent(uid)+
-        "&t="+Date.now(),
-        {
-          method:"GET",
-          cache:"no-store"
-        }
+    const { response, result } =
+      await apiRequest(
+        "/api/dashboard?t="+Date.now(),
+        { method:"GET" }
       );
-
-    const result =
-      await response.json();
 
     if(
       !response.ok ||
@@ -4316,26 +4413,16 @@ async function confirmPurchase(){
       real configured selling price.
     */
 
-    const response =
-      await fetch(
+    const { response, result } =
+      await apiRequest(
         "/api/buy",
         {
           method:"POST",
-          headers:{
-            "Content-Type":"application/json"
-          },
-          cache:"no-store",
           body:JSON.stringify({
-            userId: currentUserId || currentTelegramId,
-
-            country_code:
-              selectedCountry.code
+            country_code: selectedCountry.code
           })
         }
       );
-
-    const result =
-      await response.json();
 
     if(result && result.maintenance){
 
@@ -4515,33 +4602,19 @@ async function fetchOtp(number, orderId){
     body.orderId=orderId;
   }
 
-  const response =
-    await fetch(
+  const { response, result } =
+    await apiRequest(
       "/api/code",
       {
         method:"POST",
-        headers:{
-          "Content-Type":"application/json"
-        },
-        cache:"no-store",
         body:JSON.stringify(body)
       }
     );
 
-  let result=null;
-
-  try{
-    result=await response.json();
-  }catch(jsonError){
-    console.error(
-      "OTP response parse:",
-      jsonError
-    );
-
+  if(!result){
     const err = new Error(
       "Could not read server response."
     );
-
     err.statusCode=response.status;
     throw err;
   }
@@ -5046,24 +5119,30 @@ function renderRechargeMethods(){
   // UPI card is always branded "UPI Gateway" — whichever gateway powers it behind the scenes
   let upiCard = "";
   if(upiAutoEnabled){
-    upiCard = cardRecharge("upi","💳","UPI Gateway","Scan QR & pay — auto verification","ON","upi");
+    upiCard = cardRecharge("upi",payIcon("upi"),"UPI Gateway","Scan QR & pay — auto verification","ON","upi");
   }else{
-    upiCard = cardRecharge("upi","💳","UPI Gateway","Currently disabled<br>Contact support","OFF",null,true);
+    upiCard = cardRecharge("upi",payIcon("upi"),"UPI Gateway","Currently disabled<br>Contact support","OFF",null,true);
   }
 
   const binanceCard = binanceOn
-    ? cardRecharge("binance","🅱️","Binance Pay (Auto)","Send to Pay ID & verify","ON","binance")
-    : cardRecharge("binance","🅱️","Binance Pay","Currently disabled","OFF",null,true);
+    ? cardRecharge("binance",payIcon("binance"),"Binance Pay (Auto)","Send to Pay ID & verify","ON","binance")
+    : cardRecharge("binance",payIcon("binance"),"Binance Pay","Currently disabled","OFF",null,true);
 
   const cryptoCard = cryptoOn
-    ? cardRecharge("crypto","🪙","Crypto (Auto)","USDT via OxaPay<br>Min 0.1 USDT","ON","crypto")
-    : cardRecharge("crypto","🪙","Crypto","Currently disabled","OFF",null,true);
+    ? cardRecharge("crypto",payIcon("crypto"),"Crypto (Auto)","USDT via OxaPay<br>Min 0.1 USDT","ON","crypto")
+    : cardRecharge("crypto",payIcon("crypto"),"Crypto","Currently disabled","OFF",null,true);
 
   box.innerHTML = upiCard + binanceCard + cryptoCard;
 
   if(!upiAutoEnabled && !binanceOn && !cryptoOn){
     box.innerHTML += `<div class="recharge-note" style="grid-column:1/-1">⚠️ <b>All payment methods are currently disabled.</b> Please contact support or try again later. Admin can enable them from Payment Settings.</div>`;
   }
+}
+
+function payIcon(kind){
+  const src = PAY_ICONS[kind] || "/assets/logo.png";
+  const alt = kind === "upi" ? "UPI" : kind === "binance" ? "Binance" : "Crypto";
+  return `<img class="pay-icon" src="${src}" alt="${alt}" width="56" height="56">`;
 }
 
 function cardRecharge(id,icon,title,sub,badge,method,disabled){
@@ -5184,13 +5263,10 @@ async function createUPIInvoice(){
   const btn = document.querySelector('#rechargeFormArea .primary-btn');
   if(btn){ btn.disabled=true; btn.textContent="Generating..."; }
   try{
-    const res = await fetch("/api/recharge?action=create",{
+    const { response: res, result: data } = await apiRequest("/api/recharge?action=create",{
       method:"POST",
-      headers:{"Content-Type":"application/json"},
-      cache:"no-store",
-      body:JSON.stringify({ userId: (currentUserId||currentTelegramId), method:"upi", amount: amount })
+      body:JSON.stringify({ method:"upi", amount: amount })
     });
-    const data = await res.json();
     if(!res.ok || !data.success) throw new Error(data.message||"Failed to generate QR.");
     showUPIInvoice(data);
     closeRechargeForm();
@@ -5229,13 +5305,10 @@ async function createFamPayInvoice(){
   const btn = document.querySelector('#rechargeFormArea .primary-btn');
   if(btn){ btn.disabled=true; btn.textContent="Generating..."; }
   try{
-    const res = await fetch("/api/recharge?action=create",{
+    const { response: res, result: data } = await apiRequest("/api/recharge?action=create",{
       method:"POST",
-      headers:{"Content-Type":"application/json"},
-      cache:"no-store",
-      body:JSON.stringify({ userId: (currentUserId||currentTelegramId), method:"fampay" })
+      body:JSON.stringify({ method:"fampay" })
     });
-    const data = await res.json();
     if(!res.ok || !data.success) throw new Error(data.message||"Failed to generate QR.");
     const area = document.getElementById("rechargeInvoiceArea");
     const fampayUpi = rechargeMeta ? (rechargeMeta.fampay_upi || "") : "";
@@ -5276,13 +5349,10 @@ async function createCryptoInvoice(){
   const btn = document.querySelector('#rechargeFormArea .primary-btn');
   if(btn){ btn.disabled=true; btn.textContent="Generating..."; }
   try{
-    const res = await fetch("/api/recharge?action=create",{
+    const { response: res, result: data } = await apiRequest("/api/recharge?action=create",{
       method:"POST",
-      headers:{"Content-Type":"application/json"},
-      cache:"no-store",
-      body:JSON.stringify({ userId: (currentUserId||currentTelegramId), method:"crypto", amount: usdt })
+      body:JSON.stringify({ method:"crypto", amount: usdt })
     });
-    const data = await res.json();
     if(!res.ok || !data.success) throw new Error(data.message||"Failed to generate invoice.");
     const area = document.getElementById("rechargeInvoiceArea");
     area.classList.remove("hidden");
@@ -5315,13 +5385,10 @@ async function verifyUPI(orderId){
   const btn = area ? area.querySelector(".primary-btn") : null;
   if(btn){ btn.disabled=true; btn.textContent="Verifying..."; }
   try{
-    const res = await fetch("/api/recharge?action=verify",{
+    const { result: data } = await apiRequest("/api/recharge?action=verify",{
       method:"POST",
-      headers:{"Content-Type":"application/json"},
-      cache:"no-store",
-      body:JSON.stringify({ userId: (currentUserId||currentTelegramId), method:"upi", order_id: orderId })
+      body:JSON.stringify({ method:"upi", order_id: orderId })
     });
-    const data = await res.json();
     if(data.success){
       showMessage("✅ Payment Verified", data.message || `₹${data.amount} credited. New balance: ₹${(data.balance||0).toFixed(2)}`);
       closeRechargeInvoice();
@@ -5343,13 +5410,10 @@ async function verifyFamPay(orderId){
   const btn = area ? area.querySelector(".primary-btn") : null;
   if(btn){ btn.disabled=true; btn.textContent="Verifying..."; }
   try{
-    const res = await fetch("/api/recharge?action=verify",{
+    const { result: data } = await apiRequest("/api/recharge?action=verify",{
       method:"POST",
-      headers:{"Content-Type":"application/json"},
-      cache:"no-store",
-      body:JSON.stringify({ userId: (currentUserId||currentTelegramId), method:"fampay", order_id: orderId })
+      body:JSON.stringify({ method:"fampay", order_id: orderId })
     });
-    const data = await res.json();
     if(data.success){
       showMessage("✅ Payment Verified", data.message || `₹${data.amount} credited. New balance: ₹${(data.balance||0).toFixed(2)}`);
       closeRechargeInvoice();
@@ -5371,13 +5435,10 @@ async function verifyCrypto(trackId){
   const btn = area ? area.querySelector(".secondary-btn") : null;
   if(btn){ btn.disabled=true; btn.textContent="Checking..."; }
   try{
-    const res = await fetch("/api/recharge?action=verify",{
+    const { result: data } = await apiRequest("/api/recharge?action=verify",{
       method:"POST",
-      headers:{"Content-Type":"application/json"},
-      cache:"no-store",
-      body:JSON.stringify({ userId: (currentUserId||currentTelegramId), method:"crypto", track_id: trackId, order_id: trackId })
+      body:JSON.stringify({ method:"crypto", track_id: trackId, order_id: trackId })
     });
-    const data = await res.json();
     if(data.success){
       showMessage("✅ Crypto Verified", data.message || `${data.amount_usdt||""} USDT (₹${data.amount}) credited.`);
       closeRechargeInvoice();
@@ -5403,13 +5464,10 @@ async function verifyBinanceFromInput(){
   const btn = document.querySelector('#rechargeFormArea .primary-btn');
   if(btn){ btn.disabled=true; btn.textContent="Verifying..."; }
   try{
-    const res = await fetch("/api/recharge?action=verify",{
+    const { result: data } = await apiRequest("/api/recharge?action=verify",{
       method:"POST",
-      headers:{"Content-Type":"application/json"},
-      cache:"no-store",
-      body:JSON.stringify({ userId: (currentUserId||currentTelegramId), method:"binance", order_id: orderId })
+      body:JSON.stringify({ method:"binance", order_id: orderId })
     });
-    const data = await res.json();
     if(data.success){
       showMessage("✅ Binance Verified", data.message || `₹${data.amount} credited.`);
       closeRechargeForm();
@@ -5431,8 +5489,7 @@ async function loadRechargeHistory(){
   if(!box) return;
   box.innerHTML = `<div class="loading"><div class="spinner"></div>Loading history...</div>`;
   try{
-    const res = await fetch("/api/recharge?action=history&userId="+encodeURIComponent(currentUserId||currentTelegramId)+"&t="+Date.now(),{ cache:"no-store" });
-    const data = await res.json();
+    const { response: res, result: data } = await apiRequest("/api/recharge?action=history&t="+Date.now(),{ cache:"no-store" });
     if(!res.ok || !data.success) throw new Error(data.message||"Failed");
     const list = data.history || [];
     if(!list.length){
@@ -5848,10 +5905,15 @@ async function refreshCurrentPage(){
 ================================================== */
 
 function handleLogout(){
-
-  localStorage.removeItem("tga_user_id");
-  localStorage.removeItem("tga_telegram_id");
-  localStorage.removeItem("tga_username");
+  try{
+    fetch("/api/account?action=logout", {
+      method:"POST",
+      headers: authHeaders(true),
+      cache:"no-store",
+      body:"{}"
+    }).catch(function(){});
+  }catch(e){}
+  clearSession();
   currentUserId=null;
   currentTelegramId=null;
 
@@ -5890,8 +5952,7 @@ async function refreshBotStatus(){
   const uid = currentUserId || currentTelegramId;
   if(!uid) return;
   try{
-    const res = await fetch("/api/account?action=bot-connect&userId="+encodeURIComponent(uid)+"&t="+Date.now(),{cache:"no-store"});
-    const data = await res.json();
+    const { result: data } = await apiRequest("/api/account?action=bot-connect&t="+Date.now(),{cache:"no-store"});
     const dot=document.getElementById("botConnectDot");
     const sub=document.getElementById("botConnectSub");
     if(!dot) return;
@@ -5910,8 +5971,7 @@ async function openBotConnect(){
   const uid = currentUserId || currentTelegramId;
   if(!uid){ showMessage("Login required","Please login first."); return; }
   try{
-    const stRes = await fetch("/api/account?action=bot-connect&userId="+encodeURIComponent(uid));
-    const st=await stRes.json();
+    const { result: st } = await apiRequest("/api/account?action=bot-connect");
     if(st.success && st.bot_connected){
       showMessage("🤖 Bot Connected", "Your Telegram is already connected ✅\nTelegram ID: "+st.telegram_id);
       return;
@@ -5919,8 +5979,7 @@ async function openBotConnect(){
   }catch(e){}
   // create token
   try{
-    const res = await fetch("/api/account?action=bot-connect",{method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({userId: uid})});
-    const data=await res.json();
+    const { result: data } = await apiRequest("/api/account?action=bot-connect",{method:"POST", body:JSON.stringify({})});
     if(data.already_connected){ showMessage("✅ Already connected","Telegram ID: "+data.telegram_id); refreshBotStatus(); return; }
     if(!data.success) throw new Error(data.message||"Failed");
     const link=data.link;
@@ -5940,8 +5999,7 @@ async function submitChangePassword(){
   if(!newP || newP.length<6){ showMessage("Error","New password min 6 chars."); return; }
   const uid=currentUserId||currentTelegramId;
   try{
-    const res=await fetch("/api/account?action=change-password",{method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({userId: uid, oldPassword: oldP, newPassword: newP})});
-    const d=await res.json();
+    const { response: res, result: d }=await apiRequest("/api/account?action=change-password",{method:"POST", body:JSON.stringify({oldPassword: oldP, newPassword: newP})});
     if(!res.ok || !d.success) throw new Error(d.message||"Failed");
     closeModal("messageModal");
     showMessage("✅ Updated","Password changed successfully.");
@@ -6348,14 +6406,16 @@ window.addEventListener(
         currentCurrency;
     }
 
+    const savedToken = getSessionToken();
     const savedId = localStorage.getItem("tga_user_id") || localStorage.getItem("tga_telegram_id");
-    if(savedId){
+    if(savedToken && savedId){
       currentUserId = savedId;
       currentTelegramId = localStorage.getItem("tga_telegram_id") || savedId;
 
       showDashboard();
 
     }else{
+      clearSession();
 
       document.getElementById(
         "loginScreen"

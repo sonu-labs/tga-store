@@ -83,6 +83,7 @@ async function api(req, res, url) {
   if (route === "login") {
     return json(res, 200, {
       success: true,
+      token: "preview-demo-token",
       user: { userId: "demo-1", telegramId: "7888066934", username: "Demo User", balance: 4720 }
     });
   }
