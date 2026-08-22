@@ -216,8 +216,8 @@ body[data-theme] .modal-price{
   border:var(--t-card-border);
   border-radius:var(--t-radius-lg);
   box-shadow:var(--t-card-shadow);
-  backdrop-filter:blur(var(--t-card-blur));
-  -webkit-backdrop-filter:blur(var(--t-card-blur));
+  backdrop-filter:blur(var(--t-card-blur)) saturate(var(--t-card-sat,100%));
+  -webkit-backdrop-filter:blur(var(--t-card-blur)) saturate(var(--t-card-sat,100%));
   transition:transform var(--t-speed) var(--t-ease),
              box-shadow var(--t-speed) var(--t-ease),
              border-color var(--t-speed) var(--t-ease),
@@ -420,6 +420,14 @@ body[data-theme] .nav-btn{
   letter-spacing:var(--t-label-letter);
 }
 
+/* Press feedback on the fixed tab bar must never move the button:
+   a transform on :active inside the backdrop-filter bar makes the whole
+   bar repaint/detach on mobile (button vanishes or slides downward). */
+body[data-theme] .nav-btn:active{
+  transform:none;
+  filter:brightness(1.15);
+}
+
 body[data-theme] .nav-btn.active{
   color:var(--text);
   background:linear-gradient(180deg,rgba(var(--green-rgb),.18),var(--nav-active));
@@ -519,106 +527,292 @@ body[data-theme] .country-grid{
 
 /* ==========================================================================
    4. THEMES
-   ========================================================================== */
-
 /* --------------------------------------------------------------------------
-   GLASS — fully transparent frosted UI
-   Everything is see-through: panels, header, nav, inputs and modals all use
-   layered translucency over drifting light blobs.
+   GLASS — iOS-style frosted glass UI
+   A layered, iPhone-inspired material: every surface is a translucent frosted
+   pane with heavy blur + saturation, hairline borders and an inner top
+   highlight, floating over drifting colour blobs. Includes iOS-style
+   segmented controls, switches, tab bar, bottom-sheet modals and buttons.
    -------------------------------------------------------------------------- */
 
 body[data-theme="glass"]{
-  --bg:#070b18;
-  --surface:rgba(255,255,255,.09);
-  --surface2:rgba(255,255,255,.14);
-  --border:rgba(255,255,255,.24);
-  --text:#f3f7ff;
-  --muted:rgba(228,238,255,.74);
-  --soft:rgba(228,238,255,.5);
-  --green:#7ce7ff;
-  --green-rgb:124,231,255;
-  --red:#ff8098;
+  --bg:#060a16;
+  --surface:rgba(255,255,255,.10);
+  --surface2:rgba(255,255,255,.15);
+  --border:rgba(255,255,255,.22);
+  --text:#f4f7ff;
+  --muted:rgba(225,235,255,.72);
+  --soft:rgba(225,235,255,.48);
+  --green:#64d8ff;
+  --green-rgb:100,216,255;
+  --red:#ff6f91;
   --yellow:#ffd479;
-  --btn:rgba(255,255,255,.2);
+  --btn:rgba(255,255,255,.26);
   --btn-text:#ffffff;
-  --header-bg:rgba(255,255,255,.07);
-  --nav-bg:rgba(255,255,255,.1);
-  --nav-border:rgba(255,255,255,.3);
-  --nav-active:rgba(255,255,255,.22);
+  --header-bg:rgba(16,20,38,.5);
+  --nav-bg:rgba(22,26,48,.58);
+  --nav-border:rgba(255,255,255,.16);
+  --nav-active:rgba(255,255,255,.2);
 
-  --t-radius-lg:26px;
-  --t-radius-md:18px;
-  --t-card-bg:linear-gradient(140deg,rgba(255,255,255,.18),rgba(255,255,255,.05));
-  --t-card-bg2:rgba(255,255,255,.13);
-  --t-card-blur:26px;
-  --t-card-shadow:0 20px 60px rgba(2,6,23,.5),inset 0 1px 0 rgba(255,255,255,.4);
-  --t-card-shadow-hover:0 30px 80px rgba(2,6,23,.6),inset 0 1px 0 rgba(255,255,255,.55);
-  --t-btn-bg:linear-gradient(140deg,rgba(255,255,255,.32),rgba(255,255,255,.12));
+  /* iOS material tuning */
+  --t-radius-lg:24px;
+  --t-radius-md:16px;
+  --t-radius-sm:12px;
+  --t-pill:999px;
+  --t-border-w:1px;
+  --t-border-style:solid;
+  --t-card-bg:linear-gradient(150deg,rgba(255,255,255,.16),rgba(255,255,255,.06));
+  --t-card-bg2:rgba(255,255,255,.12);
+  --t-card-blur:30px;
+  --t-card-sat:180%;
+  --t-card-shadow:0 24px 70px rgba(0,2,16,.55),inset 0 .5px 0 rgba(255,255,255,.45);
+  --t-card-shadow-hover:0 34px 90px rgba(0,2,16,.62),inset 0 .5px 0 rgba(255,255,255,.6);
+  --t-card-border:1px solid rgba(255,255,255,.22);
+  --t-btn-radius:16px;
+  --t-btn-bg:linear-gradient(160deg,rgba(255,255,255,.34),rgba(255,255,255,.14));
   --t-btn-color:#ffffff;
-  --t-btn-border:1px solid rgba(255,255,255,.4);
-  --t-btn-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 10px 26px rgba(2,6,23,.4);
-  --t-btn-shadow-hover:inset 0 1px 0 rgba(255,255,255,.7),0 16px 36px rgba(124,231,255,.28);
-  --t-btn-sweep:1;
-  --t-nav-radius:30px;
-  --t-nav-blur:26px;
-  --t-nav-shadow:0 20px 60px rgba(2,6,23,.55),inset 0 1px 0 rgba(255,255,255,.35);
-  --t-page-anim:tBlurIn;
-  --t-card-anim:tZoomIn;
-  --t-hover-y:-6px;
-  --t-hover-scale:1.015;
+  --t-btn-border:1px solid rgba(255,255,255,.35);
+  --t-btn-weight:750;
+  --t-btn-shadow:inset 0 .5px 0 rgba(255,255,255,.55),0 12px 30px rgba(0,2,16,.35);
+  --t-btn-shadow-hover:inset 0 .5px 0 rgba(255,255,255,.75),0 16px 40px rgba(100,216,255,.22);
+  --t-btn-hover-y:-2px;
+  --t-btn-press:scale(.97);
+  --t-nav-radius:32px;
+  --t-nav-blur:34px;
+  --t-nav-pad:8px;
+  --t-nav-shadow:0 24px 70px rgba(0,2,16,.6),inset 0 .5px 0 rgba(255,255,255,.35);
+  --t-header-h:74px;
+  --t-page-anim:tFadeUp;
+  --t-page-dur:.4s;
+  --t-card-anim:tFadeUp;
+  --t-hover-y:-4px;
+  --t-hover-scale:1.01;
 
   background:
-    radial-gradient(1100px 620px at 12% -10%,rgba(124,231,255,.22),transparent 60%),
-    radial-gradient(900px 560px at 100% 0%,rgba(168,120,255,.22),transparent 60%),
-    radial-gradient(1000px 700px at 50% 120%,rgba(255,120,190,.18),transparent 60%),
-    linear-gradient(160deg,#070b18,#0d1430 55%,#101a3a);
+    radial-gradient(1200px 700px at 10% -12%,rgba(100,216,255,.26),transparent 62%),
+    radial-gradient(1000px 640px at 102% 4%,rgba(150,110,255,.26),transparent 62%),
+    radial-gradient(1100px 760px at 50% 118%,rgba(255,110,200,.2),transparent 62%),
+    linear-gradient(160deg,#060a16,#0c1230 55%,#101639);
+  background-attachment:fixed;
 }
 
+/* drifting light blobs (Control-Center style) */
 body[data-theme="glass"] .theme-fx i:nth-child(1),
 body[data-theme="glass"] .theme-fx i:nth-child(2),
 body[data-theme="glass"] .theme-fx i:nth-child(3){
-  opacity:.55;
-  width:46vmax;
-  height:46vmax;
+  opacity:.5;
+  width:48vmax;
+  height:48vmax;
   border-radius:50%;
-  filter:blur(70px);
+  filter:blur(80px);
 }
 body[data-theme="glass"] .theme-fx i:nth-child(1){left:-12vw;top:-14vh;background:radial-gradient(circle,#4fd8ff,transparent 65%);animation:tBlobA 26s ease-in-out infinite}
 body[data-theme="glass"] .theme-fx i:nth-child(2){right:-14vw;top:8vh;background:radial-gradient(circle,#a06bff,transparent 65%);animation:tBlobB 32s ease-in-out infinite}
 body[data-theme="glass"] .theme-fx i:nth-child(3){left:24vw;bottom:-22vh;background:radial-gradient(circle,#ff6bc7,transparent 65%);animation:tBlobA 38s ease-in-out infinite reverse}
 
+/* ---------- header: iOS translucent bar ---------- */
 body[data-theme="glass"] .app-header{
-  background:rgba(255,255,255,.07);
-  border-bottom:1px solid rgba(255,255,255,.18);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.25);
+  background:rgba(16,20,38,.45);
+  -webkit-backdrop-filter:blur(30px) saturate(180%);
+  backdrop-filter:blur(30px) saturate(180%);
+  border-bottom:1px solid rgba(255,255,255,.14);
+  box-shadow:inset 0 .5px 0 rgba(255,255,255,.22);
 }
 
+/* ---------- login screen / auth segmented control ---------- */
+body[data-theme="glass"] .login-card{
+  background:linear-gradient(155deg,rgba(255,255,255,.17),rgba(255,255,255,.07));
+  -webkit-backdrop-filter:blur(34px) saturate(170%);
+  backdrop-filter:blur(34px) saturate(170%);
+  box-shadow:0 34px 90px rgba(0,2,16,.6),inset 0 .5px 0 rgba(255,255,255,.5);
+  border-radius:30px;
+}
+
+body[data-theme="glass"] #tabLogin,
+body[data-theme="glass"] #tabRegister{
+  background:transparent!important;
+  border:0;
+  border-radius:12px;
+  color:var(--muted)!important;
+  padding:11px;
+  transition:background .2s ease,color .2s ease,box-shadow .2s ease;
+}
+body[data-theme="glass"] #tabLogin.active,
+body[data-theme="glass"] #tabRegister.active{
+  background:rgba(255,255,255,.24)!important;
+  color:#fff!important;
+  box-shadow:inset 0 .5px 0 rgba(255,255,255,.5),0 6px 18px rgba(0,2,16,.3);
+}
+body[data-theme="glass"] #lmTelegram,
+body[data-theme="glass"] #lmEmail,
+body[data-theme="glass"] #lmPhone,
+body[data-theme="glass"] #rmEmail,
+body[data-theme="glass"] #rmPhone{
+  background:rgba(255,255,255,.1)!important;
+  border:1px solid rgba(255,255,255,.2);
+  border-radius:13px;
+  color:var(--text);
+  transition:background .2s ease,box-shadow .2s ease;
+}
+body[data-theme="glass"] #lmTelegram.active,
+body[data-theme="glass"] #lmEmail.active,
+body[data-theme="glass"] #lmPhone.active,
+body[data-theme="glass"] #rmEmail.active,
+body[data-theme="glass"] #rmPhone.active{
+  background:rgba(255,255,255,.24)!important;
+  box-shadow:inset 0 .5px 0 rgba(255,255,255,.5),0 6px 18px rgba(0,2,16,.3);
+}
+
+/* ---------- inputs: iOS search / fields ---------- */
 body[data-theme="glass"] .field-input,
 body[data-theme="glass"] .search-box,
 body[data-theme="glass"] .recharge-input,
 body[data-theme="glass"] .select{
-  backdrop-filter:blur(14px);
-  -webkit-backdrop-filter:blur(14px);
+  background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.2);
+  border-radius:14px;
+  -webkit-backdrop-filter:blur(16px) saturate(160%);
+  backdrop-filter:blur(16px) saturate(160%);
+  box-shadow:inset 0 1px 4px rgba(0,2,16,.25);
+}
+body[data-theme="glass"] .field-input:focus,
+body[data-theme="glass"] .search-box:focus,
+body[data-theme="glass"] .recharge-input:focus,
+body[data-theme="glass"] .select:focus{
+  border-color:rgba(100,216,255,.65);
+  box-shadow:inset 0 1px 4px rgba(0,2,16,.2),0 0 0 4px rgba(100,216,255,.14);
 }
 
+/* ---------- switches: iOS green pill ---------- */
+body[data-theme="glass"] .switch{
+  background:rgba(255,255,255,.18);
+  box-shadow:inset 0 1px 3px rgba(0,2,16,.3);
+}
+body[data-theme="glass"] .switch.on{
+  background:linear-gradient(180deg,#3ddc74,#2fbf64);
+  box-shadow:inset 0 1px 2px rgba(255,255,255,.35),0 2px 8px rgba(50,215,120,.35);
+}
+
+/* ---------- settings icons: frosted squircle ---------- */
 body[data-theme="glass"] .setting-icon{
-  background:rgba(255,255,255,.16);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.4);
+  background:rgba(255,255,255,.14);
+  border:1px solid rgba(255,255,255,.2);
+  border-radius:13px;
+  box-shadow:inset 0 .5px 0 rgba(255,255,255,.45);
+}
+body[data-theme="glass"] .setting-item:hover{
+  background:rgba(255,255,255,.08);
 }
 
+/* ---------- bottom nav: iOS floating tab bar ---------- */
+body[data-theme="glass"] .bottom-nav{
+  -webkit-backdrop-filter:blur(34px) saturate(190%);
+  backdrop-filter:blur(34px) saturate(190%);
+}
+body[data-theme="glass"] .nav-btn{
+  color:rgba(228,238,255,.55);
+}
 body[data-theme="glass"] .nav-btn.active{
-  background:linear-gradient(180deg,rgba(255,255,255,.3),rgba(255,255,255,.12));
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 0 22px rgba(124,231,255,.35);
+  background:linear-gradient(180deg,rgba(255,255,255,.32),rgba(255,255,255,.14));
+  color:#fff;
+  box-shadow:inset 0 .5px 0 rgba(255,255,255,.6),0 8px 24px rgba(100,216,255,.28);
 }
 
+/* ---------- modals: iOS bottom sheet ---------- */
 body[data-theme="glass"] .modal-overlay{
-  background:rgba(6,10,26,.45);
-  backdrop-filter:blur(18px) saturate(140%);
-  -webkit-backdrop-filter:blur(18px) saturate(140%);
+  background:rgba(4,7,18,.45);
+  -webkit-backdrop-filter:blur(22px) saturate(150%);
+  backdrop-filter:blur(22px) saturate(150%);
+}
+body[data-theme="glass"] .modal{
+  background:linear-gradient(165deg,rgba(255,255,255,.18),rgba(255,255,255,.08));
+  -webkit-backdrop-filter:blur(40px) saturate(180%);
+  backdrop-filter:blur(40px) saturate(180%);
+  box-shadow:0 40px 110px rgba(0,2,16,.7),inset 0 .5px 0 rgba(255,255,255,.5);
+  border-radius:26px;
+}
+@media(max-width:600px){
+  body[data-theme="glass"] .modal-overlay{
+    align-items:flex-end;
+  }
+  body[data-theme="glass"] .modal{
+    width:100%;
+    max-width:100%;
+    border-radius:26px 26px 0 0;
+    padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));
+  }
 }
 
+/* ---------- buttons: iOS frosted pills ---------- */
+body[data-theme="glass"] .close-btn,
+body[data-theme="glass"] .header-refresh{
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.18);
+  color:var(--text);
+}
+
+/* ---------- status pills / badges ---------- */
+body[data-theme="glass"] .status-pill{
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.22);
+  -webkit-backdrop-filter:blur(10px);
+  backdrop-filter:blur(10px);
+}
+
+/* ---------- iOS large title ---------- */
+body[data-theme="glass"] .welcome-line{
+  color:var(--muted);
+  font-weight:700;
+  letter-spacing:.2px;
+}
+body[data-theme="glass"] .welcome-name{
+  font-size:34px;
+  font-weight:900;
+  letter-spacing:-.5px;
+  margin-bottom:16px;
+}
+
+/* ---------- balance card: Apple-Wallet style gradient tile ---------- */
+body[data-theme="glass"] .balance-card{
+  background:linear-gradient(135deg,rgba(64,196,255,.42),rgba(118,120,255,.34) 55%,rgba(255,110,200,.32));
+  border:1px solid rgba(255,255,255,.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.55),
+    inset 0 -14px 34px rgba(255,255,255,.12),
+    0 30px 70px rgba(0,2,16,.45);
+}
+body[data-theme="glass"] .balance-card .balance-label{
+  color:rgba(255,255,255,.85);
+}
+body[data-theme="glass"] .balance-card .balance-secondary{
+  color:rgba(255,255,255,.75);
+}
+body[data-theme="glass"] .add-balance{
+  background:rgba(255,255,255,.92);
+  color:#0b1a2e;
+  border:0;
+  box-shadow:0 12px 30px rgba(0,2,16,.35),inset 0 1px 0 #fff;
+  border-radius:999px;
+}
+
+/* ---------- stats: frosted tiles ---------- */
+body[data-theme="glass"] .stat-card{
+  background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.2);
+}
+
+/* ---------- success icon: frosted circle ---------- */
+body[data-theme="glass"] .success-icon{
+  background:rgba(255,255,255,.16);
+  border:1px solid rgba(255,255,255,.35);
+  color:#fff;
+  box-shadow:inset 0 .5px 0 rgba(255,255,255,.6),0 16px 40px rgba(0,2,16,.4);
+}
+
+/* ---------- misc overflow guards ---------- */
 body[data-theme="glass"] .settings-list,
-body[data-theme="glass"] .account-info{
+body[data-theme="glass"] .account-info,
+body[data-theme="glass"] .terms{
   overflow:hidden;
 }
 

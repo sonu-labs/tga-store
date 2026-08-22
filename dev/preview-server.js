@@ -72,7 +72,7 @@ function readBody(req) {
 }
 
 async function api(req, res, url) {
-  const route = url.pathname.replace(/^\/api\//, "");
+  const route = url.pathname.replace(/^\/api\//, "").replace(/\.js$/, "");
   const action = url.searchParams.get("action") || "";
   const body = req.method === "POST" ? await readBody(req) : {};
 
@@ -153,6 +153,32 @@ async function api(req, res, url) {
       return json(res, 200, { success: true, theme: activeTheme, themes: THEMES });
     }
     return json(res, 200, { success: true });
+  }
+
+  if (route === "apikey") {
+    if (action === "list") return json(res, 200, { success: true, keys: [] });
+    if (action === "generate") return json(res, 200, { success: true, key: "TGA_DEMO_" + Math.random().toString(36).slice(2, 14) });
+    if (action === "revoke") return json(res, 200, { success: true, message: "API key revoked." });
+    return json(res, 200, { success: true, keys: [] });
+  }
+
+  if (route === "v1") {
+    const dict = {};
+    for (const [code, c] of Object.entries(COUNTRIES)) {
+      dict[code] = { name: code, code_Num: "", code, qty: c.qty, price: String(c.price) };
+    }
+    if (action === "available_countries") {
+      return json(res, 200, { status: "ok", countries: dict, total: Object.keys(dict).length });
+    }
+    if (action === "country_info") {
+      const code = String(url.searchParams.get("country_code") || "").toUpperCase();
+      if (code && dict[code]) return json(res, 200, { status: "ok", ...dict[code] });
+      return json(res, 200, { status: "ok", countries: dict, total: Object.keys(dict).length });
+    }
+    if (action === "get_balance") return json(res, 200, { status: "ok", balance: "47.20 USD" });
+    if (action === "getNumber") return json(res, 200, { status: "ok", name: "Demo", Number: "+15550000000", price: "0.96", new_balance: "46.24" });
+    if (action === "getCode") return json(res, 200, { status: "ok", Number: "+15550000000", code: "48213", pass: "DemoPass1" });
+    return json(res, 400, { status: "error", message: "Unknown action." });
   }
 
   return json(res, 404, { success: false, message: "Mock API: unknown route " + route });

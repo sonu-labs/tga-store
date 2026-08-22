@@ -56,7 +56,7 @@ module.exports = async function handler(req, res) {
     if (!apiKey || !yourId) {
       return res.status(500).json({
         success: false,
-        message: "TG-Lion API configuration is missing."
+        message: "Number provider API configuration is missing."
       });
     }
 
@@ -101,14 +101,14 @@ module.exports = async function handler(req, res) {
 
       return res.status(502).json({
         success: false,
-        message: "Invalid response received from TG-Lion."
+        message: "Invalid response received from the number provider."
       });
     }
 
     if (!response.ok) {
       return res.status(502).json({
         success: false,
-        message: "TG-Lion request failed.",
+        message: "Provider request failed.",
         providerStatus: response.status
       });
     }
@@ -122,7 +122,7 @@ module.exports = async function handler(req, res) {
         success: false,
         message:
           data?.message ||
-          "TG-Lion did not return available countries."
+          "The number provider did not return available countries."
       });
     }
 
@@ -189,7 +189,7 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({
       success: false,
       message:
-        "Could not fetch countries from TG-Lion."
+        "Could not fetch countries from the number provider."
     });
   }
 };
