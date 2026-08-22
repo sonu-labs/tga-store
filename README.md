@@ -13,7 +13,7 @@ TGA Store is a dark-themed, mobile-friendly web store where users can buy Telegr
 | Layer | Technology |
 |---|---|
 | Frontend | Plain HTML + CSS + vanilla JavaScript (`public/`) — no framework |
-| Backend | Node.js serverless functions (`api/`) — Vercel Functions |
+| Backend | Node.js serverless function (`api/[...slug].js`) — Vercel Functions |
 | Database | MongoDB Atlas (database name: `TGAStoreBot`) |
 | Auth | bcrypt-hashed passwords + Bearer token sessions (admin) |
 | Telegram | Bot HTTP API (`api.telegram.org`) for sales/admin/buyer notifications |
@@ -29,20 +29,24 @@ Dependencies (`package.json`): `mongodb`, `bcryptjs`.
 
 ```
 tga-store/
-├── api/                        # Serverless backend functions
-│   ├── login.js                # User login (Telegram ID / Email / Phone + password)
-│   ├── account.js              # Register, change password, bot-connect token
-│   ├── dashboard.js            # User dashboard: balance, orders, stats
-│   ├── countries.js            # Live country list + stock + price (TG-Lion)
-│   ├── buy.js                  # Purchase a number (deduct balance, call TG-Lion)
-│   ├── code.js                 # Fetch OTP/code for a purchased number
-│   ├── recharge.js             # Wallet recharge: create + verify (UPI/FamPay/Crypto/Binance)
-│   ├── status.js               # Public maintenance check
-│   ├── qr_proxy.js             # Proxy QR images (fixes hot-linking + download)
-│   ├── admin.js                # Admin API (overview, logs, users, orders, settings)
-│   └── admin_login.js          # Admin login → session token
+├── api/                        # ONE serverless Function (catch-all router)
+│   └── [...slug].js            # Single `/api/*` Function → dispatches to lib/routes/*
 │
 ├── lib/                        # Shared backend logic
+│   ├── routes/                 # Route handlers (regular modules, NOT deployed as Functions)
+│   │   ├── login.js            # User login (Telegram ID / Email / Phone + password)
+│   │   ├── account.js          # Register, change password, bot-connect token
+│   │   ├── dashboard.js        # User dashboard: balance, orders, stats
+│   │   ├── countries.js        # Live country list + stock + price (TG-Lion)
+│   │   ├── buy.js              # Purchase a number (deduct balance, call TG-Lion)
+│   │   ├── code.js             # Fetch OTP/code for a purchased number
+│   │   ├── recharge.js         # Wallet recharge: create + verify (UPI/FamPay/Crypto/Binance)
+│   │   ├── status.js           # Public maintenance check
+│   │   ├── qr_proxy.js         # Proxy QR images (fixes hot-linking + download)
+│   │   ├── admin.js            # Admin API (overview, logs, users, orders, settings)
+│   │   ├── admin_login.js      # Admin login → session token
+│   │   ├── apikey.js           # User API key management
+│   │   └── v1.js               # Public developer API (TGA Store API)
 │   ├── db.js                   # Mongo client, user lookup helpers, CORS
 │   ├── auth.js                 # bcrypt hashing, email/phone validation, tokens
 │   ├── site.js                 # Maintenance toggle, sessions, event logs
@@ -412,7 +416,7 @@ Set all of these in the Vercel project. **No real password or API key is written
 4. Output directory: leave empty / root.
 5. Add all environment variables listed above in the Vercel dashboard.
 6. Deploy. `vercel.json` automatically routes `/admin` → `/admin.html`.
-7. All files in `api/` automatically become serverless functions.
+7. The single catch-all `api/[...slug].js` becomes the one serverless Function, and every `/api/*` request is routed through it. All routes are consolidated here (instead of one Function per endpoint) so the project stays within the **Vercel Hobby plan's Function limit**.
 
 ### Local dev
 ```bash
