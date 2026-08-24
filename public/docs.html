@@ -491,24 +491,13 @@ body.light .docs-pre{
 }
 </style>
 
-<link rel="stylesheet" href="/theme-ui.css">
-
 <script>
-  // Apply the store theme (admin-selected full-UI theme or the user's own
-  // dark/light preference) before first paint. /api/status refreshes it with
-  // the live admin theme shortly after load.
+  // API docs always stay on the original TGA black store look.
+  // Do not apply admin store themes or the user's light mode here.
   (function(){
     try{
-      var params = new URLSearchParams(location.search);
-      var preview = params.get("preview_theme") || "";
-      var saved = localStorage.getItem("tga_site_theme") || "default";
-      var id = preview || saved;
-      if(id && id !== "default"){
-        document.body.setAttribute("data-theme", id);
-      }else{
-        var pref = localStorage.getItem("tga_theme") || "dark";
-        if(pref === "light") document.body.classList.add("light");
-      }
+      document.body.removeAttribute("data-theme");
+      document.body.classList.remove("light");
     }catch(e){}
   })();
 </script>
@@ -952,35 +941,10 @@ body.light .docs-pre{
   }
   window.__docsToast = toast;
 
-  /* ---------------- theme (live refresh) ---------------- */
-
-  function applyTheme(id) {
-    const body = document.body;
-    const custom = Boolean(id) && id !== "default";
-    if (custom) {
-      body.setAttribute("data-theme", id);
-      body.classList.remove("light");
-    } else {
-      body.removeAttribute("data-theme");
-      let pref = "dark";
-      try { pref = localStorage.getItem("tga_theme") || "dark"; } catch (e) {}
-      body.classList.toggle("light", pref === "light");
-    }
-  }
-
-  function refreshTheme() {
-    fetch("/api/status", { cache: "no-store" })
-      .then(function (r) { return r.json(); })
-      .then(function (d) {
-        if (d && d.theme) {
-          const preview = new URLSearchParams(location.search).get("preview_theme");
-          applyTheme(preview || d.theme);
-          if (!preview) {
-            try { localStorage.setItem("tga_site_theme", d.theme); } catch (e) {}
-          }
-        }
-      })
-      .catch(function () {});
+  /* API docs stay on default TGA black — ignore store themes. */
+  function lockDocsTheme() {
+    document.body.removeAttribute("data-theme");
+    document.body.classList.remove("light");
   }
 
   /* ---------------- session + example URLs ---------------- */
@@ -1185,7 +1149,7 @@ body.light .docs-pre{
     docsTestUrlPreview();
     loadApiKeys();
     loadApiLogs();
-    refreshTheme();
+    lockDocsTheme();
   }
 
   if (document.readyState === "loading") {
