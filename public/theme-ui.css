@@ -61,6 +61,12 @@
 @keyframes tSunRise{0%{transform:translateY(6px)}50%{transform:translateY(-6px)}100%{transform:translateY(6px)}}
 @keyframes tDrift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 
+@keyframes tTilt3d{from{opacity:0;transform:perspective(900px) rotateX(18deg) translateY(28px)}to{opacity:1;transform:none}}
+@keyframes tGlowDrift{0%,100%{filter:hue-rotate(0deg) brightness(1)}50%{filter:hue-rotate(40deg) brightness(1.15)}}
+@keyframes tOrbit{0%{transform:rotate(0) translateX(18px) rotate(0)}100%{transform:rotate(360deg) translateX(18px) rotate(-360deg)}}
+@keyframes tSpark{0%,100%{opacity:.15;transform:scale(.8)}50%{opacity:.7;transform:scale(1.15)}}
+
+
 /* ==========================================================================
    2. AMBIENT FX LAYER
    Injected once by index.html. Every layer is invisible unless the active
@@ -1041,381 +1047,186 @@ body[data-theme="brutal"] .setting-icon{border:3px solid #111;background:#ffe600
 body[data-theme="brutal"] .spinner{border-radius:0;border-color:#111;border-top-color:#ff2e63;animation:tSpinSquare 1s linear infinite}
 body[data-theme="brutal"] .success-icon{border:4px solid #111;box-shadow:8px 8px 0 #111;background:#c9f24d;color:#111}
 
-/* --------------------------------------------------------------------------
-   TERMINAL — hacker console
-   -------------------------------------------------------------------------- */
-
-body[data-theme="terminal"]{
-  --bg:#020a05;
-  --surface:#04140a;
-  --surface2:#061e0e;
-  --border:#134d28;
-  --text:#c9ffd9;
-  --muted:#5fbf82;
-  --soft:#3c8a58;
-  --green:#37ff8b;
-  --green-rgb:55,255,139;
-  --red:#ff5d5d;
-  --yellow:#e4ff4d;
-  --btn:transparent;
-  --btn-text:#37ff8b;
-  --header-bg:rgba(2,10,5,.94);
-  --nav-bg:rgba(3,14,7,.96);
-  --nav-border:#1c6b39;
-  --nav-active:rgba(55,255,139,.14);
-
-  --t-font:var(--t-mono);
-  --t-display:var(--t-mono);
-  --t-body-size:14px;
-  --t-head-weight:700;
-  --t-head-transform:uppercase;
-  --t-head-letter:1px;
-  --t-label-transform:uppercase;
-  --t-label-letter:1.5px;
-  --t-radius-lg:2px;
-  --t-radius-md:2px;
-  --t-radius-sm:2px;
-  --t-pill:2px;
-  --t-card-bg:rgba(4,20,10,.86);
-  --t-card-bg2:rgba(6,30,14,.9);
-  --t-card-shadow:inset 0 0 0 1px rgba(55,255,139,.08);
-  --t-card-shadow-hover:0 0 22px rgba(55,255,139,.22),inset 0 0 0 1px rgba(55,255,139,.3);
-  --t-btn-bg:transparent;
-  --t-btn-color:#37ff8b;
-  --t-btn-border:1px solid #37ff8b;
-  --t-btn-transform:uppercase;
-  --t-btn-letter:2px;
-  --t-btn-shadow-hover:0 0 18px rgba(55,255,139,.45),inset 0 0 18px rgba(55,255,139,.14);
-  --t-btn-hover-y:0px;
-  --t-btn-press:scale(.99);
-  --t-page-anim:tScanIn;
-  --t-page-dur:.35s;
-  --t-card-anim:tFadeIn;
-  --t-card-dur:.25s;
-  --t-hover-y:0px;
-  --t-nav-radius:2px;
-  --t-nav-shadow:0 0 24px rgba(55,255,139,.16);
-  --t-cols:4;
-
-  background:
-    repeating-linear-gradient(180deg,rgba(55,255,139,.045) 0 1px,transparent 1px 3px),
-    radial-gradient(circle at 50% 0%,rgba(55,255,139,.09),transparent 55%),
-    #020a05;
-}
-
-body[data-theme="terminal"] .theme-fx i:nth-child(1){
-  opacity:.35;
-  left:0;right:0;height:22vh;
-  background:linear-gradient(180deg,transparent,rgba(55,255,139,.09),transparent);
-  animation:tScanline 6.5s linear infinite;
-}
-
-body[data-theme="terminal"] .section-title::before,
-body[data-theme="terminal"] .modal-title::before,
-body[data-theme="terminal"] .welcome-name::before{
-  content:"> ";
-  color:var(--green);
-}
-
-body[data-theme="terminal"] .welcome-name::after{
-  content:"_";
-  color:var(--green);
-  animation:tCaret 1s step-end infinite;
-}
-
-body[data-theme="terminal"] .buy-now::before,
-body[data-theme="terminal"] .primary-btn::before,
-body[data-theme="terminal"] .login-btn::before{
-  content:"[ ";
-}
-body[data-theme="terminal"] .buy-now::after,
-body[data-theme="terminal"] .primary-btn::after,
-body[data-theme="terminal"] .login-btn::after{
-  content:" ]";
-  position:static;
-  width:auto;height:auto;opacity:1;background:none;transform:none;animation:none;
-}
-
-body[data-theme="terminal"] .buy-now:hover:not(:disabled)::after,
-body[data-theme="terminal"] .primary-btn:hover::after,
-body[data-theme="terminal"] .login-btn:hover::after{
-  opacity:1;
-  animation:none;
-}
-
-body[data-theme="terminal"] .country-card{
-  text-align:left;
-  padding:16px;
-}
-body[data-theme="terminal"] .country-card::before{
-  content:"┌─ node";
-  display:block;
-  font-size:10px;
-  color:var(--soft);
-  letter-spacing:1px;
-  margin-bottom:6px;
-}
-body[data-theme="terminal"] .country-flag{font-size:30px}
-
-body[data-theme="terminal"] .order-card::before{
-  content:"$ order";
-  display:block;
-  font-size:10px;
-  color:var(--soft);
-  letter-spacing:2px;
-  margin-bottom:4px;
-}
-
-body[data-theme="terminal"] .app-header{
-  border-bottom:1px dashed #1c6b39;
-}
-body[data-theme="terminal"] .header-title::after{
-  content:" ~$";
-  color:var(--green);
-  animation:tBlink 1.4s step-end infinite;
-}
-
-body[data-theme="terminal"] .nav-btn{
-  color:#3c8a58;
-  text-transform:uppercase;
-  letter-spacing:1px;
-}
-body[data-theme="terminal"] .nav-btn.active{
-  background:rgba(55,255,139,.12);
-  color:#37ff8b;
-  box-shadow:inset 0 0 0 1px #37ff8b,0 0 16px rgba(55,255,139,.25);
-}
-body[data-theme="terminal"] .nav-btn.active::after{
-  content:"";
-  position:absolute;
-  left:8px;right:8px;bottom:6px;height:2px;
-  background:#37ff8b;
-  animation:tPulse 1.4s ease-in-out infinite;
-}
-
-body[data-theme="terminal"] .spinner{
-  border-style:dashed;
-  border-color:rgba(55,255,139,.25);
-  border-top-color:#37ff8b;
-}
-
-body[data-theme="terminal"] .status-pill{
-  border:1px solid currentColor;
-  background:transparent!important;
-}
-
-body[data-theme="terminal"] .success-icon{
-  border-radius:2px;
-  background:transparent;
-  border:2px solid #37ff8b;
-  color:#37ff8b;
-}
 
 /* --------------------------------------------------------------------------
-   ARCADE — 80s pixel arcade cabinet
+   PRISM — holographic 3D iridescent glass
    -------------------------------------------------------------------------- */
-
-body[data-theme="arcade"]{
-  --bg:#12002e;
-  --surface:#1e0a45;
-  --surface2:#2a0f5e;
-  --border:#ff2fb9;
-  --text:#ffe9ff;
-  --muted:#b58ce0;
-  --soft:#8a63b8;
-  --green:#2ff3ff;
-  --green-rgb:47,243,255;
-  --red:#ff3b6b;
-  --yellow:#ffe74c;
-  --btn:#ff2fb9;
-  --btn-text:#12002e;
-  --header-bg:rgba(18,0,46,.92);
-  --nav-bg:rgba(30,10,69,.96);
-  --nav-border:#ff2fb9;
-  --nav-active:#2a0f5e;
-
-  --t-font:"Courier New",ui-monospace,monospace;
-  --t-display:"Courier New",ui-monospace,monospace;
-  --t-head-weight:900;
-  --t-head-transform:uppercase;
-  --t-head-letter:2px;
-  --t-label-transform:uppercase;
-  --t-label-letter:2px;
-  --t-radius-lg:0px;
-  --t-radius-md:0px;
-  --t-radius-sm:0px;
-  --t-pill:0px;
-  --t-border-w:2px;
-  --t-card-bg:linear-gradient(180deg,#240a52,#180538);
-  --t-card-bg2:#2a0f5e;
-  --t-card-shadow:0 0 0 2px #12002e,0 0 0 4px rgba(255,47,185,.55),0 0 24px rgba(255,47,185,.25);
-  --t-card-shadow-hover:0 0 0 2px #12002e,0 0 0 4px #2ff3ff,0 0 30px rgba(47,243,255,.5);
-  --t-btn-bg:#ff2fb9;
-  --t-btn-color:#12002e;
-  --t-btn-border:2px solid #ffe9ff;
-  --t-btn-shadow:0 5px 0 #a30f74;
-  --t-btn-shadow-hover:0 5px 0 #a30f74,0 0 22px rgba(255,47,185,.6);
-  --t-btn-transform:uppercase;
-  --t-btn-letter:2px;
-  --t-btn-hover-y:-2px;
-  --t-btn-press:translateY(5px);
-  --t-page-anim:tDropIn;
-  --t-page-dur:.5s;
-  --t-card-anim:tPopIn;
-  --t-card-dur:.4s;
-  --t-hover-y:-4px;
-  --t-nav-radius:0px;
-  --t-nav-blur:0px;
-  --t-nav-shadow:0 0 0 2px #ff2fb9,0 0 28px rgba(255,47,185,.4);
-  --t-cols:4;
-
-  background:#12002e;
+body[data-theme="prism"]{
+  --bg:#07060f;--surface:rgba(28,20,48,.78);--surface2:rgba(40,28,70,.78);
+  --border:rgba(126,240,255,.28);--text:#f4f0ff;--muted:#b8a8d8;--soft:#7e7098;
+  --green:#7ef0ff;--green-rgb:126,240,255;--red:#ff6b9d;--yellow:#ffe08a;
+  --btn:linear-gradient(130deg,#7ef0ff,#c77dff 55%,#ff8ad4);--btn-text:#0a0614;
+  --header-bg:rgba(10,8,20,.72);--nav-bg:rgba(18,12,34,.78);--nav-border:rgba(126,240,255,.28);--nav-active:rgba(126,240,255,.16);
+  --t-radius-lg:22px;--t-radius-md:16px;--t-card-blur:18px;
+  --t-card-bg:linear-gradient(160deg,rgba(90,50,160,.45),rgba(18,12,40,.75));
+  --t-card-shadow:0 22px 50px rgba(0,0,0,.55),0 0 0 1px rgba(126,240,255,.18),0 0 40px rgba(199,125,255,.18);
+  --t-card-shadow-hover:0 28px 70px rgba(0,0,0,.65),0 0 50px rgba(126,240,255,.35);
+  --t-btn-bg:linear-gradient(130deg,#7ef0ff,#c77dff 55%,#ff8ad4);--t-btn-color:#0a0614;
+  --t-btn-shadow:0 0 28px rgba(126,240,255,.4);--t-btn-shadow-hover:0 0 42px rgba(199,125,255,.55);
+  --t-btn-sweep:1;--t-page-anim:tTilt3d;--t-card-anim:tFlipIn;--t-hover-y:-8px;--t-hover-scale:1.03;
+  --t-nav-radius:24px;--t-nav-shadow:0 20px 50px rgba(0,0,0,.55),0 0 30px rgba(126,240,255,.2);
+  background:radial-gradient(900px 500px at 10% -10%,rgba(126,240,255,.22),transparent 60%),radial-gradient(800px 500px at 100% 0,rgba(199,125,255,.22),transparent 60%),#07060f;
 }
-
-body[data-theme="arcade"] .theme-fx i:nth-child(1){
-  opacity:.7;
-  left:-50%;right:-50%;bottom:0;height:55vh;
-  background:
-    repeating-linear-gradient(90deg,rgba(47,243,255,.28) 0 2px,transparent 2px 70px),
-    repeating-linear-gradient(0deg,rgba(255,47,185,.3) 0 2px,transparent 2px 46px);
-  transform:perspective(320px) rotateX(66deg);
-  transform-origin:bottom;
-  animation:tGridMove 2.4s linear infinite;
-}
-body[data-theme="arcade"] .theme-fx i:nth-child(2){
-  opacity:.5;
-  left:50%;top:8vh;width:38vmin;height:38vmin;margin-left:-19vmin;border-radius:50%;
-  background:linear-gradient(180deg,#ffe74c,#ff2fb9);
-  filter:blur(2px);
-  animation:tSunRise 7s ease-in-out infinite;
-}
-
-body[data-theme="arcade"] .brand-title,
-body[data-theme="arcade"] .header-title{
-  text-shadow:3px 0 #ff2fb9,-3px 0 #2ff3ff;
-}
-
-body[data-theme="arcade"] .stock,
-body[data-theme="arcade"] .quality{
-  animation:tBlink 1.6s step-end infinite;
-}
-
-body[data-theme="arcade"] .nav-btn{
-  color:#b58ce0;
-  text-transform:uppercase;
-  letter-spacing:1px;
-}
-body[data-theme="arcade"] .nav-btn.active{
-  background:#ff2fb9;
-  color:#12002e;
-  box-shadow:inset 0 -4px 0 rgba(0,0,0,.35);
-  animation:tBounce 1.6s ease-in-out infinite;
-}
-
-body[data-theme="arcade"] .buy-now:disabled{
-  filter:grayscale(1);
-}
-
-body[data-theme="arcade"] .spinner{
-  border-radius:0;
-  border-width:5px;
-  border-color:#2a0f5e;
-  border-top-color:#2ff3ff;
-  animation:tSpin .6s steps(8,end) infinite;
-}
-
-body[data-theme="arcade"] .success-icon{
-  border-radius:0;
-  border:3px solid #ffe9ff;
-  box-shadow:0 6px 0 #a30f74;
-}
-
-body[data-theme="arcade"] .status-pill{
-  border:2px solid currentColor;
-}
+body[data-theme="prism"] .theme-fx i:nth-child(1),
+body[data-theme="prism"] .theme-fx i:nth-child(2){opacity:.45;width:50vmax;height:50vmax;border-radius:50%;filter:blur(70px);animation:tBlobA 22s ease-in-out infinite}
+body[data-theme="prism"] .theme-fx i:nth-child(1){left:-10vw;top:-10vh;background:radial-gradient(circle,#7ef0ff,transparent 65%)}
+body[data-theme="prism"] .theme-fx i:nth-child(2){right:-12vw;bottom:-10vh;background:radial-gradient(circle,#c77dff,transparent 65%);animation:tBlobB 28s ease-in-out infinite}
+body[data-theme="prism"] .country-card:hover{transform:perspective(800px) rotateY(-8deg) translateY(-8px) scale(1.03)}
+body[data-theme="prism"] .brand-title,body[data-theme="prism"] .welcome-name,body[data-theme="prism"] .balance-value{
+  background:linear-gradient(90deg,#7ef0ff,#c77dff,#ff8ad4,#7ef0ff);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:tShine 6s linear infinite}
+body[data-theme="prism"] .nav-btn.active{background:linear-gradient(120deg,rgba(126,240,255,.3),rgba(199,125,255,.28));box-shadow:0 0 22px rgba(126,240,255,.35)}
 
 /* --------------------------------------------------------------------------
-   AURORA — animated aurora gradient, soft oversized cards
+   NEON3D — glowing neon 3D nightclub
    -------------------------------------------------------------------------- */
-
-body[data-theme="aurora"]{
-  --bg:#080d24;
-  --surface:rgba(24,31,66,.72);
-  --surface2:rgba(36,44,86,.72);
-  --border:rgba(138,255,209,.18);
-  --text:#eef2ff;
-  --muted:#a9b4dd;
-  --soft:#7b86b4;
-  --green:#8affd1;
-  --green-rgb:138,255,209;
-  --red:#ff7a9c;
-  --yellow:#ffe08a;
-  --btn:linear-gradient(120deg,#8affd1,#7cc4ff 55%,#c9a7ff);
-  --btn-text:#08122a;
-  --header-bg:rgba(10,15,40,.62);
-  --nav-bg:rgba(16,22,54,.72);
-  --nav-border:rgba(138,255,209,.26);
-  --nav-active:rgba(28,38,86,.86);
-
-  --t-radius-lg:30px;
-  --t-radius-md:20px;
-  --t-card-pad:26px;
-  --t-card-bg:linear-gradient(150deg,rgba(40,50,105,.75),rgba(16,22,54,.72));
-  --t-card-bg2:rgba(36,44,86,.7);
-  --t-card-blur:18px;
-  --t-card-shadow:0 24px 60px rgba(4,8,26,.5);
-  --t-card-shadow-hover:0 30px 80px rgba(4,8,26,.6),0 0 0 1px rgba(138,255,209,.35);
-  --t-btn-bg:linear-gradient(120deg,#8affd1,#7cc4ff 55%,#c9a7ff);
-  --t-btn-color:#08122a;
-  --t-btn-shadow:0 12px 30px rgba(124,196,255,.28);
-  --t-btn-shadow-hover:0 18px 46px rgba(138,255,209,.42);
-  --t-btn-sweep:1;
-  --t-page-anim:tSlideLeft;
-  --t-page-dur:.5s;
-  --t-card-anim:tRiseSlow;
-  --t-hover-y:-7px;
-  --t-hover-scale:1.02;
-  --t-nav-radius:34px;
-  --t-nav-blur:24px;
-  --t-nav-shadow:0 24px 60px rgba(4,8,26,.55);
-
-  background:linear-gradient(130deg,#080d24,#131a44 40%,#0d1a3a 70%,#1a1140);
-  background-size:220% 220%;
-  animation:tDrift 24s ease-in-out infinite;
+body[data-theme="neon3d"]{
+  --bg:#05010d;--surface:#12061f;--surface2:#1a0a2c;--border:rgba(255,61,240,.4);
+  --text:#fff0ff;--muted:#c48ad4;--soft:#8a5a9a;--green:#ff3df0;--green-rgb:255,61,240;
+  --red:#ff4d7a;--yellow:#ffe14d;--btn:#ff3df0;--btn-text:#120018;
+  --header-bg:rgba(8,2,16,.9);--nav-bg:rgba(18,6,31,.94);--nav-border:rgba(61,255,255,.4);--nav-active:rgba(255,61,240,.2);
+  --t-radius-lg:18px;--t-card-bg:linear-gradient(165deg,#1c0830,#0c0418);
+  --t-card-shadow:0 16px 0 #2a0840,0 0 28px rgba(255,61,240,.35),inset 0 0 0 1px rgba(61,255,255,.35);
+  --t-card-shadow-hover:0 20px 0 #2a0840,0 0 48px rgba(61,255,255,.5);
+  --t-btn-bg:linear-gradient(180deg,#ff6af5,#c012c8);--t-btn-color:#fff;--t-btn-shadow:0 8px 0 #6a0870,0 0 24px rgba(255,61,240,.6);
+  --t-btn-shadow-hover:0 10px 0 #6a0870,0 0 40px rgba(61,255,255,.6);--t-btn-press:translateY(6px);
+  --t-page-anim:tPopIn;--t-card-anim:tTilt3d;--t-hover-y:-6px;--t-nav-radius:18px;
+  --t-nav-shadow:0 0 0 1px rgba(61,255,255,.4),0 0 30px rgba(255,61,240,.35);
+  background:#05010d;
 }
+body[data-theme="neon3d"] .theme-fx i:nth-child(1){opacity:.5;inset:0;background:repeating-linear-gradient(180deg,rgba(255,61,240,.04) 0 2px,transparent 2px 8px)}
+body[data-theme="neon3d"] .country-card{transform-style:preserve-3d}
+body[data-theme="neon3d"] .country-card:hover{transform:perspective(700px) rotateX(6deg) translateY(-8px)}
+body[data-theme="neon3d"] .brand-title,body[data-theme="neon3d"] .header-title{text-shadow:0 0 12px #ff3df0,0 0 28px #3dffff}
+body[data-theme="neon3d"] .nav-btn.active{background:#ff3df0;color:#120018;box-shadow:0 0 24px rgba(255,61,240,.7)}
+body[data-theme="neon3d"] .buy-now,body[data-theme="neon3d"] .primary-btn,body[data-theme="neon3d"] .login-btn{box-shadow:0 8px 0 #6a0870,0 0 22px rgba(255,61,240,.55)}
 
-body[data-theme="aurora"] .theme-fx i:nth-child(1),
-body[data-theme="aurora"] .theme-fx i:nth-child(2){
-  opacity:.5;
-  width:70vw;height:52vh;
-  filter:blur(80px);
-  border-radius:50%;
+/* --------------------------------------------------------------------------
+   OBSIDIAN — luxury black stone + amber glow
+   -------------------------------------------------------------------------- */
+body[data-theme="obsidian"]{
+  --bg:#050505;--surface:#121212;--surface2:#1a1a1a;--border:rgba(255,176,32,.28);
+  --text:#fff6e8;--muted:#b8a078;--soft:#7a6a48;--green:#ffb020;--green-rgb:255,176,32;
+  --red:#ff6b6b;--yellow:#ffd166;--btn:linear-gradient(180deg,#ffd166,#ff9a1a);--btn-text:#1a1000;
+  --header-bg:rgba(8,8,8,.92);--nav-bg:rgba(16,16,16,.95);--nav-border:rgba(255,176,32,.3);--nav-active:rgba(255,176,32,.14);
+  --t-radius-lg:14px;--t-card-bg:linear-gradient(180deg,#1c1c1c,#0e0e0e);
+  --t-card-shadow:0 18px 40px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.06),0 0 24px rgba(255,176,32,.08);
+  --t-card-shadow-hover:0 24px 50px rgba(0,0,0,.8),0 0 36px rgba(255,176,32,.28);
+  --t-btn-bg:linear-gradient(180deg,#ffd166,#e88900);--t-btn-color:#1a1000;--t-btn-sweep:1;
+  --t-btn-shadow:0 10px 24px rgba(255,176,32,.28);--t-page-anim:tRiseSlow;--t-card-anim:tFadeUp;--t-hover-y:-5px;
+  --t-nav-radius:16px;--t-nav-shadow:0 16px 40px rgba(0,0,0,.7);
+  background:radial-gradient(800px 400px at 50% -8%,rgba(255,176,32,.12),transparent 60%),#050505;
 }
-body[data-theme="aurora"] .theme-fx i:nth-child(1){top:-18vh;left:-10vw;background:radial-gradient(circle,#38f5c0,transparent 62%);animation:tBlobA 30s ease-in-out infinite}
-body[data-theme="aurora"] .theme-fx i:nth-child(2){bottom:-22vh;right:-12vw;background:radial-gradient(circle,#8f6bff,transparent 62%);animation:tBlobB 36s ease-in-out infinite}
+body[data-theme="obsidian"] .country-card:hover{transform:perspective(900px) translateZ(18px) translateY(-6px)}
+body[data-theme="obsidian"] .balance-value,body[data-theme="obsidian"] .brand-title{
+  background:linear-gradient(90deg,#fff1c4,#ffb020,#fff1c4);-webkit-background-clip:text;background-clip:text;color:transparent}
+body[data-theme="obsidian"] .nav-btn.active{color:#ffb020;box-shadow:inset 0 -2px 0 #ffb020,0 0 18px rgba(255,176,32,.25)}
 
-body[data-theme="aurora"] .balance-card{
-  background:linear-gradient(130deg,rgba(138,255,209,.22),rgba(124,196,255,.14) 45%,rgba(201,167,255,.2));
-  border-color:rgba(255,255,255,.16);
+/* --------------------------------------------------------------------------
+   CRYSTAL — faceted ice 3D
+   -------------------------------------------------------------------------- */
+body[data-theme="crystal"]{
+  --bg:#041018;--surface:rgba(18,40,58,.8);--surface2:rgba(24,52,74,.82);
+  --border:rgba(94,231,255,.3);--text:#e8fbff;--muted:#8ec8d8;--soft:#5a8a98;
+  --green:#5ee7ff;--green-rgb:94,231,255;--red:#ff7aa2;--yellow:#ffe08a;
+  --btn:linear-gradient(160deg,#b8f6ff,#5ee7ff);--btn-text:#042028;
+  --header-bg:rgba(4,16,24,.78);--nav-bg:rgba(10,28,40,.82);--nav-border:rgba(94,231,255,.28);--nav-active:rgba(94,231,255,.16);
+  --t-radius-lg:20px;--t-card-blur:16px;
+  --t-card-bg:linear-gradient(145deg,rgba(180,240,255,.18),rgba(10,30,44,.82));
+  --t-card-shadow:0 20px 48px rgba(0,10,20,.55),inset 0 1px 0 rgba(255,255,255,.28),0 0 30px rgba(94,231,255,.18);
+  --t-card-shadow-hover:0 28px 64px rgba(0,10,20,.65),0 0 44px rgba(94,231,255,.4);
+  --t-btn-bg:linear-gradient(160deg,#d4fbff,#5ee7ff);--t-btn-color:#042028;--t-btn-sweep:1;
+  --t-page-anim:tBlurIn;--t-card-anim:tTilt3d;--t-hover-y:-7px;--t-nav-radius:22px;
+  background:radial-gradient(900px 520px at 80% -10%,rgba(94,231,255,.22),transparent 62%),#041018;
 }
+body[data-theme="crystal"] .theme-fx i:nth-child(1){opacity:.35;width:40vmax;height:40vmax;right:-8vw;top:-8vh;border-radius:50%;filter:blur(60px);background:#5ee7ff;animation:tBlobA 20s ease-in-out infinite}
+body[data-theme="crystal"] .country-card:hover{transform:perspective(800px) rotateX(-6deg) translateY(-8px)}
+body[data-theme="crystal"] .nav-btn.active{background:rgba(94,231,255,.18);box-shadow:0 0 24px rgba(94,231,255,.35)}
+body[data-theme="crystal"] .success-icon{box-shadow:0 0 40px rgba(94,231,255,.5)}
 
-body[data-theme="aurora"] .balance-value,
-body[data-theme="aurora"] .welcome-name{
-  background:linear-gradient(100deg,#8affd1,#9ccbff 45%,#d5b7ff);
-  -webkit-background-clip:text;
-  background-clip:text;
-  color:transparent;
+/* --------------------------------------------------------------------------
+   EMBER — molten metal + fire glow
+   -------------------------------------------------------------------------- */
+body[data-theme="ember"]{
+  --bg:#0c0603;--surface:#1a0d08;--surface2:#24140c;--border:rgba(255,106,26,.35);
+  --text:#ffe8d4;--muted:#c49070;--soft:#8a5a40;--green:#ff6a1a;--green-rgb:255,106,26;
+  --red:#ff3d3d;--yellow:#ffc14d;--btn:linear-gradient(180deg,#ffb347,#ff4d00);--btn-text:#1a0800;
+  --header-bg:rgba(14,6,3,.92);--nav-bg:rgba(26,13,8,.94);--nav-border:rgba(255,106,26,.35);--nav-active:rgba(255,106,26,.18);
+  --t-radius-lg:16px;--t-card-bg:linear-gradient(180deg,#2a140c,#140805);
+  --t-card-shadow:0 16px 36px rgba(0,0,0,.65),0 0 28px rgba(255,80,0,.18),inset 0 1px 0 rgba(255,180,80,.2);
+  --t-card-shadow-hover:0 22px 48px rgba(0,0,0,.75),0 0 48px rgba(255,80,0,.4);
+  --t-btn-bg:linear-gradient(180deg,#ffc14d,#ff4d00);--t-btn-color:#1a0800;--t-btn-sweep:1;
+  --t-page-anim:tZoomIn;--t-card-anim:tPopIn;--t-hover-y:-6px;--t-nav-radius:16px;
+  background:radial-gradient(700px 400px at 50% 110%,rgba(255,80,0,.28),transparent 60%),#0c0603;
 }
+body[data-theme="ember"] .theme-fx i:nth-child(1){opacity:.4;left:20%;bottom:-10%;width:40vw;height:30vh;filter:blur(50px);background:#ff4d00;animation:tGlowDrift 8s ease-in-out infinite}
+body[data-theme="ember"] .country-card:hover{transform:perspective(800px) rotateX(5deg) translateY(-8px)}
+body[data-theme="ember"] .nav-btn.active{background:linear-gradient(180deg,#ffb347,#ff4d00);color:#1a0800;box-shadow:0 0 22px rgba(255,80,0,.5)}
 
-body[data-theme="aurora"] .nav-btn.active{
-  background:linear-gradient(120deg,rgba(138,255,209,.3),rgba(201,167,255,.28));
-  box-shadow:0 0 0 1px rgba(138,255,209,.4),0 8px 26px rgba(138,255,209,.25);
+/* --------------------------------------------------------------------------
+   NOVA — cosmic starfield 3D
+   -------------------------------------------------------------------------- */
+body[data-theme="nova"]{
+  --bg:#050714;--surface:#10152c;--surface2:#161d3a;--border:rgba(157,123,255,.32);
+  --text:#f0ecff;--muted:#a89ad0;--soft:#6e6490;--green:#9d7bff;--green-rgb:157,123,255;
+  --red:#ff6b9d;--yellow:#ffd166;--btn:linear-gradient(120deg,#9d7bff,#5ad7ff);--btn-text:#0a0818;
+  --header-bg:rgba(8,10,24,.86);--nav-bg:rgba(16,21,44,.9);--nav-border:rgba(157,123,255,.3);--nav-active:rgba(157,123,255,.18);
+  --t-radius-lg:20px;--t-card-bg:linear-gradient(165deg,#1a2048,#0c1024);
+  --t-card-shadow:0 18px 44px rgba(0,0,12,.6),0 0 32px rgba(157,123,255,.2);
+  --t-card-shadow-hover:0 26px 60px rgba(0,0,12,.7),0 0 48px rgba(90,215,255,.35);
+  --t-btn-bg:linear-gradient(120deg,#9d7bff,#5ad7ff);--t-btn-color:#0a0818;--t-btn-sweep:1;
+  --t-page-anim:tFadeUp;--t-card-anim:tRiseSlow;--t-hover-y:-7px;--t-nav-radius:22px;
+  background:radial-gradient(800px 500px at 90% 0,rgba(157,123,255,.25),transparent 60%),#050714;
 }
+body[data-theme="nova"] .theme-fx i:nth-child(n+1):nth-child(-n+6){opacity:.7;width:3px;height:3px;border-radius:50%;background:#fff;box-shadow:0 0 8px #fff;animation:tSpark 3s ease-in-out infinite}
+body[data-theme="nova"] .theme-fx i:nth-child(1){left:12%;top:18%}
+body[data-theme="nova"] .theme-fx i:nth-child(2){left:34%;top:8%;animation-delay:.4s}
+body[data-theme="nova"] .theme-fx i:nth-child(3){left:58%;top:22%;animation-delay:.8s}
+body[data-theme="nova"] .theme-fx i:nth-child(4){left:76%;top:12%;animation-delay:1.2s}
+body[data-theme="nova"] .theme-fx i:nth-child(5){left:88%;top:30%;animation-delay:1.6s}
+body[data-theme="nova"] .theme-fx i:nth-child(6){left:22%;top:40%;animation-delay:2s}
+body[data-theme="nova"] .country-card:hover{transform:perspective(900px) translateZ(20px) translateY(-8px)}
+body[data-theme="nova"] .nav-btn.active{background:linear-gradient(120deg,rgba(157,123,255,.35),rgba(90,215,255,.25));box-shadow:0 0 22px rgba(157,123,255,.4)}
 
-body[data-theme="aurora"] .app-header{
-  background:rgba(10,15,40,.55);
-  border-bottom:1px solid rgba(255,255,255,.08);
+/* --------------------------------------------------------------------------
+   CHROME3D — liquid metal
+   -------------------------------------------------------------------------- */
+body[data-theme="chrome3d"]{
+  --bg:#0b0d11;--surface:#1a1e26;--surface2:#232833;--border:#3a4250;
+  --text:#f4f7fb;--muted:#a8b0be;--soft:#6e7684;--green:#c8d4e8;--green-rgb:200,212,232;
+  --red:#ff6b7a;--yellow:#ffd166;--btn:linear-gradient(180deg,#f0f4fa,#8a96a8);--btn-text:#0b0d11;
+  --header-bg:linear-gradient(180deg,#232833,#12151b);--nav-bg:linear-gradient(180deg,#232833,#12151b);--nav-border:#4a5464;--nav-active:#c8d4e8;
+  --t-radius-lg:14px;--t-card-bg:linear-gradient(180deg,#2c3340,#161a22);
+  --t-card-shadow:0 18px 36px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.22),inset 0 -8px 18px rgba(0,0,0,.35);
+  --t-card-shadow-hover:0 24px 48px rgba(0,0,0,.7),0 0 0 1px rgba(200,212,232,.5);
+  --t-btn-bg:linear-gradient(180deg,#ffffff,#9aa6b8);--t-btn-color:#0b0d11;--t-btn-sweep:1;
+  --t-btn-shadow:inset 0 1px 0 #fff,0 8px 0 #3a4250;--t-btn-press:translateY(6px);
+  --t-page-anim:tFlipIn;--t-card-anim:tTilt3d;--t-hover-y:-5px;--t-nav-radius:14px;
+  background:repeating-linear-gradient(90deg,rgba(255,255,255,.02) 0 2px,transparent 2px 5px),#0b0d11;
 }
+body[data-theme="chrome3d"] .country-card:hover{transform:perspective(800px) rotateY(8deg) translateY(-6px)}
+body[data-theme="chrome3d"] .brand-title,body[data-theme="chrome3d"] .balance-value{
+  background:linear-gradient(180deg,#fff,#9aa6b8 50%,#fff);-webkit-background-clip:text;background-clip:text;color:transparent}
+body[data-theme="chrome3d"] .nav-btn.active{background:linear-gradient(180deg,#f0f4fa,#8a96a8);color:#0b0d11;box-shadow:inset 0 1px 0 #fff}
+
+/* --------------------------------------------------------------------------
+   PLASMA — electric energy field
+   -------------------------------------------------------------------------- */
+body[data-theme="plasma"]{
+  --bg:#030712;--surface:#0b1428;--surface2:#101c38;--border:rgba(57,246,200,.32);
+  --text:#e8fff8;--muted:#7ec8b8;--soft:#4a8a80;--green:#39f6c8;--green-rgb:57,246,200;
+  --red:#ff5d8f;--yellow:#ffe14d;--btn:linear-gradient(120deg,#39f6c8,#6b7bff);--btn-text:#031016;
+  --header-bg:rgba(4,8,18,.9);--nav-bg:rgba(8,16,32,.92);--nav-border:rgba(57,246,200,.32);--nav-active:rgba(57,246,200,.16);
+  --t-radius-lg:18px;--t-card-bg:linear-gradient(160deg,#102040,#07101e);
+  --t-card-shadow:0 18px 42px rgba(0,0,0,.55),0 0 30px rgba(57,246,200,.18);
+  --t-card-shadow-hover:0 24px 56px rgba(0,0,0,.65),0 0 48px rgba(107,123,255,.4);
+  --t-btn-bg:linear-gradient(120deg,#39f6c8,#6b7bff);--t-btn-color:#031016;--t-btn-sweep:1;
+  --t-page-anim:tGlitchIn;--t-card-anim:tFadeUp;--t-hover-y:-6px;--t-nav-radius:18px;
+  background:radial-gradient(900px 500px at 0% 0,rgba(57,246,200,.16),transparent 60%),radial-gradient(800px 500px at 100% 100%,rgba(107,123,255,.18),transparent 60%),#030712;
+}
+body[data-theme="plasma"] .theme-fx i:nth-child(1){opacity:.3;left:50%;top:50%;width:160vmax;height:160vmax;margin:-80vmax 0 0 -80vmax;background:conic-gradient(from 0deg,rgba(57,246,200,.25),transparent 30%,rgba(107,123,255,.2),transparent 70%);animation:tRadar 14s linear infinite}
+body[data-theme="plasma"] .country-card:hover{transform:perspective(800px) translateZ(16px) translateY(-8px);box-shadow:0 0 40px rgba(57,246,200,.4)}
+body[data-theme="plasma"] .nav-btn.active{background:rgba(57,246,200,.16);box-shadow:0 0 22px rgba(57,246,200,.4)}
+body[data-theme="plasma"] .brand-title,body[data-theme="plasma"] .welcome-name{text-shadow:0 0 18px rgba(57,246,200,.55)}
 
 /* --------------------------------------------------------------------------
    PAPER — notebook, sticky notes, handwritten feel
@@ -1518,120 +1329,6 @@ body[data-theme="paper"] .success-icon{
   background:#f3e6c8;
   color:#33291d;
 }
-
-/* --------------------------------------------------------------------------
-   EDITORIAL — magazine typography, hairlines, no shadows
-   -------------------------------------------------------------------------- */
-
-body[data-theme="editorial"]{
-  --bg:#faf9f7;
-  --surface:#ffffff;
-  --surface2:#f2f0ec;
-  --border:#151210;
-  --text:#14110f;
-  --muted:#6b635c;
-  --soft:#98908a;
-  --green:#b3121d;
-  --green-rgb:179,18,29;
-  --red:#b3121d;
-  --yellow:#8a6b1f;
-  --btn:#14110f;
-  --btn-text:#ffffff;
-  --header-bg:rgba(250,249,247,.96);
-  --nav-bg:rgba(255,255,255,.98);
-  --nav-border:#14110f;
-  --nav-active:#14110f;
-
-  --t-font:Georgia,"Iowan Old Style","Times New Roman",serif;
-  --t-display:"Didot","Bodoni MT",Georgia,serif;
-  --t-body-size:16px;
-  --t-head-weight:700;
-  --t-head-letter:-.6px;
-  --t-label-transform:uppercase;
-  --t-label-letter:2.4px;
-  --t-radius-lg:0px;
-  --t-radius-md:0px;
-  --t-radius-sm:0px;
-  --t-pill:0px;
-  --t-border-w:1px;
-  --t-card-bg:#ffffff;
-  --t-card-bg2:#f2f0ec;
-  --t-card-border:1px solid rgba(20,17,15,.16);
-  --t-card-shadow:none;
-  --t-card-shadow-hover:none;
-  --t-btn-bg:#14110f;
-  --t-btn-color:#ffffff;
-  --t-btn-transform:uppercase;
-  --t-btn-letter:2.2px;
-  --t-btn-weight:600;
-  --t-btn-hover-y:0px;
-  --t-btn-press:scale(.995);
-  --t-page-anim:tFadeIn;
-  --t-page-dur:.6s;
-  --t-card-anim:tFadeIn;
-  --t-hover-y:0px;
-  --t-nav-radius:0px;
-  --t-nav-blur:6px;
-  --t-nav-shadow:0 -1px 0 #14110f;
-  --t-container:1120px;
-  --t-cols:4;
-
-  background:#faf9f7;
-}
-
-body[data-theme="editorial"] .country-card:hover,
-body[data-theme="editorial"] .order-card:hover,
-body[data-theme="editorial"] .recharge-method-card:hover{
-  background:#14110f;
-  color:#faf9f7;
-  border-color:#14110f;
-}
-body[data-theme="editorial"] .country-card:hover .country-code,
-body[data-theme="editorial"] .country-card:hover .country-price{color:rgba(250,249,247,.75)}
-body[data-theme="editorial"] .country-card:hover .buy-now{background:#faf9f7;color:#14110f}
-
-body[data-theme="editorial"] .welcome-name{font-size:56px;line-height:1.02}
-body[data-theme="editorial"] .section-title{
-  border-bottom:2px solid #14110f;
-  padding-bottom:8px;
-  display:block;
-  width:100%;
-  font-size:15px;
-  text-transform:uppercase;
-  letter-spacing:3px;
-}
-body[data-theme="editorial"] .section-head{align-items:flex-end}
-
-body[data-theme="editorial"] .balance-card{
-  border-top:6px double #14110f;
-  border-left:0;border-right:0;border-bottom:1px solid rgba(20,17,15,.16);
-}
-
-body[data-theme="editorial"] .bottom-nav{
-  bottom:0;left:0;right:0;
-  transform:none;
-  width:100%;
-  border-left:0;border-right:0;border-bottom:0;
-  border-top:1px solid #14110f;
-  padding:0;
-}
-body[data-theme="editorial"] .nav-btn{
-  min-height:58px;
-  border-radius:0;
-  text-transform:uppercase;
-  letter-spacing:1.6px;
-  font-size:10px;
-}
-body[data-theme="editorial"] .nav-icon{display:none}
-body[data-theme="editorial"] .nav-btn.active{
-  background:#14110f;
-  color:#fff;
-  box-shadow:none;
-}
-body[data-theme="editorial"] #dashboardScreen{padding-bottom:72px}
-
-body[data-theme="editorial"] .spinner{border-radius:0;border-width:1px;border-color:rgba(20,17,15,.2);border-top-color:#14110f}
-body[data-theme="editorial"] .success-icon{border-radius:0;border:1px solid #14110f}
 
 /* --------------------------------------------------------------------------
    CONSOLE — dense pro dashboard with a desktop side rail
@@ -1884,113 +1581,6 @@ body[data-theme="hud"] .success-icon{
 }
 
 /* --------------------------------------------------------------------------
-   LUXE — black tie gold boutique
-   -------------------------------------------------------------------------- */
-
-body[data-theme="luxe"]{
-  --bg:#080604;
-  --surface:#100d08;
-  --surface2:#171208;
-  --border:rgba(212,175,55,.32);
-  --text:#f6efdf;
-  --muted:#b9a97f;
-  --soft:#8a7c58;
-  --green:#d4af37;
-  --green-rgb:212,175,55;
-  --red:#e05c5c;
-  --yellow:#e8c766;
-  --btn:linear-gradient(120deg,#f2dc9b,#d4af37 45%,#a8842a);
-  --btn-text:#100d08;
-  --header-bg:rgba(8,6,4,.94);
-  --nav-bg:rgba(14,11,7,.96);
-  --nav-border:rgba(212,175,55,.35);
-  --nav-active:rgba(212,175,55,.12);
-
-  --t-font:"Optima","Palatino Linotype",Georgia,serif;
-  --t-display:"Didot","Bodoni MT","Playfair Display",Georgia,serif;
-  --t-head-weight:500;
-  --t-head-letter:4px;
-  --t-head-transform:uppercase;
-  --t-label-transform:uppercase;
-  --t-label-letter:3px;
-  --t-radius-lg:2px;
-  --t-radius-md:2px;
-  --t-radius-sm:2px;
-  --t-pill:2px;
-  --t-card-pad:30px;
-  --t-card-bg:linear-gradient(160deg,#12100a,#0a0805);
-  --t-card-bg2:#171208;
-  --t-card-border:1px solid rgba(212,175,55,.3);
-  --t-card-shadow:0 18px 40px rgba(0,0,0,.6);
-  --t-card-shadow-hover:0 22px 50px rgba(0,0,0,.7),0 0 0 1px rgba(212,175,55,.6);
-  --t-btn-bg:linear-gradient(120deg,#f2dc9b,#d4af37 45%,#a8842a);
-  --t-btn-color:#100d08;
-  --t-btn-transform:uppercase;
-  --t-btn-letter:3.4px;
-  --t-btn-weight:600;
-  --t-btn-shadow-hover:0 14px 34px rgba(212,175,55,.3);
-  --t-btn-hover-y:-2px;
-  --t-btn-sweep:1;
-  --t-speed:.5s;
-  --t-ease:cubic-bezier(.2,.7,.2,1);
-  --t-page-anim:tFadeIn;
-  --t-page-dur:.8s;
-  --t-card-anim:tFadeUp;
-  --t-card-dur:.8s;
-  --t-hover-y:-4px;
-  --t-nav-radius:2px;
-  --t-nav-shadow:0 18px 40px rgba(0,0,0,.7);
-  --t-cols:4;
-  --t-container:1180px;
-
-  background:
-    radial-gradient(900px 500px at 50% -10%,rgba(212,175,55,.1),transparent 60%),
-    #080604;
-}
-
-body[data-theme="luxe"] .brand-title,
-body[data-theme="luxe"] .header-title,
-body[data-theme="luxe"] .balance-value{
-  background:linear-gradient(100deg,#f7e7b0,#d4af37 40%,#fff3c8 60%,#a8842a);
-  background-size:220% 100%;
-  -webkit-background-clip:text;
-  background-clip:text;
-  color:transparent;
-  animation:tShine 7s linear infinite;
-}
-
-body[data-theme="luxe"] .section-title{
-  position:relative;
-  padding-bottom:12px;
-}
-body[data-theme="luxe"] .section-title::after{
-  content:"";
-  position:absolute;
-  left:0;bottom:0;
-  width:54px;height:1px;
-  background:linear-gradient(90deg,#d4af37,transparent);
-}
-
-body[data-theme="luxe"] .country-card{
-  padding:26px 16px;
-}
-body[data-theme="luxe"] .country-card:hover{
-  background:linear-gradient(160deg,#1a1509,#0d0a05);
-}
-
-body[data-theme="luxe"] .nav-btn{color:#8a7c58;letter-spacing:2px}
-body[data-theme="luxe"] .nav-btn.active{
-  background:transparent;
-  color:#d4af37;
-  box-shadow:inset 0 -2px 0 #d4af37;
-}
-body[data-theme="luxe"] .nav-icon{font-size:18px}
-
-body[data-theme="luxe"] .status-pill{border:1px solid currentColor;background:transparent!important;letter-spacing:2px}
-body[data-theme="luxe"] .spinner{border-color:rgba(212,175,55,.2);border-top-color:#d4af37;animation:tSpin 1.4s cubic-bezier(.5,.1,.4,.9) infinite}
-body[data-theme="luxe"] .success-icon{border-radius:50%;border:1px solid rgba(212,175,55,.6)}
-
-/* --------------------------------------------------------------------------
    CANDY — bouncy pastel playground
    -------------------------------------------------------------------------- */
 
@@ -2076,111 +1666,6 @@ body[data-theme="candy"] .spinner{border-width:4px;border-color:#ffd0e4;border-t
 body[data-theme="candy"] .success-icon{border-radius:50%;box-shadow:0 10px 0 rgba(214,60,130,.35);animation:tBounce 1.6s ease-in-out infinite}
 
 /* --------------------------------------------------------------------------
-   SWISS — strict minimal grid, typography only
-   -------------------------------------------------------------------------- */
-
-body[data-theme="swiss"]{
-  --bg:#ffffff;
-  --surface:#ffffff;
-  --surface2:#f4f4f4;
-  --border:#000000;
-  --text:#000000;
-  --muted:#5c5c5c;
-  --soft:#9b9b9b;
-  --green:#000000;
-  --green-rgb:0,0,0;
-  --red:#e2001a;
-  --yellow:#000000;
-  --btn:#000000;
-  --btn-text:#ffffff;
-  --header-bg:#ffffff;
-  --nav-bg:#ffffff;
-  --nav-border:#000000;
-  --nav-active:#000000;
-
-  --t-font:"Helvetica Neue",Helvetica,Arial,"Inter",system-ui,sans-serif;
-  --t-display:var(--t-font);
-  --t-head-weight:700;
-  --t-head-letter:-1px;
-  --t-label-transform:uppercase;
-  --t-label-letter:1.4px;
-  --t-radius-lg:0px;
-  --t-radius-md:0px;
-  --t-radius-sm:0px;
-  --t-pill:0px;
-  --t-border-w:1px;
-  --t-card-bg:#ffffff;
-  --t-card-bg2:#f4f4f4;
-  --t-card-border:1px solid #000;
-  --t-card-shadow:none;
-  --t-card-shadow-hover:none;
-  --t-btn-bg:#000000;
-  --t-btn-color:#ffffff;
-  --t-btn-transform:uppercase;
-  --t-btn-letter:1.6px;
-  --t-btn-weight:700;
-  --t-btn-hover-y:0px;
-  --t-btn-press:none;
-  --t-speed:.16s;
-  --t-ease:linear;
-  --t-page-anim:tFadeIn;
-  --t-page-dur:.2s;
-  --t-card-anim:tFadeIn;
-  --t-card-dur:.2s;
-  --t-hover-y:0px;
-  --t-nav-radius:0px;
-  --t-nav-blur:0px;
-  --t-nav-shadow:none;
-  --t-cols:4;
-  --t-container:1240px;
-
-  background:#fff;
-}
-
-body[data-theme="swiss"] .country-grid{gap:0}
-body[data-theme="swiss"] .country-card{
-  border-width:0 1px 1px 0;
-  border-style:solid;
-  border-color:#000;
-}
-body[data-theme="swiss"] .country-card:hover{background:#000;color:#fff}
-body[data-theme="swiss"] .country-card:hover .country-code,
-body[data-theme="swiss"] .country-card:hover .country-price,
-body[data-theme="swiss"] .country-card:hover .stock{color:#fff}
-body[data-theme="swiss"] .country-card:hover .buy-now{background:#fff;color:#000}
-
-body[data-theme="swiss"] .welcome-name{font-size:64px;letter-spacing:-3px;line-height:.95}
-body[data-theme="swiss"] .balance-value{font-size:56px;letter-spacing:-2px}
-body[data-theme="swiss"] .section-title{text-transform:uppercase;letter-spacing:2px;font-size:13px}
-
-body[data-theme="swiss"] .bottom-nav{
-  left:0;right:0;bottom:0;top:auto;
-  transform:none;
-  width:100%;
-  border:0;
-  border-top:1px solid #000;
-  padding:0;
-}
-body[data-theme="swiss"] .nav-btn{
-  border-right:1px solid #000;
-  min-height:56px;
-  border-radius:0;
-  text-transform:uppercase;
-  letter-spacing:1.4px;
-  font-size:10px;
-  color:#000;
-}
-body[data-theme="swiss"] .nav-btn:last-child{border-right:0}
-body[data-theme="swiss"] .nav-icon{display:none}
-body[data-theme="swiss"] .nav-btn.active{background:#000;color:#fff;box-shadow:none}
-body[data-theme="swiss"] #dashboardScreen{padding-bottom:70px}
-
-body[data-theme="swiss"] .view-all:hover{text-decoration:underline}
-body[data-theme="swiss"] .status-pill{border:1px solid #000;background:transparent!important;color:#000!important}
-body[data-theme="swiss"] .spinner{border-radius:0;border-width:2px;border-color:#ddd;border-top-color:#000}
-body[data-theme="swiss"] .success-icon{border-radius:0}
-
-/* --------------------------------------------------------------------------
    ORGANIC — soft natural blob shapes
    -------------------------------------------------------------------------- */
 
@@ -2260,213 +1745,6 @@ body[data-theme="organic"] .nav-btn.active{
 }
 body[data-theme="organic"] .spinner{border-color:#d8e8cd;border-top-color:#3f7d4e;animation:tSpin 1.1s ease-in-out infinite}
 body[data-theme="organic"] .success-icon{border-radius:50% 22% 50% 22%}
-
-/* --------------------------------------------------------------------------
-   VAPOR — vaporwave chrome sunset
-   -------------------------------------------------------------------------- */
-
-body[data-theme="vapor"]{
-  --bg:#1b0033;
-  --surface:rgba(70,15,110,.6);
-  --surface2:rgba(96,26,140,.6);
-  --border:rgba(255,113,206,.45);
-  --text:#f7e9ff;
-  --muted:#c79ce0;
-  --soft:#9b74b8;
-  --green:#01cdfe;
-  --green-rgb:1,205,254;
-  --red:#ff5c8a;
-  --yellow:#fffb96;
-  --btn:linear-gradient(100deg,#ff71ce,#01cdfe);
-  --btn-text:#1b0033;
-  --header-bg:rgba(27,0,51,.75);
-  --nav-bg:rgba(50,8,88,.75);
-  --nav-border:rgba(255,113,206,.5);
-  --nav-active:rgba(255,113,206,.25);
-
-  --t-font:"Futura","Century Gothic","Trebuchet MS",system-ui,sans-serif;
-  --t-display:"Futura","Century Gothic",system-ui,sans-serif;
-  --t-head-transform:uppercase;
-  --t-head-letter:5px;
-  --t-label-letter:2px;
-  --t-radius-lg:4px;
-  --t-radius-md:4px;
-  --t-radius-sm:4px;
-  --t-card-bg:linear-gradient(160deg,rgba(94,25,140,.62),rgba(38,6,72,.62));
-  --t-card-bg2:rgba(96,26,140,.55);
-  --t-card-blur:12px;
-  --t-card-shadow:0 0 0 1px rgba(255,113,206,.35),0 18px 44px rgba(0,0,0,.45);
-  --t-card-shadow-hover:0 0 0 1px #01cdfe,0 0 34px rgba(1,205,254,.4);
-  --t-btn-bg:linear-gradient(100deg,#ff71ce,#01cdfe);
-  --t-btn-color:#1b0033;
-  --t-btn-transform:uppercase;
-  --t-btn-letter:3px;
-  --t-btn-shadow:0 0 22px rgba(255,113,206,.45);
-  --t-btn-shadow-hover:0 0 34px rgba(1,205,254,.6);
-  --t-btn-sweep:1;
-  --t-page-anim:tZoomIn;
-  --t-page-dur:.55s;
-  --t-card-anim:tFlipIn;
-  --t-card-dur:.55s;
-  --t-hover-y:-5px;
-  --t-nav-radius:4px;
-  --t-nav-blur:16px;
-  --t-nav-shadow:0 0 30px rgba(255,113,206,.35);
-  --t-cols:4;
-
-  background:linear-gradient(180deg,#1b0033 0%,#3d0a63 45%,#7a1f7d 70%,#ff71ce 100%);
-}
-
-body[data-theme="vapor"] .theme-fx i:nth-child(1){
-  opacity:.9;
-  left:50%;top:14vh;
-  width:44vmin;height:44vmin;
-  margin-left:-22vmin;
-  border-radius:50%;
-  background:linear-gradient(180deg,#fffb96,#ff71ce 55%,#7a1f7d);
-  mask-image:repeating-linear-gradient(180deg,#000 0 12px,transparent 12px 18px);
-  -webkit-mask-image:repeating-linear-gradient(180deg,#000 0 12px,transparent 12px 18px);
-  animation:tSunRise 8s ease-in-out infinite;
-}
-body[data-theme="vapor"] .theme-fx i:nth-child(2){
-  opacity:.55;
-  left:-50%;right:-50%;bottom:-4vh;height:42vh;
-  background:repeating-linear-gradient(90deg,rgba(1,205,254,.5) 0 2px,transparent 2px 64px),
-             repeating-linear-gradient(0deg,rgba(255,113,206,.5) 0 2px,transparent 2px 40px);
-  transform:perspective(300px) rotateX(70deg);
-  transform-origin:bottom;
-  animation:tGridMove 3s linear infinite;
-}
-
-body[data-theme="vapor"] .brand-title,
-body[data-theme="vapor"] .header-title,
-body[data-theme="vapor"] .welcome-name{
-  background:linear-gradient(180deg,#ffffff,#01cdfe 45%,#ff71ce);
-  -webkit-background-clip:text;
-  background-clip:text;
-  color:transparent;
-  text-shadow:0 0 24px rgba(255,113,206,.45);
-  font-style:italic;
-}
-
-body[data-theme="vapor"] .country-name{font-style:italic}
-body[data-theme="vapor"] .nav-btn.active{
-  background:linear-gradient(100deg,rgba(255,113,206,.4),rgba(1,205,254,.4));
-  box-shadow:0 0 0 1px rgba(255,255,255,.4),0 0 22px rgba(1,205,254,.4);
-}
-body[data-theme="vapor"] .spinner{border-color:rgba(255,113,206,.25);border-top-color:#01cdfe}
-body[data-theme="vapor"] .success-icon{border-radius:50%;box-shadow:0 0 40px rgba(1,205,254,.6)}
-
-/* --------------------------------------------------------------------------
-   METRO — flat live tiles
-   -------------------------------------------------------------------------- */
-
-body[data-theme="metro"]{
-  --bg:#0f1418;
-  --surface:#1b2732;
-  --surface2:#233240;
-  --border:transparent;
-  --text:#f3f7fa;
-  --muted:#a7b6c4;
-  --soft:#7a8b9a;
-  --green:#00b7c3;
-  --green-rgb:0,183,195;
-  --red:#e81123;
-  --yellow:#ffb900;
-  --btn:#00b7c3;
-  --btn-text:#04191c;
-  --header-bg:#141b21;
-  --nav-bg:#141b21;
-  --nav-border:transparent;
-  --nav-active:#00b7c3;
-
-  --t-font:"Segoe UI","Segoe UI Light",system-ui,sans-serif;
-  --t-display:"Segoe UI Light","Segoe UI",system-ui,sans-serif;
-  --t-head-weight:300;
-  --t-head-letter:-.5px;
-  --t-label-transform:lowercase;
-  --t-radius-lg:0px;
-  --t-radius-md:0px;
-  --t-radius-sm:0px;
-  --t-pill:0px;
-  --t-border-w:0px;
-  --t-card-border:0;
-  --t-card-bg:#1b2732;
-  --t-card-bg2:#233240;
-  --t-card-shadow:none;
-  --t-card-shadow-hover:none;
-  --t-btn-bg:#00b7c3;
-  --t-btn-color:#04191c;
-  --t-btn-hover-y:0px;
-  --t-btn-press:perspective(400px) rotateX(6deg) scale(.98);
-  --t-speed:.18s;
-  --t-page-anim:tSlideLeft;
-  --t-page-dur:.3s;
-  --t-card-anim:tTileIn;
-  --t-card-dur:.4s;
-  --t-hover-y:0px;
-  --t-nav-radius:0px;
-  --t-nav-blur:0px;
-  --t-nav-shadow:none;
-  --t-cols:5;
-
-  background:#0f1418;
-}
-
-body[data-theme="metro"] .country-grid{gap:6px}
-body[data-theme="metro"] .country-card{
-  padding:20px 12px;
-  transition:transform .16s ease,filter .16s ease;
-}
-body[data-theme="metro"] .country-card:nth-child(5n+1){background:#0078d4}
-body[data-theme="metro"] .country-card:nth-child(5n+2){background:#00b7c3}
-body[data-theme="metro"] .country-card:nth-child(5n+3){background:#5c2d91}
-body[data-theme="metro"] .country-card:nth-child(5n+4){background:#e3008c}
-body[data-theme="metro"] .country-card:nth-child(5n+5){background:#107c10}
-body[data-theme="metro"] .country-card,
-body[data-theme="metro"] .country-card .country-code,
-body[data-theme="metro"] .country-card .country-price,
-body[data-theme="metro"] .country-card .stock,
-body[data-theme="metro"] .country-card .quality{color:#fff}
-body[data-theme="metro"] .country-card:hover{
-  transform:perspective(600px) rotateY(-6deg) scale(1.02);
-  filter:brightness(1.12);
-}
-body[data-theme="metro"] .country-card:active{transform:perspective(600px) rotateX(8deg) scale(.97)}
-body[data-theme="metro"] .buy-now{background:rgba(0,0,0,.35);color:#fff}
-
-body[data-theme="metro"] .stats-row{gap:6px}
-body[data-theme="metro"] .stat-card:nth-child(1){background:#0078d4}
-body[data-theme="metro"] .stat-card:nth-child(2){background:#5c2d91}
-body[data-theme="metro"] .stat-card,
-body[data-theme="metro"] .stat-card .stat-label{color:#fff}
-body[data-theme="metro"] .balance-card{background:#107c10;color:#fff}
-body[data-theme="metro"] .balance-card .balance-label{color:rgba(255,255,255,.85)}
-
-body[data-theme="metro"] .app-header{border-bottom:0}
-body[data-theme="metro"] .bottom-nav{
-  left:0;right:0;bottom:0;
-  transform:none;
-  width:100%;
-  gap:2px;
-  padding:0;
-}
-body[data-theme="metro"] .nav-btn{
-  min-height:62px;
-  border-radius:0;
-  background:#1b2732;
-  text-transform:lowercase;
-}
-body[data-theme="metro"] .nav-btn.active{
-  background:#00b7c3;
-  color:#04191c;
-  box-shadow:none;
-}
-body[data-theme="metro"] #dashboardScreen{padding-bottom:78px}
-body[data-theme="metro"] .spinner{border-radius:0;border-color:#233240;border-top-color:#00b7c3}
-body[data-theme="metro"] .success-icon{border-radius:0;background:#107c10;color:#fff}
-body[data-theme="metro"] .settings-list{background:#1b2732}
-body[data-theme="metro"] .setting-item{border-bottom:2px solid #0f1418}
 
 /* --------------------------------------------------------------------------
    CLAY — chunky 3D claymorphism
