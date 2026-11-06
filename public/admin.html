@@ -8,6 +8,8 @@
 <title>TGA Store Admin Panel</title>
 <link rel="icon" href="/assets/logo.png" type="image/png">
 
+<script src="/icons.js"></script>
+
 <style>
 *{
   box-sizing:border-box;
@@ -247,9 +249,15 @@ input,select{
 }
 
 .nav-item .ic{
-  font-size:17px;
   width:20px;
-  text-align:center;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.nav-item .ic .icon{
+  width:18px;
+  height:18px;
 }
 
 .main{
@@ -374,8 +382,14 @@ input,select{
 }
 
 .stat-icon{
-  font-size:21px;
+  display:inline-flex;
+  color:var(--green);
   margin-bottom:11px;
+}
+
+.stat-icon .icon{
+  width:22px;
+  height:22px;
 }
 
 .stat-value{
@@ -423,6 +437,15 @@ input,select{
 .panel-title{
   font-size:15px;
   font-weight:850;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.panel-title .icon{
+  color:var(--green);
+  width:17px;
+  height:17px;
 }
 
 .panel-tools{
@@ -961,7 +984,9 @@ tbody tr:hover{
     font-weight:800;
     white-space:nowrap;
   }
-  .admin-nav-btn span{ font-size:17px; line-height:1; }
+  .admin-nav-btn span{ display:inline-flex; align-items:center; line-height:1; }
+
+  .admin-nav-btn span .icon{ width:16px; height:16px; }
   .admin-nav-btn.active{
     color:var(--text);
     background:linear-gradient(180deg,rgba(61,240,146,.18),rgba(15,22,34,.98));
@@ -1007,7 +1032,7 @@ tbody tr:hover{
       <span class="dot"></span>
     </span>
 
-    <button id="refreshBtn" class="icon-btn" type="button" title="Refresh" onclick="refreshCurrent()">↻</button>
+    <button id="refreshBtn" class="icon-btn" type="button" title="Refresh" onclick="refreshCurrent()"><svg class=icon aria-hidden=true><use href=/icons.svg#i-refresh></use></svg></button>
   </div>
 
 </header>
@@ -1019,27 +1044,27 @@ tbody tr:hover{
     <div class="side-label">Control Center</div>
 
     <button class="nav-item active" data-tab="overview" type="button" onclick="switchTab('overview')">
-      <span class="ic">◧</span> Overview
+      <span class="ic"><svg class=icon aria-hidden=true><use href=/icons.svg#i-chart></use></svg></span> Overview
     </button>
 
     <button class="nav-item" data-tab="logs" type="button" onclick="switchTab('logs')">
-      <span class="ic">≡</span> Activity Logs
+      <span class="ic"><svg class=icon aria-hidden=true><use href=/icons.svg#i-note></use></svg></span> Activity Logs
     </button>
 
     <button class="nav-item" data-tab="users" type="button" onclick="switchTab('users')">
-      <span class="ic">👥</span> Users
+      <span class="ic"><svg class=icon aria-hidden=true><use href=/icons.svg#i-users></use></svg></span> Users
     </button>
 
     <button class="nav-item" data-tab="orders" type="button" onclick="switchTab('orders')">
-      <span class="ic">🛒</span> Orders
+      <span class="ic"><svg class=icon aria-hidden=true><use href=/icons.svg#i-cart></use></svg></span> Orders
     </button>
 
     <button class="nav-item" data-tab="recharge" type="button" onclick="switchTab('recharge')">
-      <span class="ic">💳</span> Recharge
+      <span class="ic"><svg class=icon aria-hidden=true><use href=/icons.svg#i-card></use></svg></span> Recharge
     </button>
 
     <button class="nav-item" data-tab="maintenance" type="button" onclick="switchTab('maintenance')">
-      <span class="ic">⚙️</span> Settings
+      <span class="ic"><svg class=icon aria-hidden=true><use href=/icons.svg#i-settings></use></svg></span> Settings
     </button>
   </aside>
 
@@ -1054,9 +1079,9 @@ tbody tr:hover{
 
       <div class="panel">
         <div class="panel-head">
-          <div class="panel-title">⚡ Recent Activity</div>
+          <div class="panel-title"><svg class=icon aria-hidden=true><use href=/icons.svg#i-bolt></use></svg> Recent Activity</div>
           <div class="panel-tools">
-            <button class="tool-btn" type="button" onclick="switchTab('logs')">View All Logs →</button>
+            <button class="tool-btn" type="button" onclick="switchTab('logs')">View All Logs <svg class=icon aria-hidden=true><use href=/icons.svg#i-arrow-right></use></svg></button>
           </div>
         </div>
         <div id="recentFeed" class="feed">
@@ -1067,12 +1092,12 @@ tbody tr:hover{
 
     <!-- ============ ACTIVITY LOGS (user logs + API logs) ============ -->
     <section id="page-logs" class="page">
-      <button class="back-btn" type="button" onclick="switchTab('overview')">← Back</button>
+      <button class="back-btn" type="button" onclick="switchTab('overview')"><svg class=icon aria-hidden=true><use href=/icons.svg#i-arrow-left></use></svg> Back</button>
       <div class="page-title">Activity Logs</div>
       <div class="page-sub">All-time events: logins, purchases, OTP, failures — and developer API requests. Pick a tab to see that log.</div>
 
       <div class="log-view-switch" aria-label="Log type">
-        <button id="logViewUser" class="log-view-btn active" type="button" onclick="setActivityView('user')">👥 User Logs</button>
+        <button id="logViewUser" class="log-view-btn active" type="button" onclick="setActivityView('user')"><svg class=icon aria-hidden=true><use href=/icons.svg#i-users></use></svg> User Logs</button>
         <button id="logViewApi" class="log-view-btn" type="button" onclick="setActivityView('api')">⌁ API Logs</button>
       </div>
 
@@ -1129,7 +1154,7 @@ tbody tr:hover{
     <!-- ============ USERS ============ -->
     <section id="page-users" class="page">
       <div class="page-title">Users</div>
-      <div class="page-sub">Every user A → Z with their full activity.</div>
+      <div class="page-sub">Every user A <svg class=icon aria-hidden=true><use href=/icons.svg#i-arrow-right></use></svg> Z with their full activity.</div>
 
       <div class="panel">
         <div class="panel-head">
@@ -1168,7 +1193,7 @@ tbody tr:hover{
         <div class="panel-head">
           <div class="panel-title">Order History</div>
           <div class="panel-tools">
-            <button class="tool-btn" type="button" onclick="loadOrders()">↻ Reload</button>
+            <button class="tool-btn" type="button" onclick="loadOrders()"><svg class=icon aria-hidden=true><use href=/icons.svg#i-refresh></use></svg> Reload</button>
           </div>
         </div>
         <div class="table-wrap">
@@ -1215,8 +1240,8 @@ tbody tr:hover{
       </div>
 
       <!-- ============ STORE THEME ============ -->
-      <div class="page-title" style="margin-top:26px">🎨 Store Theme</div>
-      <div class="page-sub">Every theme is a <b>full UI redesign</b> of the user store — layout, card shapes, fonts, buttons, animations, navigation and background effects all change, not just the colours. The selected theme applies instantly for every visitor; use <b>👁 Live preview</b> to try one first. The admin panel keeps its own look and never changes.</div>
+      <div class="page-title" style="margin-top:26px"><svg class=icon aria-hidden=true><use href=/icons.svg#i-paint></use></svg> Store Theme</div>
+      <div class="page-sub">Every theme is a <b>full UI redesign</b> of the user store — layout, card shapes, fonts, buttons, animations, navigation and background effects all change, not just the colours. The selected theme applies instantly for every visitor; use <b><svg class=icon aria-hidden=true><use href=/icons.svg#i-eye></use></svg> Live preview</b> to try one first. The admin panel keeps its own look and never changes.</div>
 
       <div class="panel">
         <div class="panel-head">
@@ -1234,19 +1259,19 @@ tbody tr:hover{
       </div>
 
       <!-- ============ PAY (merged into Settings) ============ -->
-      <div class="page-title" style="margin-top:26px">💳 Payment Gateways</div>
-      <div class="page-sub">Same as <code>/paymentsettings</code> in the bot. The UPI/FamPay switch default comes from the <b>Bot Codes file</b> (<code>config.py → DEFAULT_INR_GATEWAY</code>); you can switch it live here. Changes apply instantly to the bot and the website's Recharge page.</div>
+      <div class="page-title" style="margin-top:26px"><svg class=icon aria-hidden=true><use href=/icons.svg#i-card></use></svg> Payment Gateways</div>
+      <div class="page-sub">Same as <code>/paymentsettings</code> in the bot. The UPI/FamPay switch default comes from the <b>Bot Codes file</b> (<code>config.py <svg class=icon aria-hidden=true><use href=/icons.svg#i-arrow-right></use></svg> DEFAULT_INR_GATEWAY</code>); you can switch it live here. Changes apply instantly to the bot and the website's Recharge page.</div>
 
       <div class="panel" style="margin-bottom:18px">
         <div class="panel-head">
-          <div class="panel-title">💳 UPI Gateway (Auto) — UPI / FamPay Switch</div>
+          <div class="panel-title"><svg class=icon aria-hidden=true><use href=/icons.svg#i-card></use></svg> UPI Gateway (Auto) — UPI / FamPay Switch</div>
         </div>
         <div style="padding:16px 18px">
           <div style="font-size:13px;color:var(--muted);margin-bottom:12px">Only ONE gateway powers the <b>UPI (Auto)</b> card at a time.</div>
           <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-            <button id="gwUpiBtn" class="tool-btn" type="button" onclick="setInrGateway('upi')">💳 UPI</button>
-            <button id="gwFamPayBtn" class="tool-btn" type="button" onclick="setInrGateway('fampay')">💳 FamPay</button>
-            <button id="gwOffBtn" class="tool-btn" type="button" onclick="setInrGateway(null)">🚫 Disable</button>
+            <button id="gwUpiBtn" class="tool-btn" type="button" onclick="setInrGateway('upi')"><svg class=icon aria-hidden=true><use href=/icons.svg#i-card></use></svg> UPI</button>
+            <button id="gwFamPayBtn" class="tool-btn" type="button" onclick="setInrGateway('fampay')"><svg class=icon aria-hidden=true><use href=/icons.svg#i-card></use></svg> FamPay</button>
+            <button id="gwOffBtn" class="tool-btn" type="button" onclick="setInrGateway(null)"><svg class=icon aria-hidden=true><use href=/icons.svg#i-ban></use></svg> Disable</button>
             <span id="paymentsINRHint" class="mono muted" style="font-size:12px"></span>
           </div>
           <div id="gatewayIds" style="margin-top:14px;display:grid;gap:8px;font-size:12px"></div>
@@ -1255,14 +1280,14 @@ tbody tr:hover{
 
       <div class="panel" style="margin-bottom:18px">
         <div class="panel-head">
-          <div class="panel-title">🅱️ Binance Pay</div>
+          <div class="panel-title"><svg class=icon aria-hidden=true><use href=/icons.svg#i-coins></use></svg> Binance Pay</div>
           <label class="maint-switch" style="width:64px;height:36px" id="binanceSwitchWrap">
             <input type="checkbox" id="binanceEnabled" style="display:none" onchange="savePayments()">
             <span style="width:28px;height:28px"></span>
           </label>
         </div>
         <div style="padding:16px 18px">
-          <div style="font-size:13px;color:var(--muted)">When ON, users see 🅱️ Binance (Auto) with Pay ID &amp; QR and can verify via Order ID. Uses <code>BINANCE_PAY_ID</code>/<code>BINANCE_QR_URL</code>/<code>BINANCE_API_KEY</code> env.</div>
+          <div style="font-size:13px;color:var(--muted)">When ON, users see <svg class=icon aria-hidden=true><use href=/icons.svg#i-coins></use></svg> Binance (Auto) with Pay ID &amp; QR and can verify via Order ID. Uses <code>BINANCE_PAY_ID</code>/<code>BINANCE_QR_URL</code>/<code>BINANCE_API_KEY</code> env.</div>
           <div id="binanceInfo" style="margin-top:12px;font-size:12px" class="mono muted"></div>
           <div id="binanceQrPreview" style="margin-top:12px"></div>
         </div>
@@ -1270,21 +1295,21 @@ tbody tr:hover{
 
       <div class="panel">
         <div class="panel-head">
-          <div class="panel-title">🪙 Crypto (OxaPay)</div>
+          <div class="panel-title"><svg class=icon aria-hidden=true><use href=/icons.svg#i-coins></use></svg> Crypto (OxaPay)</div>
           <label class="maint-switch" style="width:64px;height:36px" id="cryptoSwitchWrap">
             <input type="checkbox" id="cryptoEnabled" style="display:none" onchange="savePayments()">
             <span style="width:28px;height:28px"></span>
           </label>
         </div>
         <div style="padding:16px 18px">
-          <div style="font-size:13px;color:var(--muted)">When ON, users see 🪙 Crypto (Auto) — enter USDT, get OxaPay invoice, tap "I Have Paid". Uses <code>OXAPAY_API_KEY</code> (default from bot).</div>
+          <div style="font-size:13px;color:var(--muted)">When ON, users see <svg class=icon aria-hidden=true><use href=/icons.svg#i-coins></use></svg> Crypto (Auto) — enter USDT, get OxaPay invoice, tap "I Have Paid". Uses <code>OXAPAY_API_KEY</code> (default from bot).</div>
           <div style="margin-top:12px;font-size:12px;color:var(--muted)">Rate: <b style="color:var(--text)">₹90 / USDT</b> &nbsp;•&nbsp; Min: <b style="color:var(--text)">0.1 USDT</b> &nbsp;•&nbsp; Expiry 30 min • Auto sweep every 60s in bot (website verifies on demand).</div>
         </div>
       </div>
 
       <div class="panel" style="margin-top:18px">
         <div class="panel-head">
-          <div class="panel-title">📡 TG-Lion — Country Provider</div>
+          <div class="panel-title"><svg class=icon aria-hidden=true><use href=/icons.svg#i-server></use></svg> TG-Lion — Country Provider</div>
           <div class="muted" style="font-size:12px">TG-Lion is the only provider used by the website</div>
         </div>
         <div style="padding:18px;display:grid;gap:16px">
@@ -1309,7 +1334,7 @@ tbody tr:hover{
       </div>
 
       <!-- ============ API KEYS (all users) ============ -->
-      <div class="page-title" style="margin-top:26px">🔑 API Keys</div>
+      <div class="page-title" style="margin-top:26px"><svg class=icon aria-hidden=true><use href=/icons.svg#i-key></use></svg> API Keys</div>
       <div class="page-sub">Every API key created by every user — who made it, the full key, how many keys that user has, and how many requests it has used.</div>
 
       <div class="panel" style="margin-bottom:18px">
@@ -1317,7 +1342,7 @@ tbody tr:hover{
           <div class="panel-title">API Keys (all users)</div>
           <div class="panel-tools">
             <span id="apiKeysSummary" class="pill pill-success" style="margin-right:8px">—</span>
-            <button class="tool-btn" type="button" onclick="loadAdminApiKeys()">↻ Reload</button>
+            <button class="tool-btn" type="button" onclick="loadAdminApiKeys()"><svg class=icon aria-hidden=true><use href=/icons.svg#i-refresh></use></svg> Reload</button>
           </div>
         </div>
         <div class="table-wrap">
@@ -1343,22 +1368,22 @@ tbody tr:hover{
 
       <div class="settings-shortcuts" aria-label="Admin tools">
         <button class="settings-shortcut" type="button" onclick="switchTab('orders')">
-          <span class="settings-shortcut-icon">🛒</span>
+          <span class="settings-shortcut-icon"><svg class=icon aria-hidden=true><use href=/icons.svg#i-cart></use></svg></span>
           <span><strong>Order monitoring</strong><small>Review deliveries and OTP status</small></span>
           <b>›</b>
         </button>
         <button class="settings-shortcut" type="button" onclick="switchTab('users')">
-          <span class="settings-shortcut-icon">👥</span>
+          <span class="settings-shortcut-icon"><svg class=icon aria-hidden=true><use href=/icons.svg#i-users></use></svg></span>
           <span><strong>User directory</strong><small>Search users, balances and activity</small></span>
           <b>›</b>
         </button>
         <button class="settings-shortcut" type="button" onclick="switchTab('logs')">
-          <span class="settings-shortcut-icon">📋</span>
+          <span class="settings-shortcut-icon"><svg class=icon aria-hidden=true><use href=/icons.svg#i-copy></use></svg></span>
           <span><strong>Activity logs</strong><small>View logins, purchases and failures</small></span>
           <b>›</b>
         </button>
         <button class="settings-shortcut logout-shortcut" type="button" onclick="handleLogout()">
-          <span class="settings-shortcut-icon">🚪</span>
+          <span class="settings-shortcut-icon"><svg class=icon aria-hidden=true><use href=/icons.svg#i-logout></use></svg></span>
           <span><strong>Logout</strong><small>End this session and return to the login page</small></span>
           <b>›</b>
         </button>
@@ -1367,13 +1392,13 @@ tbody tr:hover{
 
     <!-- ============ RECHARGE (dedicated tab) ============ -->
     <section id="page-recharge" class="page">
-      <div class="page-title">🧾 Recharge Transactions</div>
+      <div class="page-title"><svg class=icon aria-hidden=true><use href=/icons.svg#i-receipt></use></svg> Recharge Transactions</div>
       <div class="page-sub">All wallet top-ups from UPI / Binance / Crypto — latest first.</div>
       <div class="panel">
         <div class="panel-head">
           <div class="panel-title">Recent Recharges</div>
           <div class="panel-tools">
-            <button class="tool-btn" type="button" onclick="loadRecharges()">↻ Reload</button>
+            <button class="tool-btn" type="button" onclick="loadRecharges()"><svg class=icon aria-hidden=true><use href=/icons.svg#i-refresh></use></svg> Reload</button>
           </div>
         </div>
         <div class="table-wrap">
@@ -1398,12 +1423,12 @@ tbody tr:hover{
 </div>
 
 <nav class="admin-bottom-nav" aria-label="Admin navigation">
-  <button class="admin-nav-btn active" data-tab="overview" type="button" onclick="switchTab('overview')"><span>◧</span>Overview</button>
-  <button class="admin-nav-btn" data-tab="logs" type="button" onclick="switchTab('logs')"><span>≡</span>Logs</button>
-  <button class="admin-nav-btn" data-tab="users" type="button" onclick="switchTab('users')"><span>👥</span>Users</button>
-  <button class="admin-nav-btn" data-tab="orders" type="button" onclick="switchTab('orders')"><span>🛒</span>Orders</button>
-  <button class="admin-nav-btn" data-tab="recharge" type="button" onclick="switchTab('recharge')"><span>💳</span>Recharge</button>
-  <button class="admin-nav-btn" data-tab="maintenance" type="button" onclick="switchTab('maintenance')"><span>⚙</span>Settings</button>
+  <button class="admin-nav-btn active" data-tab="overview" type="button" onclick="switchTab('overview')"><span><svg class="icon" aria-hidden="true"><use href="/icons.svg#i-chart"></use></svg></span>Overview</button>
+  <button class="admin-nav-btn" data-tab="logs" type="button" onclick="switchTab('logs')"><span><svg class="icon" aria-hidden="true"><use href="/icons.svg#i-note"></use></svg></span>Logs</button>
+  <button class="admin-nav-btn" data-tab="users" type="button" onclick="switchTab('users')"><span><svg class=icon aria-hidden=true><use href=/icons.svg#i-users></use></svg></span>Users</button>
+  <button class="admin-nav-btn" data-tab="orders" type="button" onclick="switchTab('orders')"><span><svg class=icon aria-hidden=true><use href=/icons.svg#i-cart></use></svg></span>Orders</button>
+  <button class="admin-nav-btn" data-tab="recharge" type="button" onclick="switchTab('recharge')"><span><svg class=icon aria-hidden=true><use href=/icons.svg#i-card></use></svg></span>Recharge</button>
+  <button class="admin-nav-btn" data-tab="maintenance" type="button" onclick="switchTab('maintenance')"><span><svg class=icon aria-hidden=true><use href=/icons.svg#i-settings></use></svg></span>Settings</button>
 </nav>
 
 <div id="toast" class="toast"></div>
@@ -1665,25 +1690,25 @@ function statCard(icon, label, value, tone){
 
 function renderOverviewStats(d){
   var html =
-    statCard("👥", "Total Users", d.totalUsers) +
-    statCard("🛒", "Total Orders", d.totalOrders) +
-    statCard("💰", "Revenue", inr(d.revenue), "revenue stat-tone-green") +
-    statCard("💸", "Total Recharged", inr(d.totalRecharge), "revenue stat-tone-blue") +
-    statCard("⏳", "Buying Now", d.inProgress, "stat-tone-yellow") +
-    statCard("✅", "Completed", d.completedOrders, "stat-tone-green") +
-    statCard("🔑", "Successful Logins", d.successfulLogins, "stat-tone-blue") +
-    statCard("❌", "Failed Logins", d.failedLogins, "stat-tone-red") +
-    statCard("🚫", "Failed Buys", d.failedBuys, "stat-tone-red");
+    statCard("<svg class=icon aria-hidden=true><use href=/icons.svg#i-users></use></svg>", "Total Users", d.totalUsers) +
+    statCard("<svg class=icon aria-hidden=true><use href=/icons.svg#i-cart></use></svg>", "Total Orders", d.totalOrders) +
+    statCard("<svg class=icon aria-hidden=true><use href=/icons.svg#i-coins></use></svg>", "Revenue", inr(d.revenue), "revenue stat-tone-green") +
+    statCard("<svg class=icon aria-hidden=true><use href=/icons.svg#i-coins></use></svg>", "Total Recharged", inr(d.totalRecharge), "revenue stat-tone-blue") +
+    statCard("<svg class=icon aria-hidden=true><use href=/icons.svg#i-note></use></svg>", "Buying Now", d.inProgress, "stat-tone-yellow") +
+    statCard("<svg class=icon aria-hidden=true><use href=/icons.svg#i-check-circle></use></svg>", "Completed", d.completedOrders, "stat-tone-green") +
+    statCard("<svg class=icon aria-hidden=true><use href=/icons.svg#i-key></use></svg>", "Successful Logins", d.successfulLogins, "stat-tone-blue") +
+    statCard("<svg class=icon aria-hidden=true><use href=/icons.svg#i-x-circle></use></svg>", "Failed Logins", d.failedLogins, "stat-tone-red") +
+    statCard("<svg class=icon aria-hidden=true><use href=/icons.svg#i-ban></use></svg>", "Failed Buys", d.failedBuys, "stat-tone-red");
 
   document.getElementById("overviewStats").innerHTML = html;
 }
 
 function eventIcon(type, status){
-  if(status === "failed"){ return "✕"; }
-  if(type === "login"){ return "🔑"; }
-  if(type === "buy"){ return "🛒"; }
-  if(type === "otp"){ return "📩"; }
-  if(type === "recharge"){ return "💰"; }
+  if(status === "failed"){ return "<svg class=icon aria-hidden=true><use href=/icons.svg#i-x></use></svg>"; }
+  if(type === "login"){ return "<svg class=icon aria-hidden=true><use href=/icons.svg#i-key></use></svg>"; }
+  if(type === "buy"){ return "<svg class=icon aria-hidden=true><use href=/icons.svg#i-cart></use></svg>"; }
+  if(type === "otp"){ return "<svg class=icon aria-hidden=true><use href=/icons.svg#i-inbox></use></svg>"; }
+  if(type === "recharge"){ return "<svg class=icon aria-hidden=true><use href=/icons.svg#i-coins></use></svg>"; }
   return "•";
 }
 
@@ -1712,7 +1737,7 @@ function renderFeed(logs){
   var box = document.getElementById("recentFeed");
 
   if(!logs.length){
-    box.innerHTML = '<div class="empty"><span class="big">📭</span>No activity recorded yet.</div>';
+    box.innerHTML = '<div class="empty"><span class="big"><svg class=icon aria-hidden=true><use href=/icons.svg#i-inbox></use></svg></span>No activity recorded yet.</div>';
     return;
   }
 
@@ -1744,7 +1769,7 @@ async function loadLogs(){
     var body = document.getElementById("logsBody");
 
     if(!logs.length){
-      body.innerHTML = '<tr><td colspan="5"><div class="empty"><span class="big">📭</span>No logs found.</div></td></tr>';
+      body.innerHTML = '<tr><td colspan="5"><div class="empty"><span class="big"><svg class=icon aria-hidden=true><use href=/icons.svg#i-inbox></use></svg></span>No logs found.</div></td></tr>';
       return;
     }
 
@@ -1752,8 +1777,8 @@ async function loadLogs(){
       var who = log.username || (log.user_id != null ? "ID " + log.user_id : "Guest");
       var details = [];
 
-      if(log.country){ details.push("🌍 " + log.country); }
-      if(log.number){ details.push("📱 " + log.number); }
+      if(log.country){ details.push("<svg class=icon aria-hidden=true><use href=/icons.svg#i-globe></use></svg> " + log.country); }
+      if(log.number){ details.push("<svg class=icon aria-hidden=true><use href=/icons.svg#i-phone></use></svg> " + log.number); }
       if(log.message){ details.push(log.message); }
 
       return '<tr>' +
@@ -1808,7 +1833,7 @@ async function loadAdminApiKeys(){
     }
 
     if(!keys.length){
-      body.innerHTML = '<tr><td colspan="6"><div class="empty"><span class="big">🔑</span>No API keys created yet.</div></td></tr>';
+      body.innerHTML = '<tr><td colspan="6"><div class="empty"><span class="big"><svg class=icon aria-hidden=true><use href=/icons.svg#i-key></use></svg></span>No API keys created yet.</div></td></tr>';
       return;
     }
 
@@ -1824,7 +1849,7 @@ async function loadAdminApiKeys(){
 
       return '<tr>' +
         '<td><span class="strong">' + who + '</span>' + (sub.length ? '<br><span class="mono muted" style="font-size:11px">' + sub.join(" · ") + '</span>' : "") + '</td>' +
-        '<td><span class="key-id">' + esc(k.key) + '</span> <button class="tool-btn" type="button" style="padding:3px 9px;font-size:11px" onclick="copyText(\'' + esc(k.key) + '\')">📋</button></td>' +
+        '<td><span class="key-id">' + esc(k.key) + '</span> <button class="tool-btn" type="button" style="padding:3px 9px;font-size:11px" onclick="copyText(\'' + esc(k.key) + '\')"><svg class=icon aria-hidden=true><use href=/icons.svg#i-copy></use></svg></button></td>' +
         '<td>' + (k.user_keys > 1 ? '<span class="pill pill-login">' + k.user_keys + ' keys</span>' : '1 key') + '</td>' +
         '<td>' + (k.requests ? '<span class="pill ' + (k.requests > 50 ? "pill-success" : "pill-waiting") + '">' + k.requests + '</span>' : "0") + '</td>' +
         '<td class="muted">' + esc(fmtDate(k.created_at)) + '</td>' +
@@ -1849,7 +1874,7 @@ async function loadUsers(){
     var body = document.getElementById("usersBody");
 
     if(!users.length){
-      body.innerHTML = '<tr><td colspan="9"><div class="empty"><span class="big">👥</span>No users found.</div></td></tr>';
+      body.innerHTML = '<tr><td colspan="9"><div class="empty"><span class="big"><svg class=icon aria-hidden=true><use href=/icons.svg#i-users></use></svg></span>No users found.</div></td></tr>';
       return;
     }
 
@@ -1888,7 +1913,7 @@ async function loadOrders(){
     var body = document.getElementById("ordersBody");
 
     if(!orders.length){
-      body.innerHTML = '<tr><td colspan="7"><div class="empty"><span class="big">🛒</span>No orders yet.</div></td></tr>';
+      body.innerHTML = '<tr><td colspan="7"><div class="empty"><span class="big"><svg class=icon aria-hidden=true><use href=/icons.svg#i-cart></use></svg></span>No orders yet.</div></td></tr>';
       return;
     }
 
@@ -1972,7 +1997,7 @@ async function toggleMaintenance(){
 
     maintenanceState = result.maintenance;
     renderMaintenance();
-    showToast(next ? "🛠️ Store is now under maintenance." : "✅ Store is back live.");
+    showToast(next ? "<svg class=icon aria-hidden=true><use href=/icons.svg#i-settings></use></svg> Store is now under maintenance." : "<svg class=icon aria-hidden=true><use href=/icons.svg#i-check-circle></use></svg> Store is back live.");
   }catch(error){
     console.error("Toggle:", error);
     showToast(error.message || "Could not toggle maintenance.", true);
@@ -1994,7 +2019,7 @@ async function saveMaintenanceMessage(){
 
     maintenanceState = result.maintenance;
     renderMaintenance();
-    showToast("💾 Maintenance message saved.");
+    showToast("<svg class=icon aria-hidden=true><use href=/icons.svg#i-save></use></svg> Maintenance message saved.");
   }catch(error){
     console.error("Save message:", error);
     showToast(error.message || "Could not save message.", true);
@@ -2051,7 +2076,7 @@ async function loadPayments(){
     var bi = document.getElementById("binanceInfo");
     if(bi){
       bi.innerHTML = binance.pay_id
-        ? 'Pay ID: <code style="user-select:all">' + esc(binance.pay_id) + '</code> <button class="tool-btn" style="padding:4px 10px;font-size:12px" type="button" data-v="' + esc(binance.pay_id) + '" onclick="copyText(this.dataset.v)">📋 Copy</button>' + (binance.qr_url ? " • QR configured" : " • No QR")
+        ? 'Pay ID: <code style="user-select:all">' + esc(binance.pay_id) + '</code> <button class="tool-btn" style="padding:4px 10px;font-size:12px" type="button" data-v="' + esc(binance.pay_id) + '" onclick="copyText(this.dataset.v)"><svg class=icon aria-hidden=true><use href=/icons.svg#i-copy></use></svg> Copy</button>' + (binance.qr_url ? " • QR configured" : " • No QR")
         : "Binance env not set (BINANCE_PAY_ID / BINANCE_QR_URL)";
     }
     var qp = document.getElementById("binanceQrPreview");
@@ -2069,15 +2094,15 @@ async function loadPayments(){
       var fampayUpi = result.fampay_upi || "";
       var defGw = result.default_inr_gateway || "upi";
       if(upiId){
-        rows.push('<div><b>UPI ID:</b> <code style="user-select:all">' + esc(upiId) + '</code> <button class="tool-btn" style="padding:4px 10px;font-size:12px" type="button" data-v="' + esc(upiId) + '" onclick="copyText(this.dataset.v)">📋 Copy</button> <span class="muted">(env UPI_ID)</span></div>');
+        rows.push('<div><b>UPI ID:</b> <code style="user-select:all">' + esc(upiId) + '</code> <button class="tool-btn" style="padding:4px 10px;font-size:12px" type="button" data-v="' + esc(upiId) + '" onclick="copyText(this.dataset.v)"><svg class=icon aria-hidden=true><use href=/icons.svg#i-copy></use></svg> Copy</button> <span class="muted">(env UPI_ID)</span></div>');
       }
       if(fampayUpi){
-        rows.push('<div><b>FamPay UPI:</b> <code style="user-select:all">' + esc(fampayUpi) + '</code> <button class="tool-btn" style="padding:4px 10px;font-size:12px" type="button" data-v="' + esc(fampayUpi) + '" onclick="copyText(this.dataset.v)">📋 Copy</button> <span class="muted">(env FAMPAY_UPI)</span></div>');
+        rows.push('<div><b>FamPay UPI:</b> <code style="user-select:all">' + esc(fampayUpi) + '</code> <button class="tool-btn" style="padding:4px 10px;font-size:12px" type="button" data-v="' + esc(fampayUpi) + '" onclick="copyText(this.dataset.v)"><svg class=icon aria-hidden=true><use href=/icons.svg#i-copy></use></svg> Copy</button> <span class="muted">(env FAMPAY_UPI)</span></div>');
       }
       if(!rows.length){
-        rows.push('<div class="muted">⚠️ UPI ID / FamPay UPI not set — add <code>UPI_ID</code> and <code>FAMPAY_UPI</code> env vars (Bot Codes file / .env) to show copyable pay IDs to users.</div>');
+        rows.push('<div class="muted"><svg class=icon aria-hidden=true><use href=/icons.svg#i-alert></use></svg> UPI ID / FamPay UPI not set — add <code>UPI_ID</code> and <code>FAMPAY_UPI</code> env vars (Bot Codes file / .env) to show copyable pay IDs to users.</div>');
       }
-      rows.push('<div class="muted" style="margin-top:4px">Switch default from Bot Codes file: <code>config.py → DEFAULT_INR_GATEWAY = "' + esc(defGw) + '"</code> — override live with the buttons above.</div>');
+      rows.push('<div class="muted" style="margin-top:4px">Switch default from Bot Codes file: <code>config.py <svg class=icon aria-hidden=true><use href=/icons.svg#i-arrow-right></use></svg> DEFAULT_INR_GATEWAY = "' + esc(defGw) + '"</code> — override live with the buttons above.</div>');
       ids.innerHTML = rows.join("");
     }
 
@@ -2098,7 +2123,7 @@ async function setInrGateway(gw){
     });
     paymentsState = result.settings || {};
     var now = paymentsState.active_inr_gateway || "";
-    showToast(now ? "✅ INR gateway set to " + now.toUpperCase() + "." : "✅ INR gateway disabled.");
+    showToast(now ? "<svg class=icon aria-hidden=true><use href=/icons.svg#i-check-circle></use></svg> INR gateway set to " + now.toUpperCase() + "." : "<svg class=icon aria-hidden=true><use href=/icons.svg#i-check-circle></use></svg> INR gateway disabled.");
     loadPayments();
   }catch(error){
     console.error("Set gateway:", error);
@@ -2109,7 +2134,7 @@ async function setInrGateway(gw){
 function copyText(txt){
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(txt).then(function(){
-      showToast("📋 Copied: " + txt);
+      showToast("<svg class=icon aria-hidden=true><use href=/icons.svg#i-copy></use></svg> Copied: " + txt);
     }).catch(function(){
       fallbackCopy(txt);
     });
@@ -2125,7 +2150,7 @@ function fallbackCopy(txt){
   ta.style.opacity = "0";
   document.body.appendChild(ta);
   ta.select();
-  try{ document.execCommand("copy"); showToast("📋 Copied: " + txt); }
+  try{ document.execCommand("copy"); showToast("<svg class=icon aria-hidden=true><use href=/icons.svg#i-copy></use></svg> Copied: " + txt); }
   catch(e){ showToast("Could not copy.", true); }
   document.body.removeChild(ta);
 }
@@ -2149,7 +2174,7 @@ async function savePayments(){
       }
     });
     paymentsState = result.settings || {};
-    showToast("✅ Payment settings saved.");
+    showToast("<svg class=icon aria-hidden=true><use href=/icons.svg#i-check-circle></use></svg> Payment settings saved.");
     var toast = document.getElementById("paymentsToast");
     if(toast) toast.textContent = "Saved at " + fmtDate(new Date());
   }catch(error){
@@ -2198,7 +2223,7 @@ async function saveServer2(){
     // TG-Lion is the only provider — s2_api is always forced to tglion server-side
     var result = await api("server_config", { method: "POST", body: { s2_api: "tglion", s2_profit: profitVal } });
     var cfg = result.config || {};
-    showToast("✅ TG-Lion saved @ " + (cfg.s2_profit!=null?cfg.s2_profit:profitVal) + "%");
+    showToast("<svg class=icon aria-hidden=true><use href=/icons.svg#i-check-circle></use></svg> TG-Lion saved @ " + (cfg.s2_profit!=null?cfg.s2_profit:profitVal) + "%");
     var hint = document.getElementById("s2apiHint");
     if(hint) hint.textContent = "Saved: TG-LION • Profit " + (cfg.s2_profit!=null?cfg.s2_profit:profitVal) + "%";
     var toast = document.getElementById("server2Toast");
@@ -2257,8 +2282,8 @@ function renderThemes(){
       '<div class="theme-swatch">' + swatch + '</div>' +
       '<strong>' + esc(t.emoji || "") + ' ' + esc(t.name) + '</strong>' +
       '<small>' + esc(t.desc || "") + '</small>' +
-      (t.ui ? '<em class="theme-ui">🧩 ' + esc(t.ui) + '</em>' : '') +
-      '<span class="theme-preview" onclick="previewTheme(event,\'' + esc(t.id) + '\')">👁 Live preview</span>' +
+      (t.ui ? '<em class="theme-ui"><svg class=icon aria-hidden=true><use href=/icons.svg#i-puzzle></use></svg> ' + esc(t.ui) + '</em>' : '') +
+      '<span class="theme-preview" onclick="previewTheme(event,\'' + esc(t.id) + '\')"><svg class=icon aria-hidden=true><use href=/icons.svg#i-eye></use></svg> Live preview</span>' +
     '</div>';
   }).join("");
 
@@ -2282,7 +2307,7 @@ async function setTheme(id){
     var result = await api("theme", { method: "POST", body: { theme: id } });
     themesState = { theme: result.theme || "default", themes: result.themes || [] };
     renderThemes();
-    showToast("🎨 User store theme set to " + (result.theme || "default") + ".");
+    showToast("<svg class=icon aria-hidden=true><use href=/icons.svg#i-paint></use></svg> User store theme set to " + (result.theme || "default") + ".");
   }catch(error){
     console.error("Set theme:", error);
     showToast(error.message || "Could not set theme.", true);
@@ -2299,7 +2324,7 @@ async function loadRecharges(){
     var result = await api("recharges");
     var list = (result.data && result.data.recharges) || [];
     if(!list.length){
-      body.innerHTML = '<tr><td colspan="6"><div class="empty"><span class="big">🧾</span>No recharges yet.</div></td></tr>';
+      body.innerHTML = '<tr><td colspan="6"><div class="empty"><span class="big"><svg class=icon aria-hidden=true><use href=/icons.svg#i-receipt></use></svg></span>No recharges yet.</div></td></tr>';
       return;
     }
     body.innerHTML = list.map(function(r){

@@ -5,7 +5,7 @@
    button, web_app inline button, or a Mini App link) this script:
 
      1. asks Telegram for the signed `initData` (window.Telegram.WebApp),
-     2. posts it to /api/telegram → the server verifies the HMAC signature,
+     2. posts it to /api/telegram, where the server verifies the HMAC signature,
         finds/creates the user by numeric Telegram id and returns a session,
      3. stores that session exactly like a normal website login, so the ID,
         name, username, photo and balance are all filled in automatically,
@@ -112,6 +112,14 @@
 
       storeSession(data.token, data.user || {});
       try { sessionStorage.removeItem("tga_tg_reloaded"); } catch (e) {}
+
+      // Hand the profile to the page straight away so the dashboard can paint
+      // the avatar / name before /api/dashboard even answers.
+      window.__tgaTelegramUser = data.user || null;
+      try {
+        window.dispatchEvent(new CustomEvent("tga:telegram-auth", { detail: data.user || null }));
+      } catch (e) {}
+
       openDashboard(data.user || {});
     } catch (e) {
       fail((e && e.message) || String(e));
