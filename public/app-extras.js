@@ -1,7 +1,7 @@
 /* ==========================================================================
    TGA STORE — APP EXTRAS
    ==========================================================================
-   • Static system emoji (no Telegram premium IDs)
+   • Icon helpers (SVG sprite, no device emoji)
    • Header 3-dot menu
    • TGA Store API documentation — standalone page at /docs
    • Pricing modal
@@ -13,20 +13,28 @@
   "use strict";
 
   /* ----------------------------------------------------------------
-     1. STATIC EMOJI
+     1. ICON HELPERS
+     Everything drawn in this file comes from /icons.svg (loaded by
+     /icons.js) so the UI never falls back to OS emoji, which look
+     different on every phone and are missing on some Android builds.
      ---------------------------------------------------------------- */
-  // Telegram premium/custom emoji IDs are intentionally not used. Keep the
-  // public hook as a no-op for older dynamic UI calls.
-  function enhanceEmojis(root) {
-    // No premium/custom emoji any more: static system emoji render fine
-    // everywhere, so there is nothing to wrap. Kept as a function (instead of
-    // deleting the calls) because the MutationObserver below and older dynamic
-    // UI code call it on every render — it used to throw
-    // "ReferenceError: enhanceEmojis is not defined" on the first DOM update.
-    return root || null;
+  function iconHtml(name, cls) {
+    if (window.icon) return window.icon(name, cls || "sm");
+    // /icons.js missing (offline cache of an old page): render nothing rather
+    // than leaking an emoji or a broken glyph.
+    return "";
   }
 
-  window.TGA_EMOJI = { mount: function () {}, enhance: enhanceEmojis };
+  // Country flags are inline SVG generated from the ISO code (see /icons.js).
+  function flagHtmlFor(name, code) {
+    if (window.flagSvg) return window.flagSvg(code || name, "xs");
+    return "";
+  }
+
+  // Kept for backwards compatibility: older dynamic UI code calls this after
+  // every render. There is no emoji pass any more, so it is a cheap no-op.
+  window.TGA_EMOJI = { mount: function () {}, enhance: function () {} };
+  window.enhanceDynamicEmojis = function () {};
 
   /* ----------------------------------------------------------------
      2. HEADER 3-DOT MENU
@@ -96,78 +104,30 @@
         .sort(function (a, b) { return Number(a.price || 0) - Number(b.price || 0); });
 
       if (!rows.length) {
-        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--muted)">No countries available right now.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--muted)">' + iconHtml("info") + ' No countries available right now.</td></tr>';
         return;
       }
       tbody.innerHTML = rows.map(function (c) {
-        const name = escapeHtml(String(c.name || c.code));
+        const name = String(c.name || c.code || "");
+        const cleanName = window.stripEmoji ? window.stripEmoji(name) : name;
         const price = Number(c.price || 0);
         return (
           "<tr>" +
-          '<td><span class="pricing-flag">' + flagEmojiOf(String(c.name || ""), String(c.code || "")) + "</span>" + name + "</td>" +
+          '<td><span class="pricing-flag">' + flagHtmlFor(name, String(c.code || "")) + "</span>" + escapeHtml(cleanName) + "</td>" +
           '<td class="pricing-price">$' + price.toFixed(2) + "</td>" +
           '<td class="pricing-stock">' + Number(c.qty || 0) + " available</td>" +
           "</tr>"
         );
       }).join("");
     } catch (e) {
-      tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--muted)">Could not load pricing. Try again.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--muted)">' + iconHtml("alert") + ' Could not load pricing. Try again.</td></tr>';
     }
   };
-
-  function flagEmojiOf(name, code) {
-    const m = String(name || "").match(/[\u{1F1E6}-\u{1F1FF}]{2}/u);
-    if (m) return m[0];
-    const c = String(code || "").toUpperCase();
-    if (/^[A-Z]{2}$/.test(c)) {
-      return String.fromCodePoint(
-        ...[...c].map(function (ch) { return 0x1f1e6 + ch.charCodeAt(0) - 65; })
-      );
-    }
-    return "";
-  }
 
   /* ----------------------------------------------------------------
-     6. AUTO-ENHANCE DYNAMIC CONTENT
-     A debounced MutationObserver keeps every freshly rendered section
-     (orders, account info, recharge invoices, toasts…) animated — the
-     same engine runs over text nodes and wraps emoji in .tga-emoji spans.
+     6. DYNAMIC CONTENT
+     Nothing to re-decorate any more: rendered HTML already contains the
+     sprite icons, so there is no post-render emoji pass and no observer
+     re-scanning the DOM on every update.
      ---------------------------------------------------------------- */
-  const origShowMessage = window.showMessage;
-  if (typeof origShowMessage === "function") {
-    window.showMessage = function (title, text) {
-      origShowMessage(title, text);
-      setTimeout(function () {
-        const t = document.getElementById("messageTitle");
-        const x = document.getElementById("messageText");
-        if (window.TGA_EMOJI) {
-          if (t) window.TGA_EMOJI.enhance(t);
-          if (x) window.TGA_EMOJI.enhance(x);
-        }
-      }, 30);
-    };
-  }
-
-  if (typeof window.MutationObserver === "function") {
-    const observer = new MutationObserver(function (mutations) {
-      let any = false;
-      for (const m of mutations) {
-        if (m.type === "childList" && m.addedNodes && m.addedNodes.length) {
-          any = true;
-          break;
-        }
-      }
-      if (!any) return;
-      clearTimeout(window.__tgaEmojiT);
-      window.__tgaEmojiT = setTimeout(function () {
-        enhanceEmojis(document.body);
-      }, 120);
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-  }
-
-  window.enhanceDynamicEmojis = function (selector) {
-    const root = selector ? document.querySelector(selector) : document.body;
-    if (root) enhanceEmojis(root);
-  };
 })();

@@ -12,6 +12,7 @@
 
 <!-- Telegram Mini App: lets /docs sign the user in automatically too -->
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="/icons.js"></script>
 
 <style>
 /* ==========================================================================
@@ -507,6 +508,13 @@ tbody td.muted{
   color:#ffd777;
 }
 
+.hint-icon{
+  flex:0 0 auto;
+  color:#ffd777;
+  display:inline-flex;
+  margin-top:1px;
+}
+
 .key-list{
   display:flex;
   flex-direction:column;
@@ -832,8 +840,8 @@ tbody td.muted{
 <body>
 
 <header class="topbar">
-  <a class="topbar-back" href="/">← Store</a>
-  <div class="topbar-title">📖 TGA Store API</div>
+  <a class="topbar-back" href="/"><svg class="icon xs" aria-hidden="true"><use href="/icons.svg#i-arrow-left"></use></svg> Store</a>
+  <div class="topbar-title"><svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-code"></use></svg> TGA Store API</div>
   <div class="topbar-session" id="sessionPill">
     <span class="dot"></span>
     <span id="sessionText">Checking…</span>
@@ -877,7 +885,7 @@ tbody td.muted{
     <!-- --------------------------------------------------------- keys -->
     <section class="card" id="keys">
       <div class="card-head">
-        <h2>🔑 Your API key</h2>
+        <h2><svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-key"></use></svg> Your API key</h2>
       </div>
 
       <!-- logged out -->
@@ -887,7 +895,7 @@ tbody td.muted{
           to create one.
         </p>
         <div class="hint">
-          <span>💡</span>
+          <span class="hint-icon"><svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-bulb"></use></svg></span>
           <span>
             <b>Opened from the Telegram bot?</b> Sign-in is automatic — just
             reopen this page from the bot's menu. On the website, log in once
@@ -919,7 +927,7 @@ tbody td.muted{
     <!-- --------------------------------------------------------- quickstart -->
     <section class="card" id="quickstart">
       <div class="card-head">
-        <h2>⚡ Quick start</h2>
+        <h2><svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-bolt"></use></svg> Quick start</h2>
       </div>
       <p>
         Every call is the same shape: the base URL plus <code>action</code>,
@@ -987,8 +995,8 @@ tbody td.muted{
   "status": "ok",
   "total": 148,
   "countries": {
-    "ID": { "name": "Indonesia 🇮🇩", "code_Num": "", "code": "ID", "qty": 512, "price": "0.31" },
-    "UA": { "name": "Ukraine 🇺🇦", "code_Num": "", "code": "UA", "qty": 425, "price": "1.50" }
+    "ID": { "name": "Indonesia", "code_Num": "", "code": "ID", "qty": 512, "price": "0.31" },
+    "UA": { "name": "Ukraine", "code_Num": "", "code": "UA", "qty": 425, "price": "1.50" }
   }
 }</pre>
       </div>
@@ -1027,7 +1035,7 @@ tbody td.muted{
       <div class="code-block">
         <pre>{
   "status": "ok",
-  "name": "Indonesia 🇮🇩",
+  "name": "Indonesia",
   "code_Num": "",
   "code": "ID",
   "qty": 512,
@@ -1105,7 +1113,7 @@ tbody td.muted{
       <div class="code-block">
         <pre>{
   "status": "ok",
-  "name": "Indonesia 🇮🇩",
+  "name": "Indonesia",
   "Number": "+6281234567890",
   "price": "0.37",
   "new_balance": "11.97",
@@ -1197,7 +1205,7 @@ tbody td.muted{
     <!-- --------------------------------------------------------- logs -->
     <section class="card" id="logs">
       <div class="card-head">
-        <h2>📊 Request logs</h2>
+        <h2><svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-chart"></use></svg> Request logs</h2>
       </div>
       <p>
         The last requests made with your keys — action, parameters, status and
@@ -1211,7 +1219,7 @@ tbody td.muted{
     <!-- --------------------------------------------------------- tester -->
     <section class="card" id="tester">
       <div class="card-head">
-        <h2>🧪 Test area</h2>
+        <h2><svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-flask"></use></svg> Test area</h2>
       </div>
       <p>
         Runs a real request against the live API with your key. Buying a number
@@ -1219,7 +1227,7 @@ tbody td.muted{
       </p>
 
       <div class="hint" style="margin:0 0 4px">
-        <span>💡</span>
+        <span class="hint-icon"><svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-bulb"></use></svg></span>
         <span>
           Keys you generate above are filled in here automatically. The same
           request works from cURL, Postman or any script — copy the URL.

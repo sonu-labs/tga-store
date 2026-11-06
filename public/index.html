@@ -17,6 +17,9 @@
 -->
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
+<!-- Icon sprite helpers: icon()/flagSvg()/stripEmoji() — no device emoji -->
+<script src="/icons.js"></script>
+
 <style>
 *{
   box-sizing:border-box;
@@ -98,78 +101,370 @@ button:disabled{
 }
 
 /* ==================================================
-   LOGIN
+   ICONS (SVG sprite — no device emoji)
+================================================== */
+
+.icon{
+  width:20px;
+  height:20px;
+  flex:0 0 auto;
+  display:inline-block;
+  vertical-align:-.18em;
+  color:currentColor;
+  pointer-events:none;
+}
+
+.icon.xs{ width:14px; height:14px; }
+.icon.sm{ width:16px; height:16px; }
+.icon.lg{ width:24px; height:24px; }
+.icon.xl{ width:30px; height:30px; }
+
+/* Flag rendered as inline SVG (see /icons.js) */
+.flag{
+  width:34px;
+  height:23px;
+  flex:0 0 auto;
+  display:block;
+  border-radius:5px;
+  box-shadow:0 0 0 1px rgba(255,255,255,.10);
+}
+
+body.light .flag{
+  box-shadow:0 0 0 1px rgba(0,0,0,.10);
+}
+
+.flag.sm{ width:24px; height:16px; border-radius:4px; }
+.flag.xs{ width:20px; height:14px; border-radius:3px; }
+
+/* ==================================================
+   LOGIN  ·  split hero layout
 ================================================== */
 
 #loginScreen{
+  position:relative;
   min-height:100vh;
   min-height:100dvh;
+  display:grid;
+  grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);
+  align-items:center;
+  gap:0;
+  padding:0;
+  overflow:hidden;
+  isolation:isolate;
+}
+
+/* ambient light — static (no animation) so it can never cause repaints */
+#loginScreen::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-2;
+  background:
+    radial-gradient(900px 520px at 8% -12%,rgba(var(--green-rgb),.16),transparent 62%),
+    radial-gradient(700px 520px at 108% 110%,rgba(56,148,255,.13),transparent 60%),
+    radial-gradient(680px 420px at 62% 46%,rgba(120,86,255,.10),transparent 70%);
+}
+
+/* faint engineering grid */
+#loginScreen::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  background-image:
+    linear-gradient(rgba(255,255,255,.028) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.028) 1px,transparent 1px);
+  background-size:56px 56px;
+  -webkit-mask-image:radial-gradient(ellipse 80% 70% at 30% 40%,#000 20%,transparent 78%);
+  mask-image:radial-gradient(ellipse 80% 70% at 30% 40%,#000 20%,transparent 78%);
+  pointer-events:none;
+}
+
+body.light #loginScreen::after{
+  background-image:
+    linear-gradient(rgba(0,0,0,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,0,0,.05) 1px,transparent 1px);
+}
+
+/* ------------------------------------------------ left: brand / pitch */
+
+.login-hero{
+  min-width:0;
+  padding:64px 56px;
+  display:flex;
+  flex-direction:column;
+  gap:26px;
+}
+
+.login-hero-brand{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+
+.login-hero-logo{
+  width:52px;
+  height:52px;
+  border-radius:15px;
+  object-fit:cover;
+  background:#0b0b0b;
+  box-shadow:0 0 0 1px rgba(255,255,255,.10),0 10px 30px rgba(0,0,0,.45);
+}
+
+.login-hero-brand-text{
+  display:flex;
+  flex-direction:column;
+  line-height:1.15;
+}
+
+.login-hero-brand-text b{
+  font-size:17px;
+  font-weight:850;
+  letter-spacing:.3px;
+}
+
+.login-hero-brand-text span{
+  font-size:11px;
+  letter-spacing:2.4px;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-top:3px;
+}
+
+.login-hero h1{
+  margin:0;
+  font-size:clamp(28px,3.6vw,44px);
+  line-height:1.1;
+  font-weight:880;
+  letter-spacing:-1px;
+  max-width:20ch;
+}
+
+.login-hero h1 em{
+  font-style:normal;
+  background:linear-gradient(92deg,var(--green),#6ee7b7 40%,#62b6ff);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+
+.login-hero p{
+  margin:0;
+  color:var(--muted);
+  font-size:14.5px;
+  line-height:1.65;
+  max-width:44ch;
+}
+
+.login-points{
+  display:grid;
+  gap:12px;
+  margin:4px 0 0;
+  padding:0;
+  list-style:none;
+  max-width:46ch;
+}
+
+.login-points li{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  font-size:13.5px;
+  color:var(--text);
+}
+
+.login-points .point-icon{
+  width:34px;
+  height:34px;
+  flex:0 0 34px;
+  border-radius:11px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--green);
+  background:rgba(var(--green-rgb),.10);
+  box-shadow:inset 0 0 0 1px rgba(var(--green-rgb),.22);
+}
+
+.login-trust{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:auto;
+  padding-top:14px;
+  color:var(--soft);
+  font-size:12px;
+}
+
+.login-trust .icon{
+  color:var(--green);
+}
+
+/* ------------------------------------------------ right: auth card */
+
+.login-panel{
+  min-width:0;
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:22px;
+  padding:44px 40px;
 }
 
 .login-card{
+  position:relative;
   width:100%;
-  max-width:390px;
-  background:var(--surface);
+  max-width:432px;
+  background:color-mix(in srgb,var(--surface) 88%,transparent);
   border:1px solid var(--border);
-  border-radius:25px;
-  padding:34px 27px;
+  border-radius:26px;
+  padding:30px 28px 26px;
   text-align:center;
-  box-shadow:0 25px 80px rgba(0,0,0,.35);
+  box-shadow:0 34px 90px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.05);
+  -webkit-backdrop-filter:blur(22px);
+  backdrop-filter:blur(22px);
 }
 
-.login-logo{
-  width:90px;
-  height:90px;
-  object-fit:cover;
-  object-position:center;
-  margin-bottom:12px;
-  border-radius:50%;
-  background:#fff;
-  box-shadow:0 0 0 2px var(--border);
+@supports not (background:color-mix(in srgb,red 50%,blue)){
+  .login-card{ background:var(--surface); }
 }
 
-body.light .login-logo{
-  background:#fff;
-  box-shadow:0 0 0 2px rgba(17,17,17,.08), 0 8px 22px rgba(0,0,0,.08);
+body.light .login-card{
+  box-shadow:0 30px 70px rgba(0,0,0,.10),inset 0 1px 0 #fff;
 }
 
+.login-card-head{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:4px;
+  margin-bottom:20px;
+}
+
+/* brand title / sub are reused by other screens */
 .brand-title{
-  font-size:27px;
+  font-size:22px;
   font-weight:850;
-  letter-spacing:1px;
+  letter-spacing:4px;
 }
 
 .brand-sub{
   color:var(--muted);
-  font-size:11px;
-  letter-spacing:2px;
-  margin-top:4px;
+  font-size:10.5px;
+  letter-spacing:2.6px;
+  margin-top:2px;
   text-transform:uppercase;
 }
 
-.welcome-text{
-  text-align:left;
-  font-size:20px;
-  font-weight:800;
-  margin-top:30px;
+/* ------------------------------------------------ tabs */
+
+.auth-tabs{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:4px;
+  padding:4px;
+  border-radius:13px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  margin-bottom:18px;
 }
 
-.welcome-sub{
-  text-align:left;
+.auth-tab{
+  border:0;
+  background:transparent;
   color:var(--muted);
+  border-radius:10px;
+  padding:10px 12px;
   font-size:13px;
-  margin:5px 0 22px;
+  font-weight:800;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  transition:background .16s ease,color .16s ease,box-shadow .16s ease;
 }
+
+.auth-tab:hover{
+  color:var(--text);
+}
+
+.auth-tab.active{
+  background:var(--bg);
+  color:var(--text);
+  box-shadow:0 1px 0 rgba(255,255,255,.05),0 6px 16px rgba(0,0,0,.35);
+}
+
+body.light .auth-tab.active{
+  background:#fff;
+  box-shadow:0 4px 14px rgba(0,0,0,.08);
+}
+
+/* ------------------------------------------------ method switch */
+
+.method-switch{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+  margin-bottom:16px;
+}
+
+.method-btn{
+  border:1px solid var(--border);
+  background:transparent;
+  color:var(--muted);
+  border-radius:12px;
+  padding:11px 6px;
+  font-size:12px;
+  font-weight:700;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+  transition:border-color .16s ease,color .16s ease,background .16s ease;
+}
+
+.method-btn:hover{
+  color:var(--text);
+  border-color:#3a3a3a;
+}
+
+.method-btn.active{
+  color:var(--text);
+  border-color:rgba(var(--green-rgb),.55);
+  background:rgba(var(--green-rgb),.10);
+}
+
+.method-btn.active .icon{
+  color:var(--green);
+}
+
+/* ------------------------------------------------ fields */
 
 .field-label{
   text-align:left;
   color:var(--muted);
-  font-size:12px;
+  font-size:11.5px;
+  font-weight:700;
+  letter-spacing:.4px;
+  text-transform:uppercase;
   margin:14px 0 7px;
+}
+
+.field-shell{
+  position:relative;
+  display:flex;
+  align-items:center;
+}
+
+.field-shell > .icon{
+  position:absolute;
+  left:14px;
+  color:var(--soft);
+  transition:color .16s ease;
+}
+
+.field-shell:focus-within > .icon{
+  color:var(--green);
 }
 
 .field-input{
@@ -178,8 +473,14 @@ body.light .login-logo{
   color:var(--text);
   border:1px solid var(--border);
   border-radius:13px;
-  padding:14px;
+  padding:14px 14px 14px 42px;
   outline:none;
+  font-size:14px;
+  transition:border-color .16s ease,box-shadow .16s ease;
+}
+
+.field-input.no-icon{
+  padding-left:14px;
 }
 
 .field-input::placeholder{
@@ -187,8 +488,35 @@ body.light .login-logo{
 }
 
 .field-input:focus{
-  border-color:#777;
+  border-color:rgba(var(--green-rgb),.55);
+  box-shadow:0 0 0 3px rgba(var(--green-rgb),.12);
 }
+
+.field-trailing{
+  position:absolute;
+  right:8px;
+  width:34px;
+  height:34px;
+  border:0;
+  border-radius:9px;
+  background:transparent;
+  color:var(--muted);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+
+.field-trailing:hover{
+  color:var(--text);
+  background:rgba(255,255,255,.06);
+}
+
+.field-shell.has-trailing .field-input{
+  padding-right:46px;
+}
+
+/* ------------------------------------------------ buttons */
 
 .login-btn,
 .primary-btn{
@@ -196,27 +524,167 @@ body.light .login-logo{
   border:0;
   border-radius:14px;
   padding:15px;
-  margin-top:22px;
+  margin-top:20px;
   background:var(--btn);
   color:var(--btn-text);
   font-weight:800;
-  transition:.2s;
+  font-size:14.5px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  transition:transform .15s ease,opacity .15s ease,box-shadow .15s ease;
 }
 
 .login-btn:hover,
 .primary-btn:hover{
   transform:translateY(-1px);
+  box-shadow:0 12px 30px rgba(0,0,0,.35);
 }
 
 .login-btn:disabled{
   opacity:.55;
+  transform:none;
+}
+
+.btn-telegram{
+  width:100%;
+  margin-top:0;
+  border:1px solid rgba(56,148,255,.45);
+  background:linear-gradient(180deg,rgba(56,148,255,.20),rgba(56,148,255,.10));
+  color:#dbeafe;
+  border-radius:14px;
+  padding:14px;
+  font-weight:800;
+  font-size:14px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  text-decoration:none;
+  transition:border-color .16s ease,background .16s ease,transform .15s ease;
+}
+
+.btn-telegram:hover{
+  border-color:rgba(56,148,255,.75);
+  background:linear-gradient(180deg,rgba(56,148,255,.28),rgba(56,148,255,.14));
+  transform:translateY(-1px);
+}
+
+body.light .btn-telegram{
+  color:#1d4ed8;
+}
+
+.btn-telegram .icon{
+  color:#3b9bff;
+}
+
+.or-divider{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  color:var(--soft);
+  font-size:11.5px;
+  letter-spacing:.5px;
+  margin:16px 0 4px;
+}
+
+.or-divider::before,
+.or-divider::after{
+  content:"";
+  flex:1 1 auto;
+  height:1px;
+  background:var(--border);
 }
 
 .login-error{
   display:none;
   color:var(--red);
-  font-size:13px;
-  margin-top:12px;
+  font-size:12.5px;
+  text-align:left;
+  margin-top:14px;
+  padding:10px 12px;
+  border-radius:11px;
+  border:1px solid rgba(255,86,86,.28);
+  background:rgba(255,86,86,.08);
+  line-height:1.5;
+}
+
+.login-error:not(:empty){
+  display:block;
+}
+
+.login-foot{
+  margin-top:16px;
+  font-size:12px;
+  color:var(--muted);
+  line-height:1.6;
+}
+
+.login-foot a{
+  color:var(--text);
+  text-decoration:none;
+  border-bottom:1px solid rgba(255,255,255,.25);
+  padding-bottom:1px;
+}
+
+.login-foot a:hover{
+  border-color:var(--green);
+  color:var(--green);
+}
+
+/* ------------------------------------------------ responsive */
+
+@media (max-width:1000px){
+  #loginScreen{
+    grid-template-columns:minmax(0,1fr);
+    padding:0;
+  }
+
+  .login-hero{
+    display:none;
+  }
+
+  .login-panel{
+    padding:28px 18px 40px;
+    min-height:100dvh;
+    align-items:center;
+  }
+}
+
+@media (max-width:600px){
+  /* The API Docs pill would sit on top of the centred brand title on a narrow
+     card, so it shrinks to a tidy round icon button. */
+  .login-api-link{
+    gap:0;
+    width:38px;
+    height:38px;
+    padding:0;
+    justify-content:center;
+    font-size:0;
+    border-radius:50%;
+  }
+
+  .login-api-link .icon{
+    width:17px;
+    height:17px;
+  }
+
+  .login-card-head{
+    margin-top:6px;
+  }
+}
+
+@media (max-width:480px){
+  .login-card{
+    padding:26px 20px 22px;
+    border-radius:22px;
+  }
+
+  .brand-title{
+    font-size:20px;
+    letter-spacing:3px;
+  }
 }
 
 /* ==================================================
@@ -340,22 +808,170 @@ body.light .header-logo{
   font-size:15px;
 }
 
-/* Small chip under the welcome name showing the signed-in Telegram account.
-   Filled from the Mini App / login response so the id and @username are always
-   visible without opening Settings. */
+/* Welcome row: avatar + name + @handle (all filled from the Telegram profile) */
+.welcome-row{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  margin-top:6px;
+  margin-bottom:18px;
+  min-width:0;
+}
+
+.welcome-avatar{
+  position:relative;
+  width:62px;
+  height:62px;
+  flex:0 0 62px;
+  border-radius:50%;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(160deg,rgba(var(--green-rgb),.22),rgba(56,148,255,.18));
+  box-shadow:0 0 0 1px rgba(var(--green-rgb),.35),0 10px 26px rgba(0,0,0,.35);
+  font-weight:850;
+  font-size:19px;
+  letter-spacing:.5px;
+  color:var(--text);
+}
+
+.welcome-avatar img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+.welcome-avatar-fallback{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  height:100%;
+}
+
+.welcome-text-wrap{
+  min-width:0;
+}
+
+.welcome-handle{
+  color:var(--muted);
+  font-size:13.5px;
+  margin-top:2px;
+  word-break:break-word;
+}
+
+.welcome-handle .dot-sep{
+  color:var(--soft);
+  margin:0 7px;
+}
+
+/* Account strip under the welcome name: id, @username, photo, bot link.
+   Filled from the Mini App / login response so the details are always visible. */
 .tg-account{
   display:flex;
   align-items:center;
+  justify-content:space-between;
   flex-wrap:wrap;
-  gap:8px 14px;
-  margin:-18px 0 24px;
-  padding:10px 13px;
+  gap:12px 18px;
+  margin:-6px 0 24px;
+  padding:12px 14px;
   border:1px solid var(--border);
-  border-radius:14px;
-  background:var(--surface);
+  border-radius:16px;
+  background:linear-gradient(180deg,var(--surface2),var(--surface));
   font-size:12px;
   color:var(--muted);
   min-width:0;
+}
+
+.tg-account-main{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  min-width:0;
+}
+
+.tg-account-text{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  min-width:0;
+}
+
+.tg-account-text b{
+  color:var(--text);
+  font-size:13.5px;
+  font-weight:800;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  max-width:52vw;
+}
+
+#tgAccountVerified{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  color:var(--green);
+  font-size:11px;
+  font-weight:700;
+}
+
+.tg-account-meta{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.tg-meta-item{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:5px 9px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:var(--bg);
+  max-width:100%;
+}
+
+.tg-meta-item .icon{
+  color:var(--soft);
+}
+
+.tg-meta-item b{
+  color:var(--text);
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:11.5px;
+  font-weight:700;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  max-width:38vw;
+}
+
+.tg-account-open{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 11px;
+  border-radius:999px;
+  border:1px solid rgba(56,148,255,.4);
+  background:rgba(56,148,255,.12);
+  color:#cfe5ff;
+  font-size:11.5px;
+  font-weight:700;
+  text-decoration:none;
+  white-space:nowrap;
+}
+
+.tg-account-open:hover{
+  border-color:rgba(56,148,255,.8);
+}
+
+body.light .tg-account-open{
+  color:#1d4ed8;
 }
 
 .tg-account.hidden{
@@ -363,9 +979,9 @@ body.light .header-logo{
 }
 
 .tg-account-avatar{
-  width:30px;
-  height:30px;
-  flex:0 0 30px;
+  width:38px;
+  height:38px;
+  flex:0 0 38px;
   border-radius:50%;
   object-fit:cover;
   background:var(--surface2);
@@ -407,11 +1023,16 @@ body.light .header-logo{
 }
 
 .welcome-name{
-  font-size:38px;
-  font-weight:900;
-  margin-top:2px;
-  margin-bottom:28px;
+  font-size:clamp(24px,4.6vw,34px);
+  font-weight:880;
+  line-height:1.15;
+  margin:0;
+  letter-spacing:-.6px;
   word-break:break-word;
+}
+
+.welcome-row + .tg-account{
+  margin-top:0;
 }
 
 .announcement{
@@ -580,9 +1201,17 @@ body.light .header-logo{
 }
 
 .country-flag{
-  font-size:43px;
-  line-height:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   margin-bottom:12px;
+  line-height:1;
+}
+
+.country-flag .flag{
+  width:44px;
+  height:30px;
+  border-radius:7px;
 }
 
 .country-name{
@@ -806,6 +1435,7 @@ a.setting-item:hover{
   flex:0 0 40px;
   border-radius:12px;
   background:var(--surface2);
+  color:var(--text);
   display:flex;
   align-items:center;
   justify-content:center;
@@ -949,11 +1579,17 @@ body.light .bottom-nav{
 }
 
 .nav-icon{
-  font-size:22px;
-  line-height:1;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
   position:relative;
   z-index:1;
-  transition:filter .2s ease, text-shadow .2s ease;
+  transition:color .2s ease, filter .2s ease;
+}
+
+.nav-icon .icon{
+  width:23px;
+  height:23px;
 }
 
 .nav-btn.active{
@@ -1219,8 +1855,12 @@ body.light .nav-btn.active{
   }
 
   .country-flag{
-    font-size:32px;
     margin-bottom:9px;
+  }
+
+  .country-flag .flag{
+    width:36px;
+    height:25px;
   }
 
   .country-name{
@@ -1269,8 +1909,9 @@ body.light .nav-btn.active{
     min-height:60px;
   }
 
-  .nav-icon{
-    font-size:20px;
+  .nav-icon .icon{
+    width:21px;
+    height:21px;
   }
 
   .nav-btn{
@@ -1293,8 +1934,9 @@ body.light .nav-btn.active{
     padding:14px 5px;
   }
 
-  .country-flag{
-    font-size:28px;
+  .country-flag .flag{
+    width:32px;
+    height:22px;
   }
 
   .country-name{
@@ -1313,8 +1955,9 @@ body.light .nav-btn.active{
     font-size:9px;
   }
 
-  .nav-icon{
-    font-size:18px;
+  .nav-icon .icon{
+    width:19px;
+    height:19px;
   }
 }
 
@@ -1327,6 +1970,44 @@ body.light .nav-btn.active{
   align-items:center;
   gap:8px;
   margin-left:auto;
+}
+
+.header-avatar{
+  width:42px;
+  height:42px;
+  padding:0;
+  flex:0 0 42px;
+  border-radius:50%;
+  border:1px solid var(--border);
+  background:linear-gradient(160deg,rgba(var(--green-rgb),.22),rgba(56,148,255,.18));
+  color:var(--text);
+  font-size:13px;
+  font-weight:850;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:transform .15s ease, box-shadow .15s ease;
+}
+
+.header-avatar:hover{
+  transform:scale(1.05);
+  box-shadow:0 0 0 2px rgba(var(--green-rgb),.35);
+}
+
+.header-avatar img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+.header-avatar-fallback{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  height:100%;
 }
 
 .header-menu{
@@ -1381,11 +2062,15 @@ body.light .nav-btn.active{
   color:var(--muted);
 }
 
-.header-menu .tga-emoji{
-  font-size:18px;
-  width:24px;
-  text-align:center;
-  flex:0 0 24px;
+.header-menu .icon{
+  width:18px;
+  height:18px;
+  flex:0 0 18px;
+  color:var(--muted);
+}
+
+.header-menu button:hover .icon{
+  color:var(--green);
 }
 
 /* ==================================================
@@ -1393,9 +2078,9 @@ body.light .nav-btn.active{
 ================================================== */
 
 .login-api-link{
-  position:fixed;
-  top:calc(14px + env(safe-area-inset-top,0px));
-  right:14px;
+  position:absolute;
+  top:12px;
+  right:12px;
   z-index:60;
   display:flex;
   align-items:center;
@@ -1474,8 +2159,10 @@ body.light .nav-btn.active{
 }
 
 .pricing-flag{
-  font-size:17px;
-  margin-right:7px;
+  display:inline-flex;
+  align-items:center;
+  margin-right:8px;
+  vertical-align:-3px;
 }
 
 .pricing-price{
@@ -1489,48 +2176,12 @@ body.light .nav-btn.active{
   font-size:12.5px;
 }
 
-/* animated emoji */
-.tga-emoji{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  line-height:1;
-  vertical-align:-.12em;
-}
-
-.tga-emoji .tga-emoji-slot{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  line-height:1;
-}
-
-.tga-emoji .tga-emoji-slot svg{
-  display:block;
-  width:1em;
-  height:1em;
-}
-
-.tga-emoji-static{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  line-height:1;
-}
-
 /* ==================================================
    STORE THEMES (admin-selected)
-   Full-UI themes now live in /theme-ui.css — each one
+   Full-UI themes live in /theme-ui.css — each one
    rebuilds layout, shapes, fonts, buttons, animations
    and backgrounds, not just the palette. Applied as
-   body[data-theme="<id>"] (no attribute) keeps the
-   original TGA dark UI defined above.
-================================================== */
-
-   Full-UI themes now live in /theme-ui.css — each one
-   rebuilds layout, shapes, fonts, buttons, animations
-   and backgrounds, not just the palette. Applied as
-   body[data-theme="<id>"]. "default" (no attribute)
+   body[data-theme="<id>"]; "default" (no attribute)
    keeps the original TGA dark UI defined above.
 ================================================== */
 
@@ -1570,85 +2221,195 @@ body.light .nav-btn.active{
 
 <div id="loginScreen">
 
-  <button
-    class="login-api-link"
-    type="button"
-    onclick="openApiDocs()"
-  >
-    <span class="tga-emoji" data-emoji="📖">📖</span> API Docs
-  </button>
+  <!-- ------------------------------------------------ left: brand / pitch -->
+  <section class="login-hero">
 
-  <div class="login-card">
-
-    <img
-      class="login-logo"
-      src="/assets/logo.png"
-      alt="TGA Store"
-    >
-
-    <div class="brand-title">
-      TGA STORE
+    <div class="login-hero-brand">
+      <img class="login-hero-logo" src="/assets/logo.png" alt="TGA Store">
+      <div class="login-hero-brand-text">
+        <b>TGA Store</b>
+        <span>Telegram Account Store</span>
+      </div>
     </div>
 
-    <div class="brand-sub">
-      Telegram Account Store
+    <h1>Premium Telegram accounts, <em>delivered in seconds</em>.</h1>
+
+    <p>
+      Live stock from 250+ countries, instant OTP delivery and a wallet that
+      works with the same balance as our Telegram bot.
+    </p>
+
+    <ul class="login-points">
+      <li>
+        <span class="point-icon"><svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-bolt"></use></svg></span>
+        Instant OTP &amp; password in your dashboard
+      </li>
+      <li>
+        <span class="point-icon"><svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-shield"></use></svg></span>
+        Secure checkout, automatic refund on failure
+      </li>
+      <li>
+        <span class="point-icon"><svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-telegram"></use></svg></span>
+        One-tap sign-in inside the Telegram app
+      </li>
+    </ul>
+
+    <div class="login-trust">
+      <svg class="icon xs" aria-hidden="true"><use href="/icons.svg#i-lock"></use></svg>
+      Encrypted sessions · No card details stored
     </div>
 
-    <div style="display:flex;gap:8px;margin-top:22px">
-      <button id="tabLogin" type="button" onclick="switchAuthTab('login')" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-weight:800">Login</button>
-      <button id="tabRegister" type="button" onclick="switchAuthTab('register')" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted);font-weight:800">Register</button>
+  </section>
+
+  <!-- ------------------------------------------------ right: auth card -->
+  <section class="login-panel">
+
+    <div class="login-card">
+
+      <button class="login-api-link" type="button" aria-label="API documentation" onclick="openApiDocs()">
+        <svg class="icon xs" aria-hidden="true"><use href="/icons.svg#i-code"></use></svg>
+        API Docs
+      </button>
+
+      <div class="login-card-head">
+        <div class="brand-title">TGA STORE</div>
+        <div class="brand-sub">Sign in to continue</div>
+      </div>
+
+      <div class="auth-tabs" role="tablist" aria-label="Login or register">
+        <button id="tabLogin" class="auth-tab active" type="button" role="tab" aria-selected="true" onclick="switchAuthTab('login')">
+          <svg class="icon xs" aria-hidden="true"><use href="/icons.svg#i-logout"></use></svg> Login
+        </button>
+        <button id="tabRegister" class="auth-tab" type="button" role="tab" aria-selected="false" onclick="switchAuthTab('register')">
+          <svg class="icon xs" aria-hidden="true"><use href="/icons.svg#i-user"></use></svg> Register
+        </button>
+      </div>
+
+      <!-- ---------------------------------------- LOGIN FORM -->
+      <div id="loginFormArea" class="auth-panel">
+
+        <div class="method-switch" role="group" aria-label="Login method">
+          <button type="button" onclick="setLoginMethod('telegram')" id="lmTelegram" class="method-btn active">
+            <svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-telegram"></use></svg> Telegram
+          </button>
+          <button type="button" onclick="setLoginMethod('email')" id="lmEmail" class="method-btn">
+            <svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-mail"></use></svg> Email
+          </button>
+          <button type="button" onclick="setLoginMethod('phone')" id="lmPhone" class="method-btn">
+            <svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-phone"></use></svg> Phone
+          </button>
+        </div>
+
+        <div id="telegramLoginBox">
+          <a href="https://t.me/TGAStore1Bot?start=login" target="_blank" rel="noopener" class="btn-telegram">
+            <svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-telegram"></use></svg>
+            Continue with Telegram
+          </a>
+          <div class="or-divider">or use your Telegram ID</div>
+          <div class="field-label">Telegram User ID</div>
+          <div class="field-shell">
+            <svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-user"></use></svg>
+            <input id="telegramIdInput" class="field-input" type="text" inputmode="numeric" autocomplete="username" placeholder="e.g. 7888066934">
+          </div>
+        </div>
+
+        <div id="emailLoginBox" class="hidden">
+          <div class="field-label">Email address</div>
+          <div class="field-shell">
+            <svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-mail"></use></svg>
+            <input id="loginEmailInput" class="field-input" type="email" autocomplete="email" placeholder="you@example.com">
+          </div>
+        </div>
+
+        <div id="phoneLoginBox" class="hidden">
+          <div class="field-label">Phone number</div>
+          <div class="field-shell">
+            <svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-phone"></use></svg>
+            <input id="loginPhoneInput" class="field-input" type="tel" autocomplete="tel" placeholder="+919876543210">
+          </div>
+        </div>
+
+        <div class="field-label">Password</div>
+        <div class="field-shell has-trailing">
+          <svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-lock"></use></svg>
+          <input id="passwordInput" class="field-input" type="password" autocomplete="current-password" placeholder="Enter your password">
+          <button class="field-trailing" type="button" aria-label="Show password" onclick="togglePasswordVisibility('passwordInput', this)">
+            <svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-eye"></use></svg>
+          </button>
+        </div>
+
+        <button id="loginBtn" class="login-btn" type="button" onclick="handleLogin()">
+          <svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-arrow-right"></use></svg>
+          Login Now
+        </button>
+
+        <div class="login-foot">
+          New here?
+          <a href="https://t.me/TGAStore1Bot?start=register" target="_blank" rel="noopener">Create an account with the bot</a>
+        </div>
+      </div>
+
+      <!-- ---------------------------------------- REGISTER FORM -->
+      <div id="registerFormArea" class="auth-panel hidden">
+
+        <div class="method-switch" role="group" aria-label="Register method">
+          <button type="button" onclick="setRegisterMethod('email')" id="rmEmail" class="method-btn active">
+            <svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-mail"></use></svg> Email
+          </button>
+          <button type="button" onclick="setRegisterMethod('phone')" id="rmPhone" class="method-btn">
+            <svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-phone"></use></svg> Phone
+          </button>
+          <a href="https://t.me/TGAStore1Bot?start=register" target="_blank" rel="noopener" class="method-btn" style="text-decoration:none">
+            <svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-telegram"></use></svg> Telegram
+          </a>
+        </div>
+
+        <div class="field-label">Username</div>
+        <div class="field-shell">
+          <svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-user"></use></svg>
+          <input id="regUsernameInput" class="field-input" type="text" autocomplete="nickname" placeholder="Your display name">
+        </div>
+
+        <div id="regEmailBox">
+          <div class="field-label">Email address</div>
+          <div class="field-shell">
+            <svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-mail"></use></svg>
+            <input id="regEmailInput" class="field-input" type="email" autocomplete="email" placeholder="you@example.com">
+          </div>
+        </div>
+
+        <div id="regPhoneBox" class="hidden">
+          <div class="field-label">Phone number</div>
+          <div class="field-shell">
+            <svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-phone"></use></svg>
+            <input id="regPhoneInput" class="field-input" type="tel" autocomplete="tel" placeholder="+919876543210">
+          </div>
+        </div>
+
+        <div class="field-label">Password</div>
+        <div class="field-shell has-trailing">
+          <svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-lock"></use></svg>
+          <input id="regPasswordInput" class="field-input" type="password" autocomplete="new-password" placeholder="Minimum 6 characters">
+          <button class="field-trailing" type="button" aria-label="Show password" onclick="togglePasswordVisibility('regPasswordInput', this)">
+            <svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-eye"></use></svg>
+          </button>
+        </div>
+
+        <button id="registerBtn" class="login-btn" type="button" onclick="handleRegister()">
+          <svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-plus"></use></svg>
+          Create Account
+        </button>
+
+        <div class="login-foot">
+          Prefer Telegram? <a href="https://t.me/TGAStore1Bot?start=register" target="_blank" rel="noopener">Register in the bot</a>
+        </div>
+      </div>
+
+      <div id="loginError" class="login-error"></div>
+
     </div>
 
-    <div id="loginFormArea" style="text-align:left;margin-top:18px">
-      <div style="display:flex;gap:6px;margin-bottom:12px">
-        <button type="button" onclick="setLoginMethod('telegram')" id="lmTelegram" class="secondary-btn" style="flex:1;padding:8px;font-size:12px;background:var(--surface2)"><span class="tga-emoji" data-emoji="✈">✈</span> Telegram</button>
-        <button type="button" onclick="setLoginMethod('email')" id="lmEmail" class="secondary-btn" style="flex:1;padding:8px;font-size:12px"><span class="tga-emoji" data-emoji="📧">📧</span> Email</button>
-        <button type="button" onclick="setLoginMethod('phone')" id="lmPhone" class="secondary-btn" style="flex:1;padding:8px;font-size:12px"><span class="tga-emoji" data-emoji="📱">📱</span> Phone</button>
-      </div>
-      <div id="telegramLoginBox">
-        <a href="https://t.me/TGAStore1Bot?start=login" target="_blank" rel="noopener" class="primary-btn" style="display:block;text-align:center;text-decoration:none;margin-top:0">✈️ Login via Telegram Bot</a>
-        <div style="text-align:center;color:var(--muted);font-size:12px;margin:10px 0">— or login with Telegram ID + password —</div>
-        <div class="field-label">Telegram User ID</div>
-        <input id="telegramIdInput" class="field-input" type="text" inputmode="numeric" autocomplete="username" placeholder="e.g. 7888066934">
-      </div>
-      <div id="emailLoginBox" class="hidden">
-        <div class="field-label">Email</div>
-        <input id="loginEmailInput" class="field-input" type="email" placeholder="you@example.com">
-      </div>
-      <div id="phoneLoginBox" class="hidden">
-        <div class="field-label">Phone</div>
-        <input id="loginPhoneInput" class="field-input" type="tel" placeholder="+919876543210">
-      </div>
-      <div class="field-label">Password</div>
-      <input id="passwordInput" class="field-input" type="password" autocomplete="current-password" placeholder="Enter password">
-      <button id="loginBtn" class="login-btn" type="button" onclick="handleLogin()">Login Now</button>
-      <div style="text-align:center;margin-top:10px"><a href="https://t.me/TGAStore1Bot?start=register" target="_blank" rel="noopener" style="color:var(--muted);font-size:12px">New here? Register via Telegram Bot →</a></div>
-    </div>
-
-    <div id="registerFormArea" class="hidden" style="text-align:left;margin-top:18px">
-      <div style="display:flex;gap:6px;margin-bottom:12px">
-        <button type="button" onclick="setRegisterMethod('email')" id="rmEmail" class="secondary-btn" style="flex:1;padding:8px;font-size:12px;background:var(--surface2)"><span class="tga-emoji" data-emoji="📧">📧</span> Email</button>
-        <button type="button" onclick="setRegisterMethod('phone')" id="rmPhone" class="secondary-btn" style="flex:1;padding:8px;font-size:12px"><span class="tga-emoji" data-emoji="📱">📱</span> Phone</button>
-        <a href="https://t.me/TGAStore1Bot?start=register" target="_blank" rel="noopener" class="secondary-btn" style="flex:1;padding:8px;font-size:12px;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center">✈️ Telegram</a>
-      </div>
-      <div class="field-label">Username</div>
-      <input id="regUsernameInput" class="field-input" type="text" placeholder="Your display name">
-      <div id="regEmailBox">
-        <div class="field-label">Email</div>
-        <input id="regEmailInput" class="field-input" type="email" placeholder="you@example.com">
-      </div>
-      <div id="regPhoneBox" class="hidden">
-        <div class="field-label">Phone</div>
-        <input id="regPhoneInput" class="field-input" type="tel" placeholder="+919876543210">
-      </div>
-      <div class="field-label">Password</div>
-      <input id="regPasswordInput" class="field-input" type="password" placeholder="Min 6 chars">
-      <button id="registerBtn" class="login-btn" type="button" onclick="handleRegister()">Create Account</button>
-    </div>
-
-    <div id="loginError" class="login-error"></div>
-
-  </div>
+  </section>
 
 </div>
 
@@ -1678,6 +2439,17 @@ body.light .nav-btn.active{
   <div class="header-actions">
 
     <button
+      id="headerAvatar"
+      class="header-avatar hidden"
+      type="button"
+      title="Your profile"
+      aria-label="Your profile"
+      onclick="openPage('settings')"
+    >
+      <span class="header-avatar-fallback">TG</span>
+    </button>
+
+    <button
       id="menuButton"
       class="header-refresh"
       type="button"
@@ -1685,7 +2457,7 @@ body.light .nav-btn.active{
       title="Menu"
       aria-label="Menu"
     >
-      ⋯
+      <svg class=icon aria-hidden=true><use href=/icons.svg#i-dots></use></svg>
     </button>
 
     <button
@@ -1696,7 +2468,7 @@ body.light .nav-btn.active{
       title="Refresh"
       aria-label="Refresh"
     >
-      ↻
+      <svg class=icon aria-hidden=true><use href=/icons.svg#i-refresh></use></svg>
     </button>
 
   </div>
@@ -1707,23 +2479,23 @@ body.light .nav-btn.active{
   >
 
     <button type="button" onclick="headerMenuAction('pricing')">
-      <span class="tga-emoji" data-emoji="💰">💰</span> Pricing
+      <svg class=icon aria-hidden=true><use href=/icons.svg#i-coins></use></svg> Pricing
     </button>
 
     <button type="button" onclick="headerMenuAction('api')">
-      <span class="tga-emoji" data-emoji="📖">📖</span> API Docs
+      <svg class=icon aria-hidden=true><use href=/icons.svg#i-book></use></svg> API Docs
     </button>
 
     <button type="button" onclick="headerMenuAction('terms')">
-      <span class="tga-emoji" data-emoji="📄">📄</span> Terms &amp; Conditions
+      <svg class=icon aria-hidden=true><use href=/icons.svg#i-doc></use></svg> Terms &amp; Conditions
     </button>
 
     <a href="https://t.me/tgaforu" target="_blank" rel="noopener">
-      <span class="tga-emoji" data-emoji="📢">📢</span> Telegram Channel
+      <svg class=icon aria-hidden=true><use href=/icons.svg#i-megaphone></use></svg> Telegram Channel
     </a>
 
     <a href="https://t.me/OfcCuteSmile" target="_blank" rel="noopener">
-      <span class="tga-emoji" data-emoji="🎧">🎧</span> Contact Support
+      <svg class=icon aria-hidden=true><use href=/icons.svg#i-headset></use></svg> Contact Support
     </a>
 
   </div>
@@ -1746,27 +2518,42 @@ body.light .nav-btn.active{
     Welcome back,
   </div>
 
-  <div
-    id="welcomeName"
-    class="welcome-name"
-  >
-    User
+  <div class="welcome-row">
+    <div id="welcomeAvatar" class="welcome-avatar hidden" aria-hidden="true">
+      <span class="welcome-avatar-fallback">TG</span>
+    </div>
+    <div class="welcome-text-wrap">
+      <div id="welcomeName" class="welcome-name">User</div>
+      <div id="welcomeHandle" class="welcome-handle hidden"></div>
+    </div>
   </div>
 
   <div id="tgAccount" class="tg-account hidden">
-    <img id="tgAccountAvatar" class="tg-account-avatar hidden" alt="" referrerpolicy="no-referrer">
-    <span class="tg-account-item">✈️ <b id="tgAccountName">—</b></span>
-    <span class="tg-account-item">
-      🆔 <b id="tgAccountId">—</b>
-      <button class="tg-account-copy" type="button" onclick="copyTelegramId()">Copy</button>
-    </span>
-  </div>
 
-  <div class="announcement">
-
-    <div class="announcement-title">
-      <span class="tga-emoji" data-emoji="📢">📢</span> TGA Store
+    <div class="tg-account-main">
+      <img id="tgAccountAvatar" class="tg-account-avatar hidden" alt="" referrerpolicy="no-referrer">
+      <div class="tg-account-text">
+        <b id="tgAccountName">—</b>
+        <span id="tgAccountVerified">
+          <svg class="icon xs" aria-hidden="true"><use href="/icons.svg#i-check-circle"></use></svg>
+          Signed in with Telegram
+        </span>
+      </div>
     </div>
+
+    <div class="tg-account-meta">
+      <span class="tg-meta-item">
+        <svg class="icon xs" aria-hidden="true"><use href="/icons.svg#i-user"></use></svg>
+        <b id="tgAccountId">—</b>
+        <button class="tg-account-copy" type="button" onclick="copyTelegramId()">Copy ID</button>
+      </span>
+      <a class="tg-account-open" href="https://t.me/TGAStore1Bot" target="_blank" rel="noopener">
+        <svg class="icon xs" aria-hidden="true"><use href="/icons.svg#i-telegram"></use></svg>
+        Open bot
+      </a>
+    </div>
+
+  </div>
 
     <div class="announcement-text">
       Fast and secure account purchasing.
@@ -1780,7 +2567,7 @@ body.light .nav-btn.active{
   <div class="balance-card">
 
     <div class="balance-label">
-      <span class="tga-emoji" data-emoji="💳">💳</span> Total Balance
+      <svg class=icon aria-hidden=true><use href=/icons.svg#i-card></use></svg> Total Balance
     </div>
 
     <span
@@ -1802,7 +2589,7 @@ body.light .nav-btn.active{
       type="button"
       onclick="openPage('recharge')"
     >
-      ＋ Add Balance
+      <svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-plus"></use></svg> Add Balance
     </button>
 
   </div>
@@ -1813,7 +2600,7 @@ body.light .nav-btn.active{
     <div class="stat-card">
 
       <div class="stat-label">
-        <span class="tga-emoji" data-emoji="⚡">⚡</span> Total Recharge
+        <svg class=icon aria-hidden=true><use href=/icons.svg#i-bolt></use></svg> Total Recharge
       </div>
 
       <div
@@ -1829,7 +2616,7 @@ body.light .nav-btn.active{
     <div class="stat-card">
 
       <div class="stat-label">
-        <span class="tga-emoji" data-emoji="🔑">🔑</span> Total Orders
+        <svg class=icon aria-hidden=true><use href=/icons.svg#i-key></use></svg> Total Orders
       </div>
 
       <div
@@ -1854,7 +2641,7 @@ body.light .nav-btn.active{
       class="view-all"
       onclick="openPage('buy')"
     >
-      View All →
+      View All <svg class=icon aria-hidden=true><use href=/icons.svg#i-arrow-right></use></svg>
     </div>
 
   </div>
@@ -1896,7 +2683,7 @@ body.light .nav-btn.active{
     class="search-box"
     type="search"
     autocomplete="off"
-    placeholder="🔍 Search countries..."
+    placeholder="<svg class=icon aria-hidden=true><use href=/icons.svg#i-search></use></svg> Search countries..."
     oninput="filterCountries()"
   >
 
@@ -1934,7 +2721,7 @@ body.light .nav-btn.active{
   >
 
     <div class="balance-label">
-      <span class="tga-emoji" data-emoji="💳">💳</span> Current Balance
+      <svg class=icon aria-hidden=true><use href=/icons.svg#i-card></use></svg> Current Balance
     </div>
 
     <span
@@ -1979,7 +2766,7 @@ body.light .nav-btn.active{
 
     <div class="recharge-history-head">
       <div class="section-title" style="font-size:18px;margin:0">
-        <span class="tga-emoji" data-emoji="📜">📜</span> Recharge History
+        <svg class=icon aria-hidden=true><use href=/icons.svg#i-doc></use></svg> Recharge History
       </div>
       <button
         class="secondary-btn"
@@ -1987,7 +2774,7 @@ body.light .nav-btn.active{
         type="button"
         onclick="loadRechargeHistory()"
       >
-        ↻ Refresh
+        <svg class=icon aria-hidden=true><use href=/icons.svg#i-refresh></use></svg> Refresh
       </button>
     </div>
 
@@ -2280,7 +3067,7 @@ body.light .pay-icon{
 
     <div class="setting-item" onclick="openBotConnect()">
       <div class="setting-left">
-        <div class="setting-icon"><span class="tga-emoji" data-emoji="🤖">🤖</span></div>
+        <div class="setting-icon"><svg class=icon aria-hidden=true><use href=/icons.svg#i-bot></use></svg></div>
         <div>
           <div class="setting-title">Bot Connect <span id="botConnectDot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--red);margin-left:6px;vertical-align:middle"></span></div>
           <div class="setting-sub" id="botConnectSub">Connect Telegram bot for purchase alerts</div>
@@ -2295,7 +3082,7 @@ body.light .pay-icon{
       <div class="setting-left">
 
         <div class="setting-icon">
-          <span class="tga-emoji" data-emoji="🔒">🔒</span>
+          <svg class=icon aria-hidden=true><use href=/icons.svg#i-lock></use></svg>
         </div>
 
         <div>
@@ -2324,7 +3111,7 @@ body.light .pay-icon{
       <div class="setting-left">
 
         <div class="setting-icon">
-          <span class="tga-emoji" data-emoji="💱">💱</span>
+          <svg class=icon aria-hidden=true><use href=/icons.svg#i-coins></use></svg>
         </div>
 
         <div>
@@ -2367,7 +3154,7 @@ body.light .pay-icon{
       <div class="setting-left">
 
         <div class="setting-icon">
-          <span class="tga-emoji" data-emoji="🌙">🌙</span>
+          <svg class=icon aria-hidden=true><use href=/icons.svg#i-moon></use></svg>
         </div>
 
         <div>
@@ -2405,7 +3192,7 @@ body.light .pay-icon{
       <div class="setting-left">
 
         <div class="setting-icon">
-          <span class="tga-emoji" data-emoji="📖">📖</span>
+          <svg class=icon aria-hidden=true><use href=/icons.svg#i-book></use></svg>
         </div>
 
         <div>
@@ -2437,7 +3224,7 @@ body.light .pay-icon{
       <div class="setting-left">
 
         <div class="setting-icon">
-          <span class="tga-emoji" data-emoji="📄">📄</span>
+          <svg class=icon aria-hidden=true><use href=/icons.svg#i-doc></use></svg>
         </div>
 
         <div>
@@ -2471,7 +3258,7 @@ body.light .pay-icon{
       <div class="setting-left">
 
         <div class="setting-icon">
-          <span class="tga-emoji" data-emoji="📢">📢</span>
+          <svg class=icon aria-hidden=true><use href=/icons.svg#i-megaphone></use></svg>
         </div>
 
         <div>
@@ -2489,7 +3276,7 @@ body.light .pay-icon{
       </div>
 
       <div class="setting-arrow">
-        ↗
+        <svg class=icon aria-hidden=true><use href=/icons.svg#i-external></use></svg>
       </div>
 
     </a>
@@ -2505,7 +3292,7 @@ body.light .pay-icon{
       <div class="setting-left">
 
         <div class="setting-icon">
-          <span class="tga-emoji" data-emoji="🎧">🎧</span>
+          <svg class=icon aria-hidden=true><use href=/icons.svg#i-headset></use></svg>
         </div>
 
         <div>
@@ -2523,7 +3310,7 @@ body.light .pay-icon{
       </div>
 
       <div class="setting-arrow">
-        ↗
+        <svg class=icon aria-hidden=true><use href=/icons.svg#i-external></use></svg>
       </div>
 
     </a>
@@ -2537,7 +3324,7 @@ body.light .pay-icon{
       <div class="setting-left">
 
         <div class="setting-icon">
-          <span class="tga-emoji" data-emoji="🚪">🚪</span>
+          <svg class=icon aria-hidden=true><use href=/icons.svg#i-logout></use></svg>
         </div>
 
         <div>
@@ -2579,7 +3366,7 @@ body.light .pay-icon{
     type="button"
     onclick="openPage('home')"
   >
-    <span class="nav-icon">⌂</span>
+    <span class="nav-icon"><svg class="icon" aria-hidden="true"><use href="/icons.svg#i-home"></use></svg></span>
     Home
   </button>
 
@@ -2589,7 +3376,7 @@ body.light .pay-icon{
     type="button"
     onclick="openPage('buy')"
   >
-    <span class="nav-icon"><span class="tga-emoji" data-emoji="🛒">🛒</span></span>
+    <span class="nav-icon"><svg class=icon aria-hidden=true><use href=/icons.svg#i-cart></use></svg></span>
     Buy
   </button>
 
@@ -2599,7 +3386,7 @@ body.light .pay-icon{
     type="button"
     onclick="openPage('recharge')"
   >
-    <span class="nav-icon">▣</span>
+    <span class="nav-icon"><svg class="icon" aria-hidden="true"><use href="/icons.svg#i-wallet"></use></svg></span>
     Recharge
   </button>
 
@@ -2609,7 +3396,7 @@ body.light .pay-icon{
     type="button"
     onclick="openPage('orders')"
   >
-    <span class="nav-icon">▤</span>
+    <span class="nav-icon"><svg class="icon" aria-hidden="true"><use href="/icons.svg#i-receipt"></use></svg></span>
     Orders
   </button>
 
@@ -2619,7 +3406,7 @@ body.light .pay-icon{
     type="button"
     onclick="openPage('settings')"
   >
-    <span class="nav-icon"><span class="tga-emoji" data-emoji="⚙">⚙</span></span>
+    <span class="nav-icon"><svg class=icon aria-hidden=true><use href=/icons.svg#i-settings></use></svg></span>
     Settings
   </button>
 
@@ -2641,7 +3428,7 @@ body.light .pay-icon{
     <div class="modal-head">
 
       <div class="modal-title">
-        <span class="tga-emoji" data-emoji="💰">💰</span> Pricing & Availability
+        <svg class=icon aria-hidden=true><use href=/icons.svg#i-coins></use></svg> Pricing & Availability
       </div>
 
       <button
@@ -2703,7 +3490,7 @@ body.light .pay-icon{
     <div class="modal-head">
 
       <div class="modal-title">
-        <span class="tga-emoji" data-emoji="📄">📄</span> Terms & Conditions
+        <svg class=icon aria-hidden=true><use href=/icons.svg#i-doc></use></svg> Terms & Conditions
       </div>
 
       <button
@@ -2780,7 +3567,7 @@ body.light .pay-icon{
     <div class="modal-head">
 
       <div class="modal-title">
-        <span class="tga-emoji" data-emoji="⚠">⚠</span> Purchase Terms
+        <svg class=icon aria-hidden=true><use href=/icons.svg#i-alert></use></svg> Purchase Terms
       </div>
 
       <button
@@ -2870,7 +3657,7 @@ body.light .pay-icon{
   <div class="modal">
 
     <div class="success-icon">
-      ✓
+      <svg class=icon aria-hidden=true><use href=/icons.svg#i-check></use></svg>
     </div>
 
     <div
@@ -2906,7 +3693,7 @@ body.light .pay-icon{
         id="getOtpButton"
         onclick="getOTP()"
       >
-        <span class="tga-emoji" data-emoji="📩">📩</span> Get OTP
+        <svg class=icon aria-hidden=true><use href=/icons.svg#i-inbox></use></svg> Get OTP
       </button>
 
       <button
@@ -3071,7 +3858,7 @@ body.light .maintenance-logo{
     >
 
     <div class="maintenance-icon">
-      🛠️
+      <svg class=icon aria-hidden=true><use href=/icons.svg#i-settings></use></svg>
     </div>
 
     <div class="maintenance-title">
@@ -3148,6 +3935,8 @@ function saveSession(token, user){
       else if(uid) localStorage.setItem("tga_telegram_id", uid);
       if(user.username) localStorage.setItem("tga_username", user.username);
       if(user.photoUrl) localStorage.setItem("tga_photo", user.photoUrl);
+      if(user.firstName) localStorage.setItem("tga_first_name", user.firstName);
+      if(user.lastName) localStorage.setItem("tga_last_name", user.lastName);
     }
   }catch(e){}
 }
@@ -3159,6 +3948,8 @@ function clearSession(){
     localStorage.removeItem("tga_telegram_id");
     localStorage.removeItem("tga_username");
     localStorage.removeItem("tga_photo");
+    localStorage.removeItem("tga_first_name");
+    localStorage.removeItem("tga_last_name");
     localStorage.removeItem("tga_login_source");
   }catch(e){}
 }
@@ -3175,7 +3966,7 @@ function forceLogin(message){
   const dash = document.getElementById("dashboardScreen");
   const login = document.getElementById("loginScreen");
   if(dash) dash.style.display = "none";
-  if(login) login.style.display = "flex";
+  if(login) login.style.display = "";
   if(message) showLoginError(message);
 }
 
@@ -3223,6 +4014,8 @@ let currentCurrency =
 
 /* ==================================================
    COUNTRY MASTER MAPPING
+   The emoji column is kept only for backwards compatibility of the tuple
+   shape; every flag shown in the UI is an inline SVG (see /icons.js).
 ================================================== */
 
 const COUNTRIES = [
@@ -3473,39 +4266,69 @@ function switchAuthTab(tab){
   authTab = tab;
   document.getElementById("loginFormArea").classList.toggle("hidden", tab!=="login");
   document.getElementById("registerFormArea").classList.toggle("hidden", tab!=="register");
+
+  // Tab + method buttons are styled entirely by their .active class now.
   const tabLoginEl = document.getElementById("tabLogin");
   const tabRegisterEl = document.getElementById("tabRegister");
-  if(tabLoginEl) tabLoginEl.classList.toggle("active", tab==="login");
-  if(tabRegisterEl) tabRegisterEl.classList.toggle("active", tab==="register");
-  document.getElementById("tabLogin").style.background = tab==="login" ? "var(--surface2)" : "transparent";
-  document.getElementById("tabLogin").style.color = tab==="login" ? "var(--text)" : "var(--muted)";
-  document.getElementById("tabRegister").style.background = tab==="register" ? "var(--surface2)" : "transparent";
-  document.getElementById("tabRegister").style.color = tab==="register" ? "var(--text)" : "var(--muted)";
+  if(tabLoginEl){
+    tabLoginEl.classList.toggle("active", tab==="login");
+    tabLoginEl.setAttribute("aria-selected", tab==="login" ? "true" : "false");
+  }
+  if(tabRegisterEl){
+    tabRegisterEl.classList.toggle("active", tab==="register");
+    tabRegisterEl.setAttribute("aria-selected", tab==="register" ? "true" : "false");
+  }
   hideLoginError();
 }
+
+
 function setLoginMethod(m){
   loginMethod=m;
   document.getElementById("telegramLoginBox").classList.toggle("hidden", m!=="telegram");
   document.getElementById("emailLoginBox").classList.toggle("hidden", m!=="email");
   document.getElementById("phoneLoginBox").classList.toggle("hidden", m!=="phone");
-  ["lmTelegram","lmEmail","lmPhone"].forEach(id=>{
-    const el=document.getElementById(id);
-    if(!el) return;
-    el.classList.toggle("active", id.toLowerCase().includes(m));
-    el.style.background = (id.toLowerCase().includes(m) ? "var(--surface2)" : "transparent");
-  });
+  setActiveMethodButton(["lmTelegram","lmEmail","lmPhone"], m);
+
+  // Move focus to the field the user is about to type in.
+  const target = m==="email" ? "loginEmailInput" : m==="phone" ? "loginPhoneInput" : "telegramIdInput";
+  const input = document.getElementById(target);
+  if(input && !input.value) setTimeout(()=>input.focus({ preventScroll:true }), 60);
 }
+
+
 function setRegisterMethod(m){
   registerMethod=m;
   document.getElementById("regEmailBox").classList.toggle("hidden", m!=="email");
   document.getElementById("regPhoneBox").classList.toggle("hidden", m!=="phone");
-  const rmEmailEl = document.getElementById("rmEmail");
-  const rmPhoneEl = document.getElementById("rmPhone");
-  if(rmEmailEl) rmEmailEl.classList.toggle("active", m==="email");
-  if(rmPhoneEl) rmPhoneEl.classList.toggle("active", m==="phone");
-  document.getElementById("rmEmail").style.background = m==="email" ? "var(--surface2)" : "transparent";
-  document.getElementById("rmPhone").style.background = m==="phone" ? "var(--surface2)" : "transparent";
+  setActiveMethodButton(["rmEmail","rmPhone"], m);
 }
+
+
+function setActiveMethodButton(ids, method){
+  ids.forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    const on = id.toLowerCase().includes(method);
+    el.classList.toggle("active", on);
+    el.setAttribute("aria-pressed", on ? "true" : "false");
+  });
+}
+
+
+/* Show / hide a password field (eye button inside the input). */
+function togglePasswordVisibility(inputId, button){
+  const input=document.getElementById(inputId);
+  if(!input) return;
+  const show = input.type === "password";
+  input.type = show ? "text" : "password";
+  if(button){
+    button.setAttribute("aria-label", show ? "Hide password" : "Show password");
+    const use = button.querySelector("use");
+    if(use) use.setAttribute("href", "/icons.svg#i-" + (show ? "eye-off" : "eye"));
+  }
+}
+
+
 async function handleRegister(){
   const username=document.getElementById("regUsernameInput").value.trim();
   const email=document.getElementById("regEmailInput").value.trim();
@@ -3524,7 +4347,7 @@ async function handleRegister(){
     else body.phone=phone;
     const { response, result } = await apiRequest("/api/account?action=register",{ method:"POST", body:JSON.stringify(body)});
     if(!response.ok || !result.success){ showLoginError(result.message||"Register failed."); return; }
-    showMessage("✅ Registered", "Account created! Now login with your credentials.");
+    showMessage("<svg class=icon aria-hidden=true><use href=/icons.svg#i-check-circle></use></svg> Registered", "Account created! Now login with your credentials.");
     switchAuthTab("login");
     if(registerMethod==="email") { setLoginMethod("email"); document.getElementById("loginEmailInput").value=email; }
     else { setLoginMethod("phone"); document.getElementById("loginPhoneInput").value=phone; }
@@ -4144,6 +4967,19 @@ function getCountryBasePrice(api){
 }
 
 
+/* Country name to ISO code: used by flagSvg() for API-provided names */
+window.TGA_COUNTRY_ISO = window.TGA_COUNTRY_ISO || (function(){
+  const map = {};
+  try{
+    COUNTRIES.forEach(c=>{
+      if(!c || !c[2]) return;
+      map[String(c[0]).toLowerCase()] = c[2];
+    });
+  }catch(e){}
+  return map;
+})();
+
+
 /* ==================================================
    COUNTRY CARD
 ================================================== */
@@ -4189,7 +5025,7 @@ function countryCard(country){
     <div class="country-card">
 
       <div class="country-flag">
-        ${flag}
+        ${flagSvg(code)}
       </div>
 
       <div class="country-name">
@@ -4429,16 +5265,16 @@ function openPurchase(country){
 
   selectedCountry=country;
 
-  document.getElementById(
-    "purchasePrice"
-  ).textContent =
-    "Price: "+
-    formatPrice(country.price)+
-    " ("+
-    country.name+
-    " "+
-    country.flag+
-    ")";
+  const priceEl =
+    document.getElementById(
+      "purchasePrice"
+    );
+
+  priceEl.innerHTML =
+    'Price: <b>'+
+    escapeHtml(formatPrice(country.price))+
+    '</b> · '+flagSvg(country.code,'sm')+
+    ' <span style="margin-left:6px">'+escapeHtml(stripEmoji(country.name))+'</span>';
 
   document.getElementById(
     "purchaseModal"
@@ -4452,18 +5288,16 @@ function updatePurchasePrice(){
     return;
   }
 
-  document.getElementById(
-    "purchasePrice"
-  ).textContent =
-    "Price: "+
-    formatPrice(
-      selectedCountry.price
-    )+
-    " ("+
-    selectedCountry.name+
-    " "+
-    selectedCountry.flag+
-    ")";
+  const priceEl =
+    document.getElementById(
+      "purchasePrice"
+    );
+
+  priceEl.innerHTML =
+    'Price: <b>'+
+    escapeHtml(formatPrice(selectedCountry.price))+
+    '</b> · '+flagSvg(selectedCountry.code,'sm')+
+    ' <span style="margin-left:6px">'+escapeHtml(stripEmoji(selectedCountry.name))+'</span>';
 }
 
 
@@ -4777,7 +5611,7 @@ async function getOTP(){
 
   if(button){
     button.disabled=true;
-    button.textContent="⏳ Getting OTP…";
+    button.innerHTML = "<svg class=icon aria-hidden=true><use href=/icons.svg#i-note></use></svg> Getting OTP…";
   }
 
   try{
@@ -4856,7 +5690,7 @@ async function getOTP(){
 
     if(button){
       button.disabled=false;
-      button.textContent="📩 Get OTP";
+      button.innerHTML = "<svg class=icon aria-hidden=true><use href=/icons.svg#i-inbox></use></svg> Get OTP";
     }
 
   }
@@ -4903,7 +5737,7 @@ async function getOrderOTP(index){
 
   if(button){
     button.disabled=true;
-    button.textContent="⏳ Getting OTP…";
+    button.innerHTML = "<svg class=icon aria-hidden=true><use href=/icons.svg#i-note></use></svg> Getting OTP…";
   }
 
   if(area){
@@ -4962,7 +5796,7 @@ async function getOrderOTP(index){
 
     if(area){
       area.innerHTML=
-        '<span style="color:var(--green)">✅ OTP received</span>';
+        '<span style="color:var(--green)"><svg class=icon aria-hidden=true><use href=/icons.svg#i-check-circle></use></svg> OTP received</span>';
     }
 
     // Keep the local order data in sync so re-renders show the OTP too.
@@ -4991,7 +5825,7 @@ async function getOrderOTP(index){
 
     if(button){
       button.disabled=false;
-      button.textContent="🔄 Get OTP Again";
+      button.innerHTML = "<svg class=icon aria-hidden=true><use href=/icons.svg#i-refresh></use></svg> Get OTP Again";
     }
 
   }
@@ -5052,7 +5886,7 @@ function renderOrders(orders){
           <div style="flex:1;min-width:0">
 
             <div class="order-country">
-              🌍
+              <svg class=icon aria-hidden=true><use href=/icons.svg#i-globe></use></svg>
               ${escapeHtml(
                 order.country ||
                 "Unknown"
@@ -5113,7 +5947,7 @@ function renderOrders(orders){
               id="orderOtpBtn-${index}"
               onclick="getOrderOTP(${index})"
             >
-              ${hasOtp ? "🔄 Get OTP Again" : "📩 Get OTP"}
+              ${hasOtp ? "<svg class=icon aria-hidden=true><use href=/icons.svg#i-refresh></use></svg> Get OTP Again" : "<svg class=icon aria-hidden=true><use href=/icons.svg#i-inbox></use></svg> Get OTP"}
             </button>
 
           </div>
@@ -5229,7 +6063,7 @@ function renderRechargeMethods(){
   box.innerHTML = upiCard + binanceCard + cryptoCard;
 
   if(!upiAutoEnabled && !binanceOn && !cryptoOn){
-    box.innerHTML += `<div class="recharge-note" style="grid-column:1/-1">⚠️ <b>All payment methods are currently disabled.</b> Please contact support or try again later. Admin can enable them from Payment Settings.</div>`;
+    box.innerHTML += `<div class="recharge-note" style="grid-column:1/-1"><svg class=icon aria-hidden=true><use href=/icons.svg#i-alert></use></svg> <b>All payment methods are currently disabled.</b> Please contact support or try again later. Admin can enable them from Payment Settings.</div>`;
   }
 }
 
@@ -5278,38 +6112,38 @@ function openRechargeForm(method){
 
   if(method==="upi"){
     formArea.innerHTML = `
-      <div style="font-weight:850;font-size:18px;margin-bottom:6px">💳 UPI Gateway — Enter Amount</div>
+      <div style="font-weight:850;font-size:18px;margin-bottom:6px"><svg class=icon aria-hidden=true><use href=/icons.svg#i-card></use></svg> UPI Gateway — Enter Amount</div>
       <div style="color:var(--muted);font-size:13px">Enter amount in INR. You will get a QR to scan with any UPI app.</div>
       <input id="upiAmountInput" class="recharge-input" type="number" inputmode="numeric" placeholder="Amount in INR (e.g. 100)" min="1" step="1">
       <div class="recharge-actions">
         <button class="primary-btn" type="button" onclick="createUPIInvoice()" style="margin-top:0">Generate QR</button>
         <button class="secondary-btn" type="button" onclick="closeRechargeForm()">Cancel</button>
       </div>
-      <div class="recharge-note">⏳ <b>Expires in 60 minutes.</b> Pay via any UPI app, then tap <b>Verify Payment</b>. We also auto-check.</div>
+      <div class="recharge-note"><svg class=icon aria-hidden=true><use href=/icons.svg#i-note></use></svg> <b>Expires in 60 minutes.</b> Pay via any UPI app, then tap <b>Verify Payment</b>. We also auto-check.</div>
     `;
     const input = document.getElementById("upiAmountInput");
     if(input){ input.focus(); input.scrollIntoView({ behavior:"smooth", block:"center" }); }
   }else if(method==="fampay"){
     formArea.innerHTML = `
-      <div style="font-weight:850;font-size:18px;margin-bottom:6px">💳 UPI Gateway — Scan & Pay</div>
+      <div style="font-weight:850;font-size:18px;margin-bottom:6px"><svg class=icon aria-hidden=true><use href=/icons.svg#i-card></use></svg> UPI Gateway — Scan & Pay</div>
       <div style="color:var(--muted);font-size:13px">Tap Generate to get a QR. You can pay <b>any amount</b> and verify.</div>
       <div class="recharge-actions">
         <button class="primary-btn" type="button" onclick="createFamPayInvoice()" style="margin-top:0">Generate QR</button>
         <button class="secondary-btn" type="button" onclick="closeRechargeForm()">Cancel</button>
       </div>
-      <div class="recharge-note">📲 <b>No amount needed upfront.</b> Scan QR, pay any amount, then tap Verify. Duplicate transactions are blocked.</div>
+      <div class="recharge-note"><svg class=icon aria-hidden=true><use href=/icons.svg#i-phone></use></svg> <b>No amount needed upfront.</b> Scan QR, pay any amount, then tap Verify. Duplicate transactions are blocked.</div>
     `;
     formArea.scrollIntoView({ behavior:"smooth", block:"center" });
   }else if(method==="crypto"){
     formArea.innerHTML = `
-      <div style="font-weight:850;font-size:18px;margin-bottom:6px">🪙 Crypto (Auto) — USDT</div>
+      <div style="font-weight:850;font-size:18px;margin-bottom:6px"><svg class=icon aria-hidden=true><use href=/icons.svg#i-coins></use></svg> Crypto (Auto) — USDT</div>
       <div style="color:var(--muted);font-size:13px">Enter USDT amount (Min ${RECHARGE_MIN_USDT}). You will receive INR at ₹${RECHARGE_USDT_TO_INR}/USDT.</div>
       <input id="cryptoAmountInput" class="recharge-input" type="number" inputmode="decimal" placeholder="Amount in USDT (e.g. 5)" min="0.1" step="0.1">
       <div class="recharge-actions">
         <button class="primary-btn" type="button" onclick="createCryptoInvoice()" style="margin-top:0">Generate Invoice</button>
         <button class="secondary-btn" type="button" onclick="closeRechargeForm()">Cancel</button>
       </div>
-      <div class="recharge-note">⚠️ <b>Send EXACT amount</b> shown on the payment link. Expires in 30 minutes.</div>
+      <div class="recharge-note"><svg class=icon aria-hidden=true><use href=/icons.svg#i-alert></use></svg> <b>Send EXACT amount</b> shown on the payment link. Expires in 30 minutes.</div>
     `;
     const cinput = document.getElementById("cryptoAmountInput");
     if(cinput){ cinput.focus(); cinput.scrollIntoView({ behavior:"smooth", block:"center" }); }
@@ -5317,12 +6151,12 @@ function openRechargeForm(method){
     const payId = rechargeMeta && rechargeMeta.binance ? rechargeMeta.binance.pay_id : "";
     const qrUrl = rechargeMeta && rechargeMeta.binance ? rechargeMeta.binance.qr_url : "";
     formArea.innerHTML = `
-      <div style="font-weight:850;font-size:18px;margin-bottom:6px">🅱️ Binance Pay (Auto)</div>
+      <div style="font-weight:850;font-size:18px;margin-bottom:6px"><svg class=icon aria-hidden=true><use href=/icons.svg#i-coins></use></svg> Binance Pay (Auto)</div>
       <div class="recharge-meta">
         <b>Pay ID:</b> <code style="user-select:all">${escapeHtml(payId||"Not configured")}</code>
-        ${payId ? `<button class="secondary-btn" type="button" style="margin-top:0;padding:6px 10px;font-size:12px" data-v="${escapeHtml(payId)}" onclick="copyToClipboard(this.dataset.v)">📋 Copy</button>` : ``}<br>
+        ${payId ? `<button class="secondary-btn" type="button" style="margin-top:0;padding:6px 10px;font-size:12px" data-v="${escapeHtml(payId)}" onclick="copyToClipboard(this.dataset.v)"><svg class=icon aria-hidden=true><use href=/icons.svg#i-copy></use></svg> Copy</button>` : ``}<br>
         ${qrUrl ? `<img src="${escapeHtml(qrProxy(qrUrl))}" class="recharge-qr" alt="Binance QR" loading="lazy">` : ``}
-        ${qrUrl ? `<div class="recharge-actions" style="margin-top:6px"><a class="secondary-btn" style="display:inline-block;text-decoration:none;margin-top:0;text-align:center" href="${escapeHtml(qrDownload(qrUrl,'binance_qr.png'))}" download="binance_qr.png">⬇️ Download QR</a></div>` : ``}
+        ${qrUrl ? `<div class="recharge-actions" style="margin-top:6px"><a class="secondary-btn" style="display:inline-block;text-decoration:none;margin-top:0;text-align:center" href="${escapeHtml(qrDownload(qrUrl,'binance_qr.png'))}" download="binance_qr.png"><svg class=icon aria-hidden=true><use href=/icons.svg#i-download></use></svg> Download QR</a></div>` : ``}
         <div style="margin-top:8px">Send payment via Binance app to this Pay ID, then enter your <b>Order ID / Transaction ID</b> below and verify.</div>
       </div>
       <input id="binanceOrderInput" class="recharge-input" type="text" placeholder="Enter Binance Order ID / Transaction ID">
@@ -5330,7 +6164,7 @@ function openRechargeForm(method){
         <button class="primary-btn" type="button" onclick="verifyBinanceFromInput()" style="margin-top:0">Verify Payment</button>
         <button class="secondary-btn" type="button" onclick="closeRechargeForm()">Back</button>
       </div>
-      ${payId ? `<div class="recharge-note">📋 <b>Tip:</b> Tap 📋 Copy to copy the Pay ID. After paying in Binance, paste Order ID here.</div>` : ``}
+      ${payId ? `<div class="recharge-note"><svg class=icon aria-hidden=true><use href=/icons.svg#i-copy></use></svg> <b>Tip:</b> Tap <svg class=icon aria-hidden=true><use href=/icons.svg#i-copy></use></svg> Copy to copy the Pay ID. After paying in Binance, paste Order ID here.</div>` : ``}
     `;
     const binput = document.getElementById("binanceOrderInput");
     if(binput){ binput.focus(); binput.scrollIntoView({ behavior:"smooth", block:"center" }); }
@@ -5376,20 +6210,20 @@ function showUPIInvoice(data){
   const upiId = rechargeMeta ? (rechargeMeta.upi_id || "") : "";
   area.classList.remove("hidden");
   area.innerHTML = `
-    <div style="font-weight:850;font-size:18px">📲 UPI Payment (Auto)</div>
+    <div style="font-weight:850;font-size:18px"><svg class=icon aria-hidden=true><use href=/icons.svg#i-phone></use></svg> UPI Payment (Auto)</div>
     <img src="${escapeHtml(qrProxy(data.qr_url))}" class="recharge-qr" alt="UPI QR" loading="lazy">
     <div class="recharge-actions" style="margin-top:6px">
-      <a class="secondary-btn" style="display:inline-block;text-decoration:none;margin-top:0;text-align:center" href="${escapeHtml(qrDownload(data.qr_url,'upi_qr_'+data.order_id+'.png'))}" download="upi_qr_${escapeHtml(data.order_id)}.png">⬇️ Download QR</a>
+      <a class="secondary-btn" style="display:inline-block;text-decoration:none;margin-top:0;text-align:center" href="${escapeHtml(qrDownload(data.qr_url,'upi_qr_'+data.order_id+'.png'))}" download="upi_qr_${escapeHtml(data.order_id)}.png"><svg class=icon aria-hidden=true><use href=/icons.svg#i-download></use></svg> Download QR</a>
     </div>
     <div class="recharge-meta">
       <b>Amount:</b> ₹${escapeHtml(String(data.amount))}<br>
       <b>Order ID:</b> <code>${escapeHtml(data.order_id)}</code><br>
-      ${upiId ? `<b>Pay to:</b> <code style="user-select:all">${escapeHtml(upiId)}</code> <button class="secondary-btn" type="button" style="margin-top:0;padding:4px 10px;font-size:12px" data-v="${escapeHtml(upiId)}" onclick="copyToClipboard(this.dataset.v)">📋 Copy</button><br>` : ``}
+      ${upiId ? `<b>Pay to:</b> <code style="user-select:all">${escapeHtml(upiId)}</code> <button class="secondary-btn" type="button" style="margin-top:0;padding:4px 10px;font-size:12px" data-v="${escapeHtml(upiId)}" onclick="copyToClipboard(this.dataset.v)"><svg class=icon aria-hidden=true><use href=/icons.svg#i-copy></use></svg> Copy</button><br>` : ``}
       <b>Expires:</b> ${data.expires_in_min||60} minutes
     </div>
     <div class="recharge-note">Scan with any UPI app and pay exactly ₹${escapeHtml(String(data.amount))}. Then tap Verify.</div>
     <div class="recharge-actions">
-      <button class="primary-btn" type="button" onclick="verifyUPI('${escapeHtml(data.order_id)}')" style="margin-top:0">✅ Verify Payment</button>
+      <button class="primary-btn" type="button" onclick="verifyUPI('${escapeHtml(data.order_id)}')" style="margin-top:0"><svg class=icon aria-hidden=true><use href=/icons.svg#i-check-circle></use></svg> Verify Payment</button>
       <button class="secondary-btn" type="button" onclick="closeRechargeInvoice()">Close</button>
     </div>
   `;
@@ -5408,19 +6242,19 @@ async function createFamPayInvoice(){
     const fampayUpi = rechargeMeta ? (rechargeMeta.fampay_upi || "") : "";
     area.classList.remove("hidden");
     area.innerHTML = `
-      <div style="font-weight:850;font-size:18px">💳 UPI Gateway — Pay Any Amount</div>
+      <div style="font-weight:850;font-size:18px"><svg class=icon aria-hidden=true><use href=/icons.svg#i-card></use></svg> UPI Gateway — Pay Any Amount</div>
       <img src="${escapeHtml(qrProxy(data.qr_url))}" class="recharge-qr" alt="UPI QR" loading="lazy">
       <div class="recharge-actions" style="margin-top:6px">
-        <a class="secondary-btn" style="display:inline-block;text-decoration:none;margin-top:0;text-align:center" href="${escapeHtml(qrDownload(data.qr_url,'fampay_qr_'+data.order_id+'.png'))}" download="fampay_qr_${escapeHtml(data.order_id)}.png">⬇️ Download QR</a>
+        <a class="secondary-btn" style="display:inline-block;text-decoration:none;margin-top:0;text-align:center" href="${escapeHtml(qrDownload(data.qr_url,'fampay_qr_'+data.order_id+'.png'))}" download="fampay_qr_${escapeHtml(data.order_id)}.png"><svg class=icon aria-hidden=true><use href=/icons.svg#i-download></use></svg> Download QR</a>
       </div>
       <div class="recharge-meta">
         <b>Order ID:</b> <code>${escapeHtml(data.order_id)}</code><br>
-        ${fampayUpi ? `<b>Pay to (FamPay):</b> <code style="user-select:all">${escapeHtml(fampayUpi)}</code> <button class="secondary-btn" type="button" style="margin-top:0;padding:4px 10px;font-size:12px" data-v="${escapeHtml(fampayUpi)}" onclick="copyToClipboard(this.dataset.v)">📋 Copy</button><br>` : ``}
+        ${fampayUpi ? `<b>Pay to (FamPay):</b> <code style="user-select:all">${escapeHtml(fampayUpi)}</code> <button class="secondary-btn" type="button" style="margin-top:0;padding:4px 10px;font-size:12px" data-v="${escapeHtml(fampayUpi)}" onclick="copyToClipboard(this.dataset.v)"><svg class=icon aria-hidden=true><use href=/icons.svg#i-copy></use></svg> Copy</button><br>` : ``}
         ${data.expire ? `<b>Expires:</b> ${escapeHtml(data.expire)}<br>` : ``}
         <b>Note:</b> Pay any amount you wish, then verify.
       </div>
       <div class="recharge-actions">
-        <button class="primary-btn" type="button" onclick="verifyFamPay('${escapeHtml(data.order_id)}')" style="margin-top:0">✅ Verify Payment</button>
+        <button class="primary-btn" type="button" onclick="verifyFamPay('${escapeHtml(data.order_id)}')" style="margin-top:0"><svg class=icon aria-hidden=true><use href=/icons.svg#i-check-circle></use></svg> Verify Payment</button>
         <button class="secondary-btn" type="button" onclick="closeRechargeInvoice()">Close</button>
       </div>
     `;
@@ -5452,7 +6286,7 @@ async function createCryptoInvoice(){
     area.classList.remove("hidden");
     const inr = data.amount_inr;
     area.innerHTML = `
-      <div style="font-weight:850;font-size:18px">🪙 Crypto Invoice</div>
+      <div style="font-weight:850;font-size:18px"><svg class=icon aria-hidden=true><use href=/icons.svg#i-coins></use></svg> Crypto Invoice</div>
       <div class="recharge-meta">
         <b>Amount:</b> ${escapeHtml(String(data.amount_usdt))} USDT<br>
         <b>INR Value:</b> ₹${escapeHtml(String(inr))}<br>
@@ -5460,10 +6294,10 @@ async function createCryptoInvoice(){
         <b>Pay URL:</b> <a href="${escapeHtml(data.pay_url)}" target="_blank" rel="noopener" style="color:var(--green);word-break:break-all">${escapeHtml(data.pay_url)}</a>
       </div>
       <div class="recharge-actions">
-        <a class="primary-btn" href="${escapeHtml(data.pay_url)}" target="_blank" rel="noopener" style="text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center">💳 Pay Now</a>
-        <button class="secondary-btn" type="button" onclick="verifyCrypto('${escapeHtml(data.track_id)}')">✅ I Have Paid</button>
+        <a class="primary-btn" href="${escapeHtml(data.pay_url)}" target="_blank" rel="noopener" style="text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center"><svg class=icon aria-hidden=true><use href=/icons.svg#i-card></use></svg> Pay Now</a>
+        <button class="secondary-btn" type="button" onclick="verifyCrypto('${escapeHtml(data.track_id)}')"><svg class=icon aria-hidden=true><use href=/icons.svg#i-check-circle></use></svg> I Have Paid</button>
       </div>
-      <div class="recharge-note">⏳ Expires in 30 minutes. Send exact amount.</div>
+      <div class="recharge-note"><svg class=icon aria-hidden=true><use href=/icons.svg#i-note></use></svg> Expires in 30 minutes. Send exact amount.</div>
     `;
     closeRechargeForm();
   }catch(e){
@@ -5484,17 +6318,17 @@ async function verifyUPI(orderId){
       body:JSON.stringify({ method:"upi", order_id: orderId })
     });
     if(data.success){
-      showMessage("✅ Payment Verified", data.message || `₹${data.amount} credited. New balance: ₹${(data.balance||0).toFixed(2)}`);
+      showMessage("<svg class=icon aria-hidden=true><use href=/icons.svg#i-check-circle></use></svg> Payment Verified", data.message || `₹${data.amount} credited. New balance: ₹${(data.balance||0).toFixed(2)}`);
       closeRechargeInvoice();
       await loadDashboardData();
       await loadRechargeHistory();
     }else{
-      showMessage("⏳ Not yet", data.message||"Payment not received yet. Try again.");
+      showMessage("<svg class=icon aria-hidden=true><use href=/icons.svg#i-note></use></svg> Not yet", data.message||"Payment not received yet. Try again.");
     }
   }catch(e){
     showMessage("Verify Failed", e.message||"Could not verify.");
   }finally{
-    if(btn){ btn.disabled=false; btn.textContent="✅ Verify Payment"; }
+    if(btn){ btn.disabled=false; btn.innerHTML = "<svg class=icon aria-hidden=true><use href=/icons.svg#i-check-circle></use></svg> Verify Payment"; }
   }
 }
 
@@ -5509,17 +6343,17 @@ async function verifyFamPay(orderId){
       body:JSON.stringify({ method:"fampay", order_id: orderId })
     });
     if(data.success){
-      showMessage("✅ Payment Verified", data.message || `₹${data.amount} credited. New balance: ₹${(data.balance||0).toFixed(2)}`);
+      showMessage("<svg class=icon aria-hidden=true><use href=/icons.svg#i-check-circle></use></svg> Payment Verified", data.message || `₹${data.amount} credited. New balance: ₹${(data.balance||0).toFixed(2)}`);
       closeRechargeInvoice();
       await loadDashboardData();
       await loadRechargeHistory();
     }else{
-      showMessage("⏳ Not yet", data.message||"Payment not received yet.");
+      showMessage("<svg class=icon aria-hidden=true><use href=/icons.svg#i-note></use></svg> Not yet", data.message||"Payment not received yet.");
     }
   }catch(e){
     showMessage("Verify Failed", e.message||"Could not verify.");
   }finally{
-    if(btn){ btn.disabled=false; btn.textContent="✅ Verify Payment"; }
+    if(btn){ btn.disabled=false; btn.innerHTML = "<svg class=icon aria-hidden=true><use href=/icons.svg#i-check-circle></use></svg> Verify Payment"; }
   }
 }
 
@@ -5534,7 +6368,7 @@ async function verifyCrypto(trackId){
       body:JSON.stringify({ method:"crypto", track_id: trackId, order_id: trackId })
     });
     if(data.success){
-      showMessage("✅ Crypto Verified", data.message || `${data.amount_usdt||""} USDT (₹${data.amount}) credited.`);
+      showMessage("<svg class=icon aria-hidden=true><use href=/icons.svg#i-check-circle></use></svg> Crypto Verified", data.message || `${data.amount_usdt||""} USDT (₹${data.amount}) credited.`);
       closeRechargeInvoice();
       await loadDashboardData();
       await loadRechargeHistory();
@@ -5544,7 +6378,7 @@ async function verifyCrypto(trackId){
   }catch(e){
     showMessage("Verify Failed", e.message||"Could not verify.");
   }finally{
-    if(btn){ btn.disabled=false; btn.textContent="✅ I Have Paid"; }
+    if(btn){ btn.disabled=false; btn.innerHTML = "<svg class=icon aria-hidden=true><use href=/icons.svg#i-check-circle></use></svg> I Have Paid"; }
   }
 }
 
@@ -5563,7 +6397,7 @@ async function verifyBinanceFromInput(){
       body:JSON.stringify({ method:"binance", order_id: orderId })
     });
     if(data.success){
-      showMessage("✅ Binance Verified", data.message || `₹${data.amount} credited.`);
+      showMessage("<svg class=icon aria-hidden=true><use href=/icons.svg#i-check-circle></use></svg> Binance Verified", data.message || `₹${data.amount} credited.`);
       closeRechargeForm();
       await loadDashboardData();
       await loadRechargeHistory();
@@ -5603,7 +6437,7 @@ async function loadRechargeHistory(){
             <div><b>${method}</b> — ${sub}</div>
             <div class="muted">${escapeHtml(d)} • <code>${escapeHtml(tx.order_id||"")}</code></div>
           </div>
-          <div style="text-align:right"><b style="color:var(--green)">✓ Paid</b></div>
+          <div style="text-align:right"><b style="color:var(--green)"><svg class=icon aria-hidden=true><use href=/icons.svg#i-check></use></svg> Paid</b></div>
         </div>
       `;
     }).join("");
@@ -5801,7 +6635,7 @@ function showThemePreviewBadge(id){
   const badge = document.createElement("div");
   badge.id = "themePreviewBadge";
   badge.className = "theme-preview-badge";
-  badge.textContent = "👁 Preview: " + (SITE_THEME_LABELS[id] || id);
+  badge.innerHTML = "<svg class=icon aria-hidden=true><use href=/icons.svg#i-eye></use></svg> Preview: " + (SITE_THEME_LABELS[id] || id);
   document.body.appendChild(badge);
 }
 
@@ -6029,7 +6863,7 @@ function handleLogout(){
 
   document.getElementById(
     "loginScreen"
-  ).style.display="flex";
+  ).style.display="";
 
   document.getElementById(
     "telegramIdInput"
@@ -6053,11 +6887,11 @@ async function refreshBotStatus(){
     if(data.success && data.bot_connected){
       dot.style.background="var(--green)";
       dot.style.boxShadow="0 0 8px var(--green)";
-      if(sub) sub.textContent="✅ Connected as @"+(data.username||"")+" (Telegram: "+(data.telegram_id||"")+")";
+      if(sub) sub.innerHTML = "<svg class=icon aria-hidden=true><use href=/icons.svg#i-check-circle></use></svg> Connected as @"+(data.username||"")+" (Telegram: "+(data.telegram_id||"")+")";
     } else {
       dot.style.background="var(--red)";
       dot.style.boxShadow="none";
-      if(sub) sub.textContent="🔴 Not connected — tap to connect for purchase alerts";
+      if(sub) sub.innerHTML = "<svg class=icon aria-hidden=true><use href=/icons.svg#i-alert></use></svg> Not connected — tap to connect for purchase alerts";
     }
   }catch(e){}
 }
@@ -6067,23 +6901,23 @@ async function openBotConnect(){
   try{
     const { result: st } = await apiRequest("/api/account?action=bot-connect");
     if(st.success && st.bot_connected){
-      showMessage("🤖 Bot Connected", "Your Telegram is already connected ✅\nTelegram ID: "+st.telegram_id);
+      showMessage("<svg class=icon aria-hidden=true><use href=/icons.svg#i-bot></use></svg> Bot Connected", "Your Telegram is already connected <svg class=icon aria-hidden=true><use href=/icons.svg#i-check-circle></use></svg>\nTelegram ID: "+st.telegram_id);
       return;
     }
   }catch(e){}
   // create token
   try{
     const { result: data } = await apiRequest("/api/account?action=bot-connect",{method:"POST", body:JSON.stringify({})});
-    if(data.already_connected){ showMessage("✅ Already connected","Telegram ID: "+data.telegram_id); refreshBotStatus(); return; }
+    if(data.already_connected){ showMessage("<svg class=icon aria-hidden=true><use href=/icons.svg#i-check-circle></use></svg> Already connected","Telegram ID: "+data.telegram_id); refreshBotStatus(); return; }
     if(!data.success) throw new Error(data.message||"Failed");
     const link=data.link;
-    document.getElementById("messageTitle").textContent="🤖 Connect Telegram Bot";
-    document.getElementById("messageText").innerHTML='Tap the button below to connect:<br><br><a href="'+link+'" target="_blank" rel="noopener" style="display:inline-block;padding:12px 18px;background:#fff;color:#000;border-radius:12px;text-decoration:none;font-weight:800">✈️ Open Bot — Connect</a><br><br><code style="word-break:break-all">'+link+'</code><br><br><span style="color:var(--muted)">Link expires in 15 minutes. After tapping Start in bot, refresh this page.</span>';
+    document.getElementById("messageTitle").innerHTML = "<svg class=icon aria-hidden=true><use href=/icons.svg#i-bot></use></svg> Connect Telegram Bot";
+    document.getElementById("messageText").innerHTML='Tap the button below to connect:<br><br><a href="'+link+'" target="_blank" rel="noopener" style="display:inline-block;padding:12px 18px;background:#fff;color:#000;border-radius:12px;text-decoration:none;font-weight:800"><svg class=icon aria-hidden=true><use href=/icons.svg#i-telegram></use></svg> Open Bot — Connect</a><br><br><code style="word-break:break-all">'+link+'</code><br><br><span style="color:var(--muted)">Link expires in 15 minutes. After tapping Start in bot, refresh this page.</span>';
     document.getElementById("messageModal").classList.add("show");
   }catch(e){ showMessage("Error", e.message||"Could not create link."); }
 }
 function openChangePassword(){
-  document.getElementById("messageTitle").textContent="🔒 Change Password";
+  document.getElementById("messageTitle").innerHTML = "<svg class=icon aria-hidden=true><use href=/icons.svg#i-lock></use></svg> Change Password";
   document.getElementById("messageText").innerHTML='<div style="text-align:left"><div class="field-label">Current Password</div><input id="cpOld" class="field-input" type="password" placeholder="Current"><div class="field-label">New Password</div><input id="cpNew" class="field-input" type="password" placeholder="Min 6 chars"><button class="primary-btn" onclick="submitChangePassword()">Update Password</button></div>';
   document.getElementById("messageModal").classList.add("show");
 }
@@ -6096,7 +6930,7 @@ async function submitChangePassword(){
     const { response: res, result: d }=await apiRequest("/api/account?action=change-password",{method:"POST", body:JSON.stringify({oldPassword: oldP, newPassword: newP})});
     if(!res.ok || !d.success) throw new Error(d.message||"Failed");
     closeModal("messageModal");
-    showMessage("✅ Updated","Password changed successfully.");
+    showMessage("<svg class=icon aria-hidden=true><use href=/icons.svg#i-check-circle></use></svg> Updated","Password changed successfully.");
   }catch(e){ showMessage("Failed", e.message); }
 }
 
@@ -6142,17 +6976,55 @@ function renderTelegramAccount(user){
     return;
   }
 
-  const name =
-    user && user.username
-      ? "@" + String(user.username).replace(/^@/, "")
-      : (localStorage.getItem("tga_username") || "Telegram account");
+  const rawUsername =
+    (user && user.username) ||
+    (localStorage.getItem("tga_username") || "");
+
+  const handle = rawUsername
+    ? "@" + String(rawUsername).replace(/^@/, "")
+    : "";
+
+  const displayName =
+    (user && (user.firstName || user.first_name))
+      ? [user.firstName || user.first_name, user.lastName || user.last_name]
+          .filter(Boolean).join(" ")
+      : "";
+
+  /* ---- welcome row: avatar + name + handle ---- */
 
   const nameEl =
+    document.getElementById(
+      "welcomeName"
+    );
+
+  if(nameEl && displayName){
+    nameEl.textContent = displayName;
+  }
+
+  const handleEl =
+    document.getElementById(
+      "welcomeHandle"
+    );
+
+  if(handleEl){
+    const parts = [];
+    if(handle) parts.push(handle);
+    parts.push("Telegram ID " + tgId);
+    handleEl.innerHTML =
+      parts.map(p=>escapeHtml(p)).join(' <span class="dot-sep">·</span> ');
+    handleEl.classList.remove("hidden");
+  }
+
+  /* ---- account strip ---- */
+
+  const stripName =
     document.getElementById(
       "tgAccountName"
     );
 
-  if(nameEl) nameEl.textContent = name;
+  if(stripName){
+    stripName.textContent = displayName || handle || "Telegram account";
+  }
 
   const idEl =
     document.getElementById(
@@ -6161,28 +7033,86 @@ function renderTelegramAccount(user){
 
   if(idEl) idEl.textContent = tgId;
 
-  const avatar =
-    document.getElementById(
-      "tgAccountAvatar"
-    );
-
   const photo =
     (user && (user.photoUrl || user.photo_url)) ||
     localStorage.getItem("tga_photo") ||
     "";
 
-  if(avatar){
-    if(photo){
-      avatar.src = photo;
-      avatar.classList.remove("hidden");
-      avatar.onerror = ()=>{ avatar.classList.add("hidden"); };
-    }else{
-      avatar.removeAttribute("src");
-      avatar.classList.add("hidden");
-    }
-  }
+  paintAvatar(
+    document.getElementById("tgAccountAvatar"),
+    photo
+  );
+
+  paintAvatar(
+    document.getElementById("welcomeAvatar"),
+    photo,
+    displayName || rawUsername || "TG"
+  );
+
+  paintAvatar(
+    document.getElementById("headerAvatar"),
+    photo,
+    displayName || rawUsername || "TG"
+  );
 
   box.classList.remove("hidden");
+}
+
+
+/* "Sonu Kumar" -> SK, "@tg_demo" -> TD, "" -> TG */
+function initialsOf(value){
+
+  const words = String(value || "")
+    .replace(/^@/, "")
+    .replace(/[_.\-]+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if(!words.length) return "TG";
+
+  if(words.length === 1){
+    return words[0].slice(0, 2).toUpperCase();
+  }
+
+  return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+}
+
+
+/* Fill an avatar element with a photo, or initials as a fallback. */
+function paintAvatar(container, photo, fallbackText){
+
+  if(!container) return;
+
+  const existing = container.querySelector("img");
+
+  if(photo){
+    const img = existing || document.createElement("img");
+    img.alt = "";
+    img.referrerPolicy = "no-referrer";
+    img.onerror = ()=>{
+      img.remove();
+      container.classList.remove("has-photo");
+    };
+    img.src = photo;
+    if(!existing) container.appendChild(img);
+    container.classList.add("has-photo");
+    return;
+  }
+
+  if(existing) existing.remove();
+  container.classList.remove("has-photo");
+
+  // Initials fallback (works for the welcome avatar *and* the header avatar).
+  const fallback = container.querySelector(
+    ".welcome-avatar-fallback, .header-avatar-fallback"
+  );
+
+  if(fallback){
+    fallback.textContent = initialsOf(fallbackText);
+  }
+
+  container.classList.remove("hidden");
 }
 
 
@@ -6216,12 +7146,19 @@ function showDashboard(){
     "dashboardScreen"
   ).style.display="block";
 
-  document.getElementById(
-    "welcomeName"
-  ).textContent =
-    localStorage.getItem(
-      "tga_username"
-    ) || "User";
+  // Prefer the saved display name; "@username" is only a fallback so the
+  // dashboard never shows "User" after a successful Telegram sign-in.
+  const savedFirst = localStorage.getItem("tga_first_name") || "";
+  const savedLast = localStorage.getItem("tga_last_name") || "";
+  const savedDisplay = (savedFirst + " " + savedLast).trim();
+  const welcomeNameEl = document.getElementById("welcomeName");
+
+  if(welcomeNameEl){
+    welcomeNameEl.textContent =
+      savedDisplay ||
+      localStorage.getItem("tga_username") ||
+      "User";
+  }
 
   loadDashboardData();
 
@@ -6340,7 +7277,7 @@ function formatDateTime(value){
 function copyToClipboard(text){
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(text).then(function(){
-      showMessage("📋 Copied", text);
+      showMessage("<svg class=icon aria-hidden=true><use href=/icons.svg#i-copy></use></svg> Copied", text);
     }).catch(function(){
       fallbackCopyText(text);
     });
@@ -6356,7 +7293,7 @@ function fallbackCopyText(text){
   ta.style.opacity = "0";
   document.body.appendChild(ta);
   ta.select();
-  try{ document.execCommand("copy"); showMessage("📋 Copied", text); }
+  try{ document.execCommand("copy"); showMessage("<svg class=icon aria-hidden=true><use href=/icons.svg#i-copy></use></svg> Copied", text); }
   catch(e){ showMessage("Copy Failed", "Could not copy. Please copy manually."); }
   document.body.removeChild(ta);
 }
@@ -6595,7 +7532,7 @@ function restoreSavedSession(){
 
     document.getElementById(
       "loginScreen"
-    ).style.display="flex";
+    ).style.display="";
 
   }else{
 
@@ -6624,7 +7561,7 @@ function showTelegramBooting(){
 
   if(!screen) return;
 
-  screen.style.display="flex";
+  screen.style.display="";
 
   const card =
     screen.querySelector(
@@ -6640,14 +7577,8 @@ function showTelegramBooting(){
     if(el) el.classList.add("hidden");
   });
 
-  const tabs = card.querySelectorAll(
-    "button[onclick^='switchAuthTab']"
-  );
-
-  tabs.forEach(tab=>{
-    const row = tab.parentElement;
-    if(row) row.classList.add("hidden");
-  });
+  const tabs = card.querySelector(".auth-tabs");
+  if(tabs) tabs.classList.add("hidden");
 
   if(document.getElementById("telegramBooting")) return;
 
@@ -6696,22 +7627,14 @@ function showNormalLoginAfterTelegram(){
 
   if(booting) booting.remove();
 
-  ["loginFormArea","registerFormArea"].forEach(id=>{
-    const el = document.getElementById(id);
-    if(el) el.classList.remove("hidden");
-  });
+  const tabs = document.querySelector(".login-card .auth-tabs");
+  if(tabs) tabs.classList.remove("hidden");
 
-  // The Login / Register tab row lives directly above the form area.
-  const loginArea =
-    document.getElementById(
-      "loginFormArea"
-    );
-
-  if(loginArea && loginArea.parentElement){
-    loginArea.parentElement
-      .querySelectorAll(":scope > div[style*='margin-top:22px']")
-      .forEach(row=>row.classList.remove("hidden"));
-  }
+  const activeTab = authTab === "register" ? "register" : "login";
+  const loginArea = document.getElementById("loginFormArea");
+  const registerArea = document.getElementById("registerFormArea");
+  if(loginArea) loginArea.classList.toggle("hidden", activeTab !== "login");
+  if(registerArea) registerArea.classList.toggle("hidden", activeTab !== "register");
 
   showLoginError(
     "Telegram sign-in did not complete. Log in with your details, or reopen the store from the bot."
@@ -6722,7 +7645,7 @@ function showNormalLoginAfterTelegram(){
       "loginScreen"
     );
 
-  if(screen) screen.style.display="flex";
+  if(screen) screen.style.display="";
 }
 
 
@@ -6787,6 +7710,8 @@ window.addEventListener(
     // Telegram handed to the page, then calls this hook. Defined unconditionally
     // so an early (cached) initData response never races the DOM.
     window.__tgaOpenDashboard = function(user){
+      try{ sessionStorage.removeItem("tga_tg_reloaded"); }catch(e){}
+
       if(user){
         currentUserId = String(user.userId || user.telegramId || "");
         currentTelegramId = String(user.telegramId || currentUserId || "");
@@ -6796,7 +7721,21 @@ window.addEventListener(
         if(user.photoUrl){
           try{ localStorage.setItem("tga_photo", user.photoUrl); }catch(e){}
         }
+        try{
+          var first = user.firstName || user.first_name || "";
+          var last = user.lastName || user.last_name || "";
+          if(first) localStorage.setItem("tga_first_name", first);
+          if(last) localStorage.setItem("tga_last_name", last);
+        }catch(e){}
       }
+
+      // Paint the Telegram name / @username / photo straight away so a Mini
+      // App launch shows the real profile instantly instead of "User" while
+      // /api/dashboard is still in flight. The API then refreshes the rest.
+      if(user){
+        try{ renderTelegramAccount(user); }catch(e){}
+      }
+
       showDashboard();
     };
 
