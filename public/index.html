@@ -119,22 +119,28 @@ button:disabled{
 .icon.lg{ width:24px; height:24px; }
 .icon.xl{ width:30px; height:30px; }
 
-/* Flag rendered as inline SVG (see /icons.js) */
-.flag{
-  width:34px;
-  height:23px;
+/* Flags are the device's own flag emoji (same artwork Telegram/WhatsApp use) */
+.flag-emoji{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
   flex:0 0 auto;
-  display:block;
-  border-radius:5px;
-  box-shadow:0 0 0 1px rgba(255,255,255,.10);
+  font-size:26px;
+  line-height:1;
+  font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji","Android Emoji",sans-serif;
 }
 
-body.light .flag{
-  box-shadow:0 0 0 1px rgba(0,0,0,.10);
-}
+.flag-emoji.sm{ font-size:19px; }
+.flag-emoji.xs{ font-size:16px; }
 
-.flag.sm{ width:24px; height:16px; border-radius:4px; }
-.flag.xs{ width:20px; height:14px; border-radius:3px; }
+/* Sprite host inserted by /icons.js (inline copy of /icons.svg) */
+.tga-sprite-host{
+  position:absolute;
+  width:0;
+  height:0;
+  overflow:hidden;
+  pointer-events:none;
+}
 
 /* ==================================================
    LOGIN  ·  split hero layout
@@ -597,6 +603,12 @@ body.light .btn-telegram{
   background:var(--border);
 }
 
+.auth-panel{
+  display:flex;
+  flex-direction:column;
+  gap:0;
+}
+
 .login-error{
   display:none;
   color:var(--red);
@@ -978,14 +990,37 @@ body.light .tg-account-open{
   display:none;
 }
 
+/* Avatar wrapper (photo is injected as an <img>, initials stay as fallback) */
 .tg-account-avatar{
-  width:38px;
-  height:38px;
-  flex:0 0 38px;
+  width:40px;
+  height:40px;
+  flex:0 0 40px;
   border-radius:50%;
-  object-fit:cover;
-  background:var(--surface2);
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(160deg,rgba(var(--green-rgb),.20),rgba(56,148,255,.16));
   border:1px solid var(--border);
+  font-size:12px;
+  font-weight:850;
+  letter-spacing:.4px;
+  color:var(--text);
+}
+
+.tg-account-avatar img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+.tg-account-avatar-fallback{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  height:100%;
 }
 
 .tg-account-item{
@@ -1047,6 +1082,13 @@ body.light .tg-account-open{
   font-size:18px;
   font-weight:800;
   margin-bottom:8px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.announcement-title .icon{
+  color:var(--green);
 }
 
 .announcement-text{
@@ -1070,6 +1112,15 @@ body.light .tg-account-open{
   color:var(--muted);
   font-size:14px;
   margin-bottom:8px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.balance-label .icon{
+  width:17px;
+  height:17px;
+  color:var(--green);
 }
 
 .balance-value{
@@ -1113,6 +1164,15 @@ body.light .tg-account-open{
   color:var(--muted);
   font-size:14px;
   margin-bottom:8px;
+  display:flex;
+  align-items:center;
+  gap:7px;
+}
+
+.stat-label .icon{
+  width:16px;
+  height:16px;
+  color:var(--green);
 }
 
 .stat-value{
@@ -1135,12 +1195,27 @@ body.light .tg-account-open{
 .section-title{
   font-size:22px;
   font-weight:850;
+  display:flex;
+  align-items:center;
+  gap:9px;
+}
+
+.section-title .icon{
+  color:var(--green);
 }
 
 .view-all{
   color:var(--muted);
   cursor:pointer;
   white-space:nowrap;
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+}
+
+.view-all .icon{
+  width:15px;
+  height:15px;
 }
 
 .view-all:hover{
@@ -1176,7 +1251,7 @@ body.light .tg-account-open{
 */
 .country-grid{
   display:grid;
-  grid-template-columns:repeat(5,minmax(0,1fr));
+  grid-template-columns:repeat(auto-fill,minmax(178px,1fr));
   gap:16px;
   width:100%;
 }
@@ -1208,10 +1283,8 @@ body.light .tg-account-open{
   line-height:1;
 }
 
-.country-flag .flag{
-  width:44px;
-  height:30px;
-  border-radius:7px;
+.country-flag .flag-emoji{
+  font-size:30px;
 }
 
 .country-name{
@@ -1312,6 +1385,15 @@ body.light .tg-account-open{
 .order-country{
   font-weight:800;
   margin-bottom:7px;
+  display:flex;
+  align-items:center;
+  gap:7px;
+}
+
+.order-country .icon{
+  width:15px;
+  height:15px;
+  color:var(--muted);
 }
 
 .order-detail{
@@ -1453,7 +1535,13 @@ a.setting-item:hover{
 
 .setting-arrow{
   color:var(--muted);
-  font-size:20px;
+  display:inline-flex;
+  align-items:center;
+}
+
+.setting-arrow .icon{
+  width:17px;
+  height:17px;
 }
 
 .select{
@@ -1656,6 +1744,16 @@ body.light .nav-btn.active{
 .modal-title{
   font-size:21px;
   font-weight:850;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  min-width:0;
+}
+
+.modal-title .icon{
+  width:19px;
+  height:19px;
+  color:var(--green);
 }
 
 .close-btn{
@@ -1666,7 +1764,20 @@ body.light .nav-btn.active{
   border:1px solid var(--border);
   background:var(--surface2);
   color:var(--text);
-  font-size:22px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  transition:background .15s ease,color .15s ease;
+}
+
+.close-btn:hover{
+  background:var(--surface);
+  color:var(--green);
+}
+
+.close-btn .icon{
+  width:17px;
+  height:17px;
 }
 
 .terms{
@@ -1724,8 +1835,14 @@ body.light .nav-btn.active{
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:48px;
   margin:0 auto 20px;
+}
+
+.success-icon .icon{
+  width:44px;
+  height:44px;
+  stroke-width:2.4;
+  color:var(--btn-text);
 }
 
 .account-info{
@@ -1774,7 +1891,7 @@ body.light .nav-btn.active{
 /* Tablet */
 @media(max-width:1100px){
   .country-grid{
-    grid-template-columns:repeat(3,minmax(0,1fr));
+    grid-template-columns:repeat(auto-fill,minmax(158px,1fr));
   }
 }
 
@@ -1850,7 +1967,7 @@ body.light .nav-btn.active{
   }
 
   .country-card{
-    padding:17px 8px;
+    padding:17px 9px;
     border-radius:17px;
   }
 
@@ -1858,9 +1975,8 @@ body.light .nav-btn.active{
     margin-bottom:9px;
   }
 
-  .country-flag .flag{
-    width:36px;
-    height:25px;
+  .country-flag .flag-emoji{
+    font-size:24px;
   }
 
   .country-name{
@@ -1934,9 +2050,8 @@ body.light .nav-btn.active{
     padding:14px 5px;
   }
 
-  .country-flag .flag{
-    width:32px;
-    height:22px;
+  .country-flag .flag-emoji{
+    font-size:21px;
   }
 
   .country-name{
@@ -2531,7 +2646,9 @@ body.light .nav-btn.active{
   <div id="tgAccount" class="tg-account hidden">
 
     <div class="tg-account-main">
-      <img id="tgAccountAvatar" class="tg-account-avatar hidden" alt="" referrerpolicy="no-referrer">
+      <span id="tgAccountAvatar" class="tg-account-avatar hidden" aria-hidden="true">
+        <span class="tg-account-avatar-fallback">TG</span>
+      </span>
       <div class="tg-account-text">
         <b id="tgAccountName">—</b>
         <span id="tgAccountVerified">
@@ -2554,6 +2671,16 @@ body.light .nav-btn.active{
     </div>
 
   </div>
+
+  <!-- Announcement card: the <div class="announcement"> wrapper and its title
+       were lost in an earlier edit, which closed <section>/<main> early and
+       pushed the balance card + country grid outside the page container. -->
+  <div class="announcement">
+
+    <div class="announcement-title">
+      <svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-megaphone"></use></svg>
+      TGA Store
+    </div>
 
     <div class="announcement-text">
       Fast and secure account purchasing.
@@ -2841,7 +2968,6 @@ body.light .nav-btn.active{
 }
 
 .recharge-method-icon{
-  font-size:32px;
   line-height:1;
   display:flex;
   align-items:center;
@@ -2922,6 +3048,12 @@ body.light .pay-icon{
   justify-content:space-between;
   gap:12px;
   margin-bottom:14px;
+}
+
+.recharge-history-head .section-title .icon,
+.recharge-history-head .icon{
+  width:16px;
+  height:16px;
 }
 
 .recharge-history-list{
@@ -3073,7 +3205,7 @@ body.light .pay-icon{
           <div class="setting-sub" id="botConnectSub">Connect Telegram bot for purchase alerts</div>
         </div>
       </div>
-      <div class="setting-arrow">›</div>
+      <div class="setting-arrow"><svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-chevron-right"></use></svg></div>
     </div>
 
     <div class="setting-item" onclick="openChangePassword()">
@@ -3099,9 +3231,7 @@ body.light .pay-icon{
 
       </div>
 
-      <div class="setting-arrow">
-        ›
-      </div>
+      <div class="setting-arrow"><svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-chevron-right"></use></svg></div>
 
     </div>
 
@@ -3209,9 +3339,7 @@ body.light .pay-icon{
 
       </div>
 
-      <div class="setting-arrow">
-        ›
-      </div>
+      <div class="setting-arrow"><svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-chevron-right"></use></svg></div>
 
     </div>
 
@@ -3241,9 +3369,7 @@ body.light .pay-icon{
 
       </div>
 
-      <div class="setting-arrow">
-        ›
-      </div>
+      <div class="setting-arrow"><svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-chevron-right"></use></svg></div>
 
     </div>
 
@@ -3341,9 +3467,7 @@ body.light .pay-icon{
 
       </div>
 
-      <div class="setting-arrow">
-        ›
-      </div>
+      <div class="setting-arrow"><svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-chevron-right"></use></svg></div>
 
     </div>
 
@@ -3435,9 +3559,7 @@ body.light .pay-icon{
         class="close-btn"
         type="button"
         onclick="closeModal('pricingModal')"
-      >
-        ×
-      </button>
+      ><svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-x"></use></svg></button>
 
     </div>
 
@@ -3497,9 +3619,7 @@ body.light .pay-icon{
         class="close-btn"
         type="button"
         onclick="closeModal('termsModal')"
-      >
-        ×
-      </button>
+      ><svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-x"></use></svg></button>
 
     </div>
 
@@ -3574,9 +3694,7 @@ body.light .pay-icon{
         class="close-btn"
         type="button"
         onclick="closeModal('purchaseModal')"
-      >
-        ×
-      </button>
+      ><svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-x"></use></svg></button>
 
     </div>
 
@@ -3735,9 +3853,7 @@ body.light .pay-icon{
         class="close-btn"
         type="button"
         onclick="closeModal('messageModal')"
-      >
-        ×
-      </button>
+      ><svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-x"></use></svg></button>
 
     </div>
 
@@ -3818,7 +3934,7 @@ body.light .maintenance-logo{
   justify-content:center;
   margin:0 auto 16px;
   border-radius:20px;
-  font-size:31px;
+  color:var(--yellow);
   background:rgba(255,200,87,.12);
   border:1px solid rgba(255,200,87,.28);
 }
@@ -6497,6 +6613,10 @@ function openPage(page){
 
   });
 
+  if(typeof window.refreshIcons === "function"){
+    try{ window.refreshIcons(document); }catch(e){}
+  }
+
   // Instant jump, not smooth: smooth scrolling while the bottom nav is
   // position:fixed (and backdrop-filtered) makes the bar glitch/detach on
   // mobile browsers. An instant jump is what fixed-page apps use anyway.
@@ -6740,17 +6860,66 @@ function showComingSoon(title){
 }
 
 
+/*
+  Every message goes through one sanitizer.
+
+  Titles used to be written with .textContent, so an icon passed in as markup
+  printed the raw <svg> tag (the "Bot Connected <svg class=icon …>" bug in the
+  screenshot). Titles now accept markup, but only a whitelist: sprite icons,
+  <b>, <i> and <br>. Everything else — including anything an API response puts
+  in a message — is escaped, so a server string can never inject HTML.
+*/
+var MSG_ICON_RE =
+  /<svg[^>]*>\s*<use[^>]*?\/icons\.svg#i-([a-z0-9-]+)[^>]*>\s*<\/use>\s*<\/svg>/gi;
+
+function safeMessageHtml(value){
+  var raw = String(value == null ? "" : value);
+  var icons = [];
+
+  // 1. pull the trusted icon snippets out first (they survive escaping)
+  var rest = raw.replace(MSG_ICON_RE, function(_m, name){
+    icons.push(String(name).toLowerCase());
+    return "\u0000" + (icons.length - 1) + "\u0000";
+  });
+
+  // 2. escape everything that is left
+  rest = escapeHtml(rest);
+
+  // 3. re-allow the tiny bit of formatting the UI itself uses
+  rest = rest
+    .replace(/&lt;b&gt;/gi, "<b>")
+    .replace(/&lt;\/b&gt;/gi, "</b>")
+    .replace(/&lt;i&gt;/gi, "<i>")
+    .replace(/&lt;\/i&gt;/gi, "</i>")
+    .replace(/&lt;br\s*\/?&gt;/gi, "<br>");
+
+  // 4. put the icons back, rendered from the verified name only
+  return rest.replace(/\u0000(\d+)\u0000/g, function(_m, index){
+    var name = icons[Number(index)];
+    return window.icon ? window.icon(name) : "";
+  });
+}
+
+function setMessageField(el, value){
+  if(!el) return;
+  var str = String(value == null ? "" : value);
+  // Markup only when the UI itself asked for it; plain strings stay plain text
+  // (so a message like "Balance < 10" is never parsed as HTML).
+  if(/<\/?[a-z]/i.test(str)) el.innerHTML = safeMessageHtml(str);
+  else el.textContent = str;
+}
+
 function showMessage(title,text){
 
-  document.getElementById(
-    "messageTitle"
-  ).textContent =
-    title;
+  setMessageField(
+    document.getElementById("messageTitle"),
+    title
+  );
 
-  document.getElementById(
-    "messageText"
-  ).textContent =
-    text;
+  setMessageField(
+    document.getElementById("messageText"),
+    text
+  );
 
   document.getElementById(
     "messageModal"
@@ -6872,6 +7041,8 @@ function handleLogout(){
   document.getElementById(
     "passwordInput"
   ).value="";
+
+  hideLoginError();
 }
 
 
@@ -7040,7 +7211,8 @@ function renderTelegramAccount(user){
 
   paintAvatar(
     document.getElementById("tgAccountAvatar"),
-    photo
+    photo,
+    displayName || rawUsername || "TG"
   );
 
   paintAvatar(
@@ -7105,7 +7277,7 @@ function paintAvatar(container, photo, fallbackText){
 
   // Initials fallback (works for the welcome avatar *and* the header avatar).
   const fallback = container.querySelector(
-    ".welcome-avatar-fallback, .header-avatar-fallback"
+    ".welcome-avatar-fallback, .header-avatar-fallback, .tg-account-avatar-fallback"
   );
 
   if(fallback){
@@ -7145,6 +7317,25 @@ function showDashboard(){
   document.getElementById(
     "dashboardScreen"
   ).style.display="block";
+
+  // Mini App sign-in succeeded (or a normal login finished): drop the
+  // "Signing you in with Telegram…" state so a later logout shows the form.
+  const bootBox = document.getElementById("telegramBooting");
+  if(bootBox) bootBox.remove();
+
+  document.querySelectorAll(".login-card .auth-tabs, .login-card .method-switch")
+    .forEach(el=>el.classList.remove("hidden"));
+
+  const loginArea = document.getElementById("loginFormArea");
+  const registerArea = document.getElementById("registerFormArea");
+  if(loginArea) loginArea.classList.toggle("hidden", authTab === "register");
+  if(registerArea) registerArea.classList.toggle("hidden", authTab !== "register");
+
+  // Dynamic markup (country grid, orders, modals) is written after boot; point
+  // its #i-… references at the inline sprite copy as soon as it lands.
+  if(typeof window.refreshIcons === "function"){
+    try{ window.refreshIcons(document); }catch(e){}
+  }
 
   // Prefer the saved display name; "@username" is only a fallback so the
   // dashboard never shows "User" after a successful Telegram sign-in.
@@ -7523,10 +7714,21 @@ function restoreSavedSession(){
 
   if(dash){ dash.style.display="none"; }
 
-  const inTelegram =
-    !!(window.Telegram &&
-       window.Telegram.WebApp &&
-       window.Telegram.WebApp.initData);
+  /*
+    A Mini App launch is recognisable before Telegram's SDK fills initData: the
+    URL carries the payload in its hash (#tgWebAppData=…) or the SDK object
+    exists with a platform set. Treating only a filled initData as "inside
+    Telegram" is what used to flash the password form on a cold launch.
+  */
+  const inTelegram = (function(){
+    try{
+      if(window.Telegram && window.Telegram.WebApp) return true;
+      if(window.__tgaTelegramDiag && window.__tgaTelegramDiag.hasTelegramObject) return true;
+      if(location.hash && location.hash.indexOf("tgWebAppData") !== -1) return true;
+      if(location.search && location.search.indexOf("tgWebApp") !== -1) return true;
+    }catch(e){}
+    return false;
+  })();
 
   if(!inTelegram){
 
@@ -7540,11 +7742,14 @@ function restoreSavedSession(){
 
     // Watchdog: if the Mini App sign-in has not produced a session after a few
     // seconds (offline, rejected initData, very slow cold start), stop showing
-    // the spinner and let the user log in normally.
+    // the spinner and let the user log in normally — with the reason.
     setTimeout(()=>{
       if(getSessionToken()) return;
-      showNormalLoginAfterTelegram();
-    }, 4500);
+      showNormalLoginAfterTelegram(
+        (window.__tgaTelegramAuthFailed && TELEGRAM_FAIL_MESSAGES[window.__tgaTelegramAuthFailed.reason]) ||
+        "Telegram sign-in is taking longer than usual. You can log in with your details below, or reopen the store from the bot."
+      );
+    }, 8000);
 
   }
 
@@ -7579,6 +7784,10 @@ function showTelegramBooting(){
 
   const tabs = card.querySelector(".auth-tabs");
   if(tabs) tabs.classList.add("hidden");
+
+  card.querySelectorAll(".method-switch").forEach(function(el){
+    el.classList.add("hidden");
+  });
 
   if(document.getElementById("telegramBooting")) return;
 
@@ -7618,7 +7827,7 @@ function showTelegramBooting(){
   signature rejected…). Drop the "signing in" state and show the normal form so
   the user can still log in with ID / email / phone + password.
 */
-function showNormalLoginAfterTelegram(){
+function showNormalLoginAfterTelegram(customMessage){
 
   const booting =
     document.getElementById(
@@ -7637,6 +7846,7 @@ function showNormalLoginAfterTelegram(){
   if(registerArea) registerArea.classList.toggle("hidden", activeTab !== "register");
 
   showLoginError(
+    customMessage ||
     "Telegram sign-in did not complete. Log in with your details, or reopen the store from the bot."
   );
 
@@ -7653,8 +7863,34 @@ function showNormalLoginAfterTelegram(){
   Listen at parse time (not DOMContentLoaded): /telegram-app.js fails fast when
   Telegram's initData is rejected, possibly before the startup handler exists.
 */
-window.addEventListener("tga:telegram-auth-failed", ()=>{
-  showNormalLoginAfterTelegram();
+var TELEGRAM_FAIL_MESSAGES = {
+  not_in_telegram:
+    "This page was opened in Telegram's normal browser, so Telegram did not share your account. Open the store from the bot's menu button (or its \u201cOpen Store\u201d button) to sign in automatically.",
+  no_init_data:
+    "Telegram did not share your account details this time. Close this window and open the store again from the bot's menu button.",
+  bad_hash:
+    "Telegram rejected this login. Please reopen the store from the bot \u2014 the bot connected to the store must be the same bot that opened it.",
+  expired:
+    "This Telegram login link has expired. Please reopen the store from the bot.",
+  bot_token_missing:
+    "Telegram login is not configured on the server (BOT_TOKEN is missing).",
+  missing_user:
+    "Telegram did not share your account details. Please reopen the store from the bot.",
+  network:
+    "Could not reach the store server. Check your connection and try again.",
+  auth_date_in_future:
+    "Your phone's clock looks wrong, so Telegram's login was rejected. Fix the date & time and reopen the store."
+};
+
+window.addEventListener("tga:telegram-auth-failed", function(event){
+
+  const detail = (event && event.detail) || window.__tgaTelegramAuthFailed || {};
+  const reason = typeof detail === "string" ? detail : detail.reason;
+
+  showNormalLoginAfterTelegram(
+    TELEGRAM_FAIL_MESSAGES[reason] ||
+    "Telegram sign-in did not complete. Log in with your details below, or reopen the store from the bot."
+  );
 });
 
 
@@ -7703,7 +7939,10 @@ window.addEventListener(
     restoreSavedSession();
 
     if(window.__tgaTelegramAuthFailed){
-      showNormalLoginAfterTelegram();
+      const failed = window.__tgaTelegramAuthFailed;
+      showNormalLoginAfterTelegram(
+        TELEGRAM_FAIL_MESSAGES[failed && failed.reason]
+      );
     }
 
     // Telegram Mini App: /telegram-app.js signs the user in with the initData
