@@ -105,7 +105,16 @@ async function api(req, res, url) {
   if (route === "dashboard") {
     return json(res, 200, {
       success: true,
-      user: { username: "Demo User", balance: 4720, telegramId: "7888066934" },
+      user: {
+        userId: "7888066934",
+        username: "tg_demo_user",
+        firstName: "Demo",
+        lastName: "User",
+        photoUrl: null,
+        telegramId: "7888066934",
+        balance: 4720,
+        bot_connected: true
+      },
       totalOrders: ORDERS.length,
       totalRecharge: 7,
       announcement: { title: "Theme demo", text: "This is the local mock API used for previewing themes." },
@@ -144,9 +153,9 @@ async function api(req, res, url) {
     if (action === "history") {
       return json(res, 200, {
         success: true,
-        recharges: [
-          { amount: 500, method: "UPI", status: "completed", date: "2026-08-18" },
-          { amount: 1200, method: "Binance", status: "completed", date: "2026-08-14" }
+        history: [
+          { amount: 500, method: "UPI", status: "paid", order_id: "preview-upi-1", date: "2026-08-18T05:00:00.000Z" },
+          { amount: 1200, method: "BINANCE", status: "paid", order_id: "preview-bin-2", date: "2026-08-14T05:00:00.000Z" }
         ]
       });
     }

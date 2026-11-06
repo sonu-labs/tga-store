@@ -69,6 +69,26 @@ a:hover{
   display:none !important;
 }
 
+/* ---------------------------------------------------------------- icons
+   Base sizing for the SVG sprite icons. Without this an <svg class="icon">
+   renders at the browser default (300×150) and destroys the layout — the
+   admin panel had the same bug. */
+
+.icon{
+  width:20px;
+  height:20px;
+  flex:0 0 auto;
+  display:inline-block;
+  vertical-align:-.18em;
+  color:currentColor;
+  pointer-events:none;
+}
+
+.icon.xs{ width:14px; height:14px; }
+.icon.sm{ width:16px; height:16px; }
+.icon.lg{ width:24px; height:24px; }
+.icon.xl{ width:30px; height:30px; }
+
 /* ---------------------------------------------------------------- topbar */
 
 .topbar{
@@ -388,6 +408,7 @@ a:hover{
   overflow-x:auto;
   border:1px solid var(--border);
   border-radius:12px;
+  max-width:100%;
   -webkit-overflow-scrolling:touch;
 }
 
@@ -973,7 +994,7 @@ tbody td.muted{
         provider, so cache politely and expect them to move.
       </p>
 
-      <table class="table-wrap">
+      <div class="table-wrap"><table>
         <thead>
           <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
         </thead>
@@ -981,7 +1002,7 @@ tbody td.muted{
           <tr><td><code>action</code></td><td>string</td><td>yes</td><td class="muted"><code>available_countries</code></td></tr>
           <tr><td><code>apiKey</code></td><td>string</td><td>yes</td><td class="muted">Your key</td></tr>
         </tbody>
-      </table>
+      </table></div>
 
       <h3>Request</h3>
       <div class="code-block wrap-lines">
@@ -1014,7 +1035,7 @@ tbody td.muted{
         <code>available_countries</code>.
       </p>
 
-      <table class="table-wrap">
+      <div class="table-wrap"><table>
         <thead>
           <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
         </thead>
@@ -1023,7 +1044,7 @@ tbody td.muted{
           <tr><td><code>apiKey</code></td><td>string</td><td>yes</td><td class="muted">Your key</td></tr>
           <tr><td><code>country_code</code></td><td>string</td><td>no</td><td class="muted">ISO-3166 alpha-2, e.g. <code>id</code></td></tr>
         </tbody>
-      </table>
+      </table></div>
 
       <h3>Request</h3>
       <div class="code-block wrap-lines">
@@ -1055,7 +1076,7 @@ tbody td.muted{
         before a buying run.
       </p>
 
-      <table class="table-wrap">
+      <div class="table-wrap"><table>
         <thead>
           <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
         </thead>
@@ -1063,7 +1084,7 @@ tbody td.muted{
           <tr><td><code>action</code></td><td>string</td><td>yes</td><td class="muted"><code>get_balance</code></td></tr>
           <tr><td><code>apiKey</code></td><td>string</td><td>yes</td><td class="muted">Your key</td></tr>
         </tbody>
-      </table>
+      </table></div>
 
       <h3>Request</h3>
       <div class="code-block wrap-lines">
@@ -1092,7 +1113,7 @@ tbody td.muted{
         automatically.
       </p>
 
-      <table class="table-wrap">
+      <div class="table-wrap"><table>
         <thead>
           <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
         </thead>
@@ -1101,7 +1122,7 @@ tbody td.muted{
           <tr><td><code>apiKey</code></td><td>string</td><td>yes</td><td class="muted">Your key</td></tr>
           <tr><td><code>country_code</code></td><td>string</td><td>yes</td><td class="muted">ISO-3166 alpha-2, e.g. <code>id</code></td></tr>
         </tbody>
-      </table>
+      </table></div>
 
       <h3>Request</h3>
       <div class="code-block wrap-lines">
@@ -1137,7 +1158,7 @@ tbody td.muted{
         until the SMS arrives the API answers with a <code>409</code>.
       </p>
 
-      <table class="table-wrap">
+      <div class="table-wrap"><table>
         <thead>
           <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
         </thead>
@@ -1146,7 +1167,7 @@ tbody td.muted{
           <tr><td><code>apiKey</code></td><td>string</td><td>yes</td><td class="muted">Your key</td></tr>
           <tr><td><code>number</code></td><td>string</td><td>yes</td><td class="muted">Number returned by <code>getNumber</code></td></tr>
         </tbody>
-      </table>
+      </table></div>
 
       <h3>Request</h3>
       <div class="code-block wrap-lines">
@@ -1186,7 +1207,7 @@ tbody td.muted{
 }</pre>
       </div>
 
-      <table class="table-wrap" style="margin-top:14px">
+      <div class="table-wrap" style="margin-top:14px"><table>
         <thead>
           <tr><th>Code</th><th>Meaning</th><th>What to do</th></tr>
         </thead>
@@ -1199,7 +1220,7 @@ tbody td.muted{
           <tr><td><code>502</code></td><td class="muted">Provider unavailable</td><td class="muted">Retry with backoff</td></tr>
           <tr><td><code>503</code></td><td class="muted">Store under maintenance</td><td class="muted">Try again later</td></tr>
         </tbody>
-      </table>
+      </table></div>
     </section>
 
     <!-- --------------------------------------------------------- logs -->
@@ -1785,7 +1806,18 @@ tbody td.muted{
     $("responseTime").textContent = "";
   });
 
-  /* ---------------------------------------------------------------- boot */
+  /* ---------------------------------------------------------------- boot
+
+     Telegram Mini App hook: when this page is opened from the bot,
+     /telegram-app.js calls __tgaOpenDashboard after the server accepts the
+     initData. Defining it here means the page signs in silently — no logout
+     flash, no full-page reload, no double sign-in round-trip. */
+
+  window.__tgaOpenDashboard = function () {
+    STORE.loggedIn = Boolean(token() && storedUserId());
+    renderSession();
+    if (STORE.loggedIn) { loadKeys(); loadLogs(); }
+  };
 
   async function boot() {
     document.title = "TGA Store — API Docs";
@@ -1803,8 +1835,8 @@ tbody td.muted{
       loadLogs();
     }
 
-    // If the page was opened inside Telegram, /telegram-app.js signs in and
-    // reloads; this listener covers the case where it signs in without a reload.
+    // Fallback for the (older) path where /telegram-app.js cannot find the
+    // hook and instead only dispatches this event.
     window.addEventListener("tga:telegram-auth", function () {
       STORE.loggedIn = Boolean(token() && storedUserId());
       renderSession();
