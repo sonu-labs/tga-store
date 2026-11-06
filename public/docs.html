@@ -916,7 +916,7 @@ tbody td.muted{
         </p>
 
         <div class="key-toolbar">
-          <button class="btn primary" type="button" id="generateBtn">＋ Generate new key</button>
+          <button class="btn primary" type="button" id="generateBtn"><svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-plus"></use></svg> Generate new key</button>
           <span class="badge" id="keyCountBadge">0 / 3 keys</span>
         </div>
 
@@ -1565,7 +1565,7 @@ tbody td.muted{
     }
 
     var btn = $("generateBtn");
-    var original = btn ? btn.textContent : "";
+    var original = btn ? btn.innerHTML : "";
     if (btn) { btn.disabled = true; btn.textContent = "Generating…"; }
 
     try {
@@ -1587,7 +1587,7 @@ tbody td.muted{
       toast("Could not reach the server", true);
     }
 
-    if (btn) { btn.disabled = false; btn.textContent = original || "＋ Generate new key"; }
+    if (btn) { btn.disabled = false; btn.innerHTML = original || '<svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-plus"></use></svg> Generate new key'; }
     await loadKeys();
   }
 

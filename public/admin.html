@@ -11,6 +11,9 @@
 <script src="/icons.js"></script>
 
 <style>
+.shortcut-go{ display:inline-flex; align-items:center; color:var(--muted); }
+.shortcut-go .icon{ width:16px; height:16px; }
+
 *{
   box-sizing:border-box;
   margin:0;
@@ -1370,22 +1373,22 @@ tbody tr:hover{
         <button class="settings-shortcut" type="button" onclick="switchTab('orders')">
           <span class="settings-shortcut-icon"><svg class=icon aria-hidden=true><use href=/icons.svg#i-cart></use></svg></span>
           <span><strong>Order monitoring</strong><small>Review deliveries and OTP status</small></span>
-          <b>›</b>
+          <b class="shortcut-go"><svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-chevron-right"></use></svg></b>
         </button>
         <button class="settings-shortcut" type="button" onclick="switchTab('users')">
           <span class="settings-shortcut-icon"><svg class=icon aria-hidden=true><use href=/icons.svg#i-users></use></svg></span>
           <span><strong>User directory</strong><small>Search users, balances and activity</small></span>
-          <b>›</b>
+          <b class="shortcut-go"><svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-chevron-right"></use></svg></b>
         </button>
         <button class="settings-shortcut" type="button" onclick="switchTab('logs')">
           <span class="settings-shortcut-icon"><svg class=icon aria-hidden=true><use href=/icons.svg#i-copy></use></svg></span>
           <span><strong>Activity logs</strong><small>View logins, purchases and failures</small></span>
-          <b>›</b>
+          <b class="shortcut-go"><svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-chevron-right"></use></svg></b>
         </button>
         <button class="settings-shortcut logout-shortcut" type="button" onclick="handleLogout()">
           <span class="settings-shortcut-icon"><svg class=icon aria-hidden=true><use href=/icons.svg#i-logout></use></svg></span>
           <span><strong>Logout</strong><small>End this session and return to the login page</small></span>
-          <b>›</b>
+          <b class="shortcut-go"><svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-chevron-right"></use></svg></b>
         </button>
       </div>
     </section>

@@ -1393,6 +1393,7 @@ body[data-theme="console"] .stat-value{font-size:20px}
 body[data-theme="console"] .section-title{font-size:14px;text-transform:uppercase;letter-spacing:1.6px;color:var(--muted)}
 body[data-theme="console"] .country-card{padding:12px 8px}
 body[data-theme="console"] .country-flag{font-size:26px;margin-bottom:6px}
+body[data-theme="console"] .country-flag .flag-emoji{font-size:22px}
 body[data-theme="console"] .country-name{font-size:13px}
 body[data-theme="console"] .buy-now{padding:8px;font-size:11px;margin-top:10px}
 body[data-theme="console"] .order-card{padding:12px 14px;border-left:3px solid var(--green)}
