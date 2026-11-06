@@ -23,6 +23,20 @@ const PUBLIC_DIR = path.join(__dirname, "..", "public");
 
 let activeTheme = process.env.THEME || "default";
 
+// Fake API keys so /docs can be clicked through without MongoDB.
+const MOCK_KEYS = [
+  {
+    _id: "TGA_9f2c4e8a1b6d70354c2f8e9a0b1c2d3e",
+    created_at: new Date(Date.now() - 6 * 864e5).toISOString(),
+    last_used_at: new Date(Date.now() - 22 * 60e3).toISOString()
+  },
+  {
+    _id: "TGA_1a7b3c9d5e2f68044b1c8d7e6a5f4c3b",
+    created_at: new Date(Date.now() - 2 * 864e5).toISOString(),
+    last_used_at: null
+  }
+];
+
 const MIME = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
@@ -174,10 +188,58 @@ async function api(req, res, url) {
   }
 
   if (route === "apikey") {
-    if (action === "list") return json(res, 200, { success: true, keys: [] });
-    if (action === "generate") return json(res, 200, { success: true, key: "TGA_DEMO_" + Math.random().toString(36).slice(2, 14) });
-    if (action === "revoke") return json(res, 200, { success: true, message: "API key revoked." });
-    return json(res, 200, { success: true, keys: [] });
+    if (action === "list") {
+      return json(res, 200, {
+        success: true,
+        keys: MOCK_KEYS.map((k) => ({ _id: k._id, created_at: k.created_at, last_used_at: k.last_used_at }))
+      });
+    }
+    if (action === "generate") {
+      const key = "TGA_" + Math.random().toString(16).slice(2).padEnd(20, "0").slice(0, 20) +
+        Math.random().toString(16).slice(2).padEnd(20, "0").slice(0, 20);
+      MOCK_KEYS.unshift({ _id: key, created_at: new Date().toISOString(), last_used_at: null });
+      MOCK_KEYS.length = Math.min(MOCK_KEYS.length, 3);
+      return json(res, 200, { success: true, key, message: "API key generated." });
+    }
+    if (action === "revoke") {
+      const idx = MOCK_KEYS.findIndex((k) => k._id === body.key);
+      if (idx !== -1) MOCK_KEYS.splice(idx, 1);
+      return json(res, 200, { success: true, message: "API key revoked." });
+    }
+    if (action === "logs") {
+      return json(res, 200, {
+        success: true,
+        logs: [
+          { action: "get_balance", method: "GET", status_code: 200, success: true, query: {}, created_at: new Date(Date.now() - 4 * 60e3).toISOString(), duration_ms: 143 },
+          { action: "available_countries", method: "GET", status_code: 200, success: true, query: {}, created_at: new Date(Date.now() - 26 * 60e3).toISOString(), duration_ms: 812 },
+          { action: "getNumber", method: "GET", status_code: 200, success: true, query: { country_code: "id" }, created_at: new Date(Date.now() - 2 * 36e5).toISOString(), duration_ms: 1320 },
+          { action: "getCode", method: "GET", status_code: 409, success: false, query: { number: "+6281234567890" }, created_at: new Date(Date.now() - 2 * 36e5).toISOString(), duration_ms: 401 }
+        ]
+      });
+    }
+    return json(res, 200, { success: true, keys: MOCK_KEYS });
+  }
+
+  // Mini App sign-in (dev mock: never verifies anything, just demonstrates flow)
+  if (route === "telegram") {
+    if (req.method === "GET") {
+      return json(res, 200, { success: true, bot_username: "TGAStore1Bot", bot_configured: true, webapp_enabled: true });
+    }
+    return json(res, 200, {
+      success: true,
+      token: "preview-telegram-token",
+      created: false,
+      user: {
+        userId: "7888066934",
+        telegramId: 7888066934,
+        username: "tg_demo_user",
+        firstName: "Demo",
+        lastName: "User",
+        photoUrl: null,
+        balance: 4720,
+        bot_connected: true
+      }
+    });
   }
 
   if (route === "v1") {
@@ -202,13 +264,32 @@ async function api(req, res, url) {
   return json(res, 404, { success: false, message: "Mock API: unknown route " + route });
 }
 
-function serveStatic(res, filePath) {
+/*
+  Dev-only helper: /?preview_telegram=1 pretends the page was opened inside
+  Telegram, so the Mini App auto-login (public/telegram-app.js → POST
+  /api/telegram, mocked above) can be clicked through without a real bot.
+  Never deployed — this file lives in dev/.
+*/
+function injectPreviewTelegram(html) {
+  return html.replace(
+    "<head>",
+    "<head>\n<script>window.Telegram={WebApp:{initData:\"preview_init_data\",ready:function(){},expand:function(){},enableClosingConfirmation:function(){}}};</script>"
+  );
+}
+
+function serveStatic(res, filePath, url) {
   fs.readFile(filePath, (err, data) => {
     if (err) {
       res.writeHead(404, { "Content-Type": "text/plain" });
       res.end("Not found");
       return;
     }
+
+    const isHtml = path.extname(filePath).toLowerCase() === ".html";
+    if (isHtml && url && url.searchParams.get("preview_telegram")) {
+      data = Buffer.from(injectPreviewTelegram(data.toString("utf8")), "utf8");
+    }
+
     res.writeHead(200, {
       "Content-Type": MIME[path.extname(filePath).toLowerCase()] || "application/octet-stream",
       "Cache-Control": "no-store"
@@ -277,7 +358,7 @@ const server = http.createServer((req, res) => {
     res.end("Forbidden");
     return;
   }
-  serveStatic(res, filePath);
+  serveStatic(res, filePath, url);
 });
 
 server.listen(PORT, "0.0.0.0", () => {

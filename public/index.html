@@ -9,6 +9,14 @@
 <title>TGA Store</title>
 <link rel="icon" href="/assets/logo.png" type="image/png">
 
+<!--
+  Telegram Mini App support: the official Telegram WebApp SDK must be the
+  first script on the page so `window.Telegram.WebApp.initData` exists by the
+  time /telegram-app.js runs. Outside Telegram the CDN script simply does not
+  expose anything and the normal login form is used.
+-->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
 <style>
 *{
   box-sizing:border-box;
@@ -310,6 +318,9 @@ body.light .header-logo{
   width:min(1280px,100%);
   margin:auto;
   padding:28px 24px;
+  /* Belt and braces against sideways scrolling on small phones: a single wide
+     child (long number, key, country name) must not shift the whole page. */
+  overflow-x:clip;
 }
 
 /* ==================================================
@@ -327,6 +338,72 @@ body.light .header-logo{
 .welcome-line{
   color:var(--muted);
   font-size:15px;
+}
+
+/* Small chip under the welcome name showing the signed-in Telegram account.
+   Filled from the Mini App / login response so the id and @username are always
+   visible without opening Settings. */
+.tg-account{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:8px 14px;
+  margin:-18px 0 24px;
+  padding:10px 13px;
+  border:1px solid var(--border);
+  border-radius:14px;
+  background:var(--surface);
+  font-size:12px;
+  color:var(--muted);
+  min-width:0;
+}
+
+.tg-account.hidden{
+  display:none;
+}
+
+.tg-account-avatar{
+  width:30px;
+  height:30px;
+  flex:0 0 30px;
+  border-radius:50%;
+  object-fit:cover;
+  background:var(--surface2);
+  border:1px solid var(--border);
+}
+
+.tg-account-item{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  min-width:0;
+}
+
+.tg-account-item b{
+  color:var(--text);
+  font-weight:700;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:11.5px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  max-width:52vw;
+}
+
+.tg-account-copy{
+  border:1px solid var(--border);
+  background:transparent;
+  color:var(--muted);
+  border-radius:8px;
+  padding:3px 8px;
+  font-size:10.5px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.tg-account-copy:hover{
+  color:var(--text);
+  border-color:rgba(var(--green-rgb),.45);
 }
 
 .welcome-name{
@@ -1255,7 +1332,10 @@ body.light .nav-btn.active{
 .header-menu{
   position:fixed;
   top:calc(var(--header-h,78px) + 6px);
+  /* Never wider than the viewport: on a 320px phone a 230px menu anchored at
+     14px from the right used to overflow and cause a sideways page shift. */
   right:14px;
+  max-width:calc(100vw - 28px);
   z-index:120;
   min-width:230px;
   background:var(--nav-bg,var(--surface));
@@ -1314,7 +1394,7 @@ body.light .nav-btn.active{
 
 .login-api-link{
   position:fixed;
-  top:14px;
+  top:calc(14px + env(safe-area-inset-top,0px));
   right:14px;
   z-index:60;
   display:flex;
@@ -1671,6 +1751,15 @@ body.light .nav-btn.active{
     class="welcome-name"
   >
     User
+  </div>
+
+  <div id="tgAccount" class="tg-account hidden">
+    <img id="tgAccountAvatar" class="tg-account-avatar hidden" alt="" referrerpolicy="no-referrer">
+    <span class="tg-account-item">✈️ <b id="tgAccountName">—</b></span>
+    <span class="tg-account-item">
+      🆔 <b id="tgAccountId">—</b>
+      <button class="tg-account-copy" type="button" onclick="copyTelegramId()">Copy</button>
+    </span>
   </div>
 
   <div class="announcement">
@@ -3058,6 +3147,7 @@ function saveSession(token, user){
       if(user.telegramId) localStorage.setItem("tga_telegram_id", String(user.telegramId));
       else if(uid) localStorage.setItem("tga_telegram_id", uid);
       if(user.username) localStorage.setItem("tga_username", user.username);
+      if(user.photoUrl) localStorage.setItem("tga_photo", user.photoUrl);
     }
   }catch(e){}
 }
@@ -3068,6 +3158,8 @@ function clearSession(){
     localStorage.removeItem("tga_user_id");
     localStorage.removeItem("tga_telegram_id");
     localStorage.removeItem("tga_username");
+    localStorage.removeItem("tga_photo");
+    localStorage.removeItem("tga_login_source");
   }catch(e){}
 }
 
@@ -3572,6 +3664,8 @@ async function loadDashboardData(){
     ).textContent =
       result.user?.username ||
       "User";
+
+    renderTelegramAccount(result.user);
 
     document.getElementById(
       "totalOrders"
@@ -6019,6 +6113,96 @@ function closeAllModals(){
 
 
 /* ==================================================
+   TELEGRAM ACCOUNT CHIP
+================================================== */
+
+/*
+  Shows the account details the API just gave us: Telegram id, @username and
+  (when Telegram provides it) the profile photo. Filled automatically for Mini
+  App sign-ins and for a normal Telegram-ID login after the dashboard loads.
+*/
+function renderTelegramAccount(user){
+
+  const box =
+    document.getElementById(
+      "tgAccount"
+    );
+
+  if(!box) return;
+
+  const tgId =
+    user && (user.telegramId || user.telegram_id)
+      ? String(user.telegramId || user.telegram_id)
+      : (localStorage.getItem("tga_telegram_id") || "");
+
+  // Only useful when there is a real numeric Telegram id (email/phone-only
+  // accounts get an ObjectId here, which means nothing to the user).
+  if(!tgId || !/^\d+$/.test(tgId)){
+    box.classList.add("hidden");
+    return;
+  }
+
+  const name =
+    user && user.username
+      ? "@" + String(user.username).replace(/^@/, "")
+      : (localStorage.getItem("tga_username") || "Telegram account");
+
+  const nameEl =
+    document.getElementById(
+      "tgAccountName"
+    );
+
+  if(nameEl) nameEl.textContent = name;
+
+  const idEl =
+    document.getElementById(
+      "tgAccountId"
+    );
+
+  if(idEl) idEl.textContent = tgId;
+
+  const avatar =
+    document.getElementById(
+      "tgAccountAvatar"
+    );
+
+  const photo =
+    (user && (user.photoUrl || user.photo_url)) ||
+    localStorage.getItem("tga_photo") ||
+    "";
+
+  if(avatar){
+    if(photo){
+      avatar.src = photo;
+      avatar.classList.remove("hidden");
+      avatar.onerror = ()=>{ avatar.classList.add("hidden"); };
+    }else{
+      avatar.removeAttribute("src");
+      avatar.classList.add("hidden");
+    }
+  }
+
+  box.classList.remove("hidden");
+}
+
+
+function copyTelegramId(){
+
+  const el =
+    document.getElementById(
+      "tgAccountId"
+    );
+
+  const id =
+    el ? el.textContent.trim() : "";
+
+  if(!id || id==="—") return;
+
+  copyToClipboard(id);
+}
+
+
+/* ==================================================
    SHOW DASHBOARD
 ================================================== */
 
@@ -6365,6 +6549,193 @@ function hideMaintenance(){
 
 
 /* ==================================================
+   SAVED SESSION
+================================================== */
+
+function restoreSavedSession(){
+
+  const savedToken =
+    getSessionToken();
+
+  const savedId =
+    localStorage.getItem("tga_user_id") ||
+    localStorage.getItem("tga_telegram_id");
+
+  if(savedToken && savedId){
+
+    currentUserId = savedId;
+
+    currentTelegramId =
+      localStorage.getItem("tga_telegram_id") ||
+      savedId;
+
+    showDashboard();
+
+    return true;
+  }
+
+  // Nothing usable saved. Do not force a login screen yet when the page is
+  // inside Telegram (Mini App) — /telegram-app.js is about to sign us in and
+  // showing "Login" first only flickers.
+  clearSession();
+
+  const dash =
+    document.getElementById(
+      "dashboardScreen"
+    );
+
+  if(dash){ dash.style.display="none"; }
+
+  const inTelegram =
+    !!(window.Telegram &&
+       window.Telegram.WebApp &&
+       window.Telegram.WebApp.initData);
+
+  if(!inTelegram){
+
+    document.getElementById(
+      "loginScreen"
+    ).style.display="flex";
+
+  }else{
+
+    showTelegramBooting();
+
+    // Watchdog: if the Mini App sign-in has not produced a session after a few
+    // seconds (offline, rejected initData, very slow cold start), stop showing
+    // the spinner and let the user log in normally.
+    setTimeout(()=>{
+      if(getSessionToken()) return;
+      showNormalLoginAfterTelegram();
+    }, 4500);
+
+  }
+
+  return false;
+}
+
+
+function showTelegramBooting(){
+
+  const screen =
+    document.getElementById(
+      "loginScreen"
+    );
+
+  if(!screen) return;
+
+  screen.style.display="flex";
+
+  const card =
+    screen.querySelector(
+      ".login-card"
+    );
+
+  if(!card) return;
+
+  // Keep the logo + brand, replace the form area with a quiet "signing in"
+  // state, so a Mini App launch never flashes the password form.
+  ["loginFormArea","registerFormArea","loginError"].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.classList.add("hidden");
+  });
+
+  const tabs = card.querySelectorAll(
+    "button[onclick^='switchAuthTab']"
+  );
+
+  tabs.forEach(tab=>{
+    const row = tab.parentElement;
+    if(row) row.classList.add("hidden");
+  });
+
+  if(document.getElementById("telegramBooting")) return;
+
+  const box =
+    document.createElement("div");
+
+  box.id = "telegramBooting";
+
+  box.style.cssText =
+    "margin-top:22px;display:flex;flex-direction:column;align-items:center;gap:12px;color:var(--muted);font-size:13px;line-height:1.6";
+
+  box.innerHTML =
+    '<div class="spinner" style="width:26px;height:26px;border:2px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:bootSpin .8s linear infinite"></div>' +
+    '<div>Signing you in with Telegram…</div>' +
+    '<div style="font-size:12px;opacity:.75">If this takes more than a few seconds, reopen the store from the bot.</div>';
+
+  card.appendChild(box);
+
+  if(!document.getElementById("telegramBootSpinStyle")){
+
+    const style =
+      document.createElement("style");
+
+    style.id = "telegramBootSpinStyle";
+
+    style.textContent =
+      "@keyframes bootSpin{to{transform:rotate(360deg)}}";
+
+    document.head.appendChild(style);
+
+  }
+}
+
+
+/*
+  Telegram auto-login could not finish (expired initData, API unreachable,
+  signature rejected…). Drop the "signing in" state and show the normal form so
+  the user can still log in with ID / email / phone + password.
+*/
+function showNormalLoginAfterTelegram(){
+
+  const booting =
+    document.getElementById(
+      "telegramBooting"
+    );
+
+  if(booting) booting.remove();
+
+  ["loginFormArea","registerFormArea"].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.classList.remove("hidden");
+  });
+
+  // The Login / Register tab row lives directly above the form area.
+  const loginArea =
+    document.getElementById(
+      "loginFormArea"
+    );
+
+  if(loginArea && loginArea.parentElement){
+    loginArea.parentElement
+      .querySelectorAll(":scope > div[style*='margin-top:22px']")
+      .forEach(row=>row.classList.remove("hidden"));
+  }
+
+  showLoginError(
+    "Telegram sign-in did not complete. Log in with your details, or reopen the store from the bot."
+  );
+
+  const screen =
+    document.getElementById(
+      "loginScreen"
+    );
+
+  if(screen) screen.style.display="flex";
+}
+
+
+/*
+  Listen at parse time (not DOMContentLoaded): /telegram-app.js fails fast when
+  Telegram's initData is rejected, possibly before the startup handler exists.
+*/
+window.addEventListener("tga:telegram-auth-failed", ()=>{
+  showNormalLoginAfterTelegram();
+});
+
+
+/* ==================================================
    STARTUP
 ================================================== */
 
@@ -6406,25 +6777,28 @@ window.addEventListener(
         currentCurrency;
     }
 
-    const savedToken = getSessionToken();
-    const savedId = localStorage.getItem("tga_user_id") || localStorage.getItem("tga_telegram_id");
-    if(savedToken && savedId){
-      currentUserId = savedId;
-      currentTelegramId = localStorage.getItem("tga_telegram_id") || savedId;
+    restoreSavedSession();
 
-      showDashboard();
-
-    }else{
-      clearSession();
-
-      document.getElementById(
-        "loginScreen"
-      ).style.display="flex";
-
-      document.getElementById(
-        "dashboardScreen"
-      ).style.display="none";
+    if(window.__tgaTelegramAuthFailed){
+      showNormalLoginAfterTelegram();
     }
+
+    // Telegram Mini App: /telegram-app.js signs the user in with the initData
+    // Telegram handed to the page, then calls this hook. Defined unconditionally
+    // so an early (cached) initData response never races the DOM.
+    window.__tgaOpenDashboard = function(user){
+      if(user){
+        currentUserId = String(user.userId || user.telegramId || "");
+        currentTelegramId = String(user.telegramId || currentUserId || "");
+        if(user.username){
+          try{ localStorage.setItem("tga_username", user.username); }catch(e){}
+        }
+        if(user.photoUrl){
+          try{ localStorage.setItem("tga_photo", user.photoUrl); }catch(e){}
+        }
+      }
+      showDashboard();
+    };
 
 
     /*
@@ -6455,6 +6829,9 @@ window.addEventListener(
 
 
 <script src="/app-extras.js"></script>
+
+<!-- Telegram Mini App auto-login (no-op outside Telegram) -->
+<script src="/telegram-app.js"></script>
 
 </body>
   </html>

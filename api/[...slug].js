@@ -20,6 +20,7 @@
 
 const { setSecurityHeaders } = require("../lib/security");
 
+// NOTE: `telegram` = Mini App sign-in (verifies Telegram WebApp initData).
 const routes = {
   login: require("../lib/routes/login"),
   account: require("../lib/routes/account"),
@@ -33,6 +34,7 @@ const routes = {
   qr_proxy: require("../lib/routes/qr_proxy"),
   recharge: require("../lib/routes/recharge"),
   status: require("../lib/routes/status"),
+  telegram: require("../lib/routes/telegram"),
   v1: require("../lib/routes/v1"),
 };
 

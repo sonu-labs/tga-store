@@ -22,7 +22,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
-from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo, MenuButtonWebApp
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from pymongo import MongoClient
 from telethon import TelegramClient
@@ -57,6 +57,8 @@ s3_catalog = db["server3_catalog"]
 
 #--------- Config : don't use @
 BOTUSER = "TGAStore1Bot"
+# Store URL used by the Mini App buttons (override with WEBSITE_URL in the env).
+WEBSITE_URL = os.getenv("WEBSITE_URL", "https://tga-store.vercel.app")
 SUPPORT = "OfcCuteSmile"
 USAGE = "twalllogs"
 OWNER = "OfcCuteSmile"
@@ -591,7 +593,9 @@ async def cmd_start(m: Message):
         kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="Copy User ID", copy_text=CopyTextButton(text=str(m.from_user.id)))],
             [InlineKeyboardButton(text="Copy Password", copy_text=CopyTextButton(text=new_pwd))],
-            [InlineKeyboardButton(text="Open Website", url="https://tga-store.vercel.app")]
+            # Mini App button: the store reads Telegram's signed initData and
+            # signs the user in automatically (no ID / password typing).
+            [InlineKeyboardButton(text="Open Store", web_app=WebAppInfo(url=WEBSITE_URL))]
         ])
         await m.answer(
             f"Account Created Successfully!\n\n"
@@ -4619,8 +4623,30 @@ s3_send_countries_message = register_server3_handlers(
     BOTUSER=BOTUSER, CHANNEL=CHANNEL
 )
 # ===== Bot Runner =====
+
+async def setup_mini_app_menu():
+    """Expose the store as a Telegram Mini App.
+
+    Two things make the store open *inside* Telegram with automatic sign-in:
+      1. a persistent menu button (bottom-left "Store") pointing at WEBSITE_URL,
+      2. /start registration buttons that use web_app=WEBSITE_URL.
+
+    The website verifies Telegram's signed initData (HMAC with BOT_TOKEN), so
+    the user never types an id or password. Failures here are non-fatal: the
+    bot keeps working even if the URL is not registered as a Mini App yet.
+    """
+    try:
+        await bot.set_chat_menu_button(
+            menu_button=MenuButtonWebApp(text="Store", web_app=WebAppInfo(url=WEBSITE_URL))
+        )
+        print(f"Mini App menu button set -> {WEBSITE_URL}")
+    except Exception as e:
+        print(f"Mini App menu button failed (ok, not fatal): {e}")
+
+
 async def main():
     print("Bot started.")
+    await setup_mini_app_menu()
     start_auto_sweeper()  # launches the UPI/FamPay background auto-verify loop
     asyncio.create_task(smm_background_task())  # launches SMM order auto-status-checker
     

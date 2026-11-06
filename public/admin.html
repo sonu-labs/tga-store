@@ -256,6 +256,7 @@ input,select{
   flex:1;
   min-width:0;
   padding:26px 28px 60px;
+  overflow-x:hidden;
 }
 
 .page{
@@ -479,6 +480,10 @@ input,select{
 
 .table-wrap{
   overflow-x:auto;
+  /* Avoid the classic mobile glitch where a wide table (min-width:720px)
+     pushes the whole page sideways and the sticky topbar stops covering it. */
+  max-width:100%;
+  -webkit-overflow-scrolling:touch;
 }
 
 table{
