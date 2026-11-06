@@ -17,7 +17,16 @@
      ---------------------------------------------------------------- */
   // Telegram premium/custom emoji IDs are intentionally not used. Keep the
   // public hook as a no-op for older dynamic UI calls.
-  window.TGA_EMOJI = { mount: function () {}, enhance: function () {} };
+  function enhanceEmojis(root) {
+    // No premium/custom emoji any more: static system emoji render fine
+    // everywhere, so there is nothing to wrap. Kept as a function (instead of
+    // deleting the calls) because the MutationObserver below and older dynamic
+    // UI code call it on every render — it used to throw
+    // "ReferenceError: enhanceEmojis is not defined" on the first DOM update.
+    return root || null;
+  }
+
+  window.TGA_EMOJI = { mount: function () {}, enhance: enhanceEmojis };
 
   /* ----------------------------------------------------------------
      2. HEADER 3-DOT MENU

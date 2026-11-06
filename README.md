@@ -47,6 +47,7 @@ tga-store/
 │   │   ├── admin.js            # Admin API (overview, logs, users, orders, settings)
 │   │   ├── admin_login.js      # Admin login → session token
 │   │   ├── apikey.js           # User API key management
+│   │   ├── telegram.js         # Mini App sign-in (verify initData → session)
 │   │   └── v1.js               # Public developer API (TGA Store API)
 │   ├── db.js                   # Mongo client, user lookup helpers, CORS
 │   ├── auth.js                 # bcrypt hashing, email/phone validation, tokens
@@ -56,6 +57,7 @@ tga-store/
 │   ├── tglion.js               # TG-Lion API wrapper (country/number/code)
 │   ├── server2.js              # Unified country fetch + profit margin
 │   ├── themes.js               # Store theme catalog (22 full-UI themes) + get/set
+│   ├── telegramAuth.js         # Telegram WebApp initData verification (HMAC)
 │   └── notify.js               # Telegram sales/admin/buyer notifications
 │
 ├── public/                     # Static frontend (served as-is by Vercel)
@@ -67,6 +69,7 @@ tga-store/
 │   ├── index.html              # User-facing store (single page app)
 │   ├── docs.html               # Standalone API Docs page (served at /docs)
 │   ├── app-extras.js           # Emoji, header menu, /docs redirect, pricing modal
+│   ├── telegram-app.js         # Telegram Mini App auto sign-in (initData → /api/telegram)
 │   ├── theme-ui.css            # Full-UI theme engine (all 22 store themes)
 │   ├── admin.html              # Admin dashboard (single page app)
 │   └── admin_login.html        # Admin login page
@@ -89,6 +92,15 @@ tga-store/
   - ✈️ **Telegram** — Telegram User ID + password (get the password from the bot via `/start register`)
   - 📧 **Email** — register on the website
   - 📱 **Phone** — with country code (e.g. `+919876543210`)
+- **Telegram Mini App (automatic)** — when the page is opened from the bot
+  (menu button "Store", the "Open Store" button after `/start register`, or any
+  `web_app` button) Telegram hands the page a signed `initData` payload. It is
+  posted to `POST /api/telegram`, verified server-side (HMAC-SHA256 with
+  `BOT_TOKEN`, see `lib/telegramAuth.js`), and the user is signed in
+  automatically: Telegram id, name, username, photo and balance are all filled
+  in — no ID/password typing. A brand-new Telegram user gets a `users` document
+  with the numeric Telegram id as `_id`, exactly like `bot.py` does, so balance
+  and purchases are shared with the bot.
 - **Register** (website): username + email/phone + password (min 6 chars). The password is hashed with bcrypt.
 - **Telegram registration** is only done through the bot (`/start register`) — the bot generates a strong auto-generated password.
 - Legacy plain-text passwords are automatically migrated to a bcrypt hash on first login.
@@ -301,6 +313,7 @@ background effects.
 | POST | `/api/recharge?action=verify` | Verify payment + credit balance |
 | GET | `/api/qr_proxy?url=&dl=` | QR image proxy (display + download) |
 | GET/POST | `/api/apikey?action=list/generate/revoke/logs` | User API key management and personal API request logs |
+| GET/POST | `/api/telegram` | Mini App sign-in. `POST {initData}` → session token; `GET` → `{bot_username}` |
 | GET/POST | `/api/v1?action=…` | Public developer API (see below) |
 
 ### Developer API (`/api/v1`) — "TGA Store API"
@@ -318,6 +331,19 @@ login screen top corner, the header ⋯ menu, and Settings → API Docs). Every
 | `getCode` | `apiKey`, `number` | Login code + password for a purchase |
 
 Example: `GET /api/v1?action=getNumber&apiKey=TGA_…&country_code=uz`
+
+### Telegram Mini App sign-in
+| Piece | File | What it does |
+|---|---|---|
+| SDK | `index.html`, `docs.html` | `<script src="https://telegram.org/js/telegram-web-app.js">` — first script on the page |
+| Client | `public/telegram-app.js` | Reads `Telegram.WebApp.initData`, posts it to `/api/telegram`, saves the session like a normal login, opens the dashboard. No-op outside Telegram. Shows a short "Signing you in…" state, and falls back to the normal login form if verification fails |
+| Verify | `lib/telegramAuth.js` | HMAC-SHA256 check (`WebAppData` + `BOT_TOKEN`), `auth_date` must be < 24 h old, `user.id` required |
+| Route | `lib/routes/telegram.js` | Finds the user by numeric Telegram id (or `telegram_id`), creates it if missing (bot-compatible document), refreshes name/username/photo, returns a normal session token |
+| Bot | `bot.py` | `set_chat_menu_button(MenuButtonWebApp(...))` on startup + `web_app` button after `/start register`; store URL comes from `WEBSITE_URL` (default `https://tga-store.vercel.app`) |
+
+Requirements: the URL must be HTTPS and served from a domain the bot can use as
+a Mini App. Nothing else is needed — the signature check uses the same
+`BOT_TOKEN` the bot already has.
 
 ### Emoji
 The user UI uses normal system emoji only. Telegram premium/custom emoji IDs and Lottie assets are not used.
@@ -346,7 +372,7 @@ Database name: **`TGAStoreBot`** (also used by `bot.py`).
 
 | Collection | Purpose |
 |---|---|
-| `users` | `_id` (numeric Telegram ID or ObjectId), `telegram_id`, `username`, `email`, `phone`, `balance` (INR), `password_hash`, `bot_connected`, `created_at`, `joined_at` |
+| `users` | `_id` (numeric Telegram ID or ObjectId), `telegram_id`, `username`, `first_name`, `last_name`, `photo_url`, `email`, `phone`, `balance` (INR), `password_hash`, `bot_connected`, `auth_method`, `created_at`, `joined_at` |
 | `orders` | `user_id`, `country`, `country_code`, `number`, `otp`, `pass`, `price` (INR), `provider_price` (USD), `status` (`purchased`/`completed`), `provider`, `created_at`, `code_at` |
 | `transactions` | UPI/FamPay/Binance recharges: `_id` (order id), `user_id`, `method`, `amount`, `status` (`pending`/`paid`), `created_at`, `settled_at`, `expires_at`, `claimed_txn` |
 | `crypto_invoices` | OxaPay invoices: `user_id`, `track_id`, `order_id`, `amount_usdt`, `amount_inr`, `status`, `payment_url`, `created_at` |
@@ -380,6 +406,13 @@ Set all of these in the Vercel project. **No real password or API key is written
 | `ADMIN_LOG_CHAT_ID` / `ADMINLOG` | Private admin log group (e.g. `-1003441797589`) |
 | `BOT_USERNAME` / `BOTUSER` | Bot username without @ (e.g. `TGAStore1Bot`) |
 | `BOT_CHANNEL` / `CHANNEL` | Channel username without @ (e.g. `TGAForu`) |
+
+### Telegram Mini App
+| Var | Default | Purpose |
+|---|---|---|
+| `BOT_TOKEN` | — (required) | Also used to verify Mini App `initData` signatures |
+| `BOT_USERNAME` | `TGAStore1Bot` | Public bot username (deep links, docs) |
+| `WEBSITE_URL` | `https://tga-store.vercel.app` | Store URL used by the bot's Mini App menu button and `/start` button |
 
 ### TG-Lion (Number Provider)
 | Var | Description |
@@ -447,6 +480,9 @@ Serves `public/` with an in-memory mock API so the entire user flow
 - `http://localhost:3000/?preview_theme=glass` — force any theme in one tab
 - `http://localhost:3000/gallery` — all 22 themes rendered live side by side
 - `http://localhost:3000/admin` — admin panel against the mock API
+- `http://localhost:3000/docs` — API docs page (mock keys + logs, working test area)
+- `http://localhost:3000/?preview_telegram=1` — pretend the page was opened inside
+  Telegram, so the Mini App auto-login can be clicked through end to end
 
 ---
 
