@@ -62,6 +62,24 @@ input,select{
   display:none!important;
 }
 
+/* ============ ICONS ============ */
+/* Base sizing for the SVG sprite icons. Without this an <svg class="icon">
+   renders at the browser default (300×150) and breaks every row/button it
+   appears in. */
+.icon{
+  width:20px;
+  height:20px;
+  flex:0 0 auto;
+  display:inline-block;
+  vertical-align:-.18em;
+  color:currentColor;
+  pointer-events:none;
+}
+.icon.xs{ width:14px; height:14px; }
+.icon.sm{ width:16px; height:16px; }
+.icon.lg{ width:24px; height:24px; }
+.icon.xl{ width:30px; height:30px; }
+
 /* ============ TOPBAR ============ */
 
 .topbar{
@@ -135,6 +153,11 @@ input,select{
   background:var(--green);
   box-shadow:0 0 10px var(--green);
   animation:pulse 1.6s ease-in-out infinite;
+}
+
+.status-dot.status-live{
+  border-color:rgba(61,240,146,.25);
+  background:rgba(61,240,146,.1);
 }
 
 .status-dot.status-down{

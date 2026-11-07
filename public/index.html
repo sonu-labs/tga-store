@@ -1015,6 +1015,13 @@ body.light .tg-account-open{
   display:block;
 }
 
+/* When a real photo is loaded it covers the initials completely */
+.tg-account-avatar.has-photo .tg-account-avatar-fallback,
+.welcome-avatar.has-photo .welcome-avatar-fallback,
+.header-avatar.has-photo .header-avatar-fallback{
+  display:none;
+}
+
 .tg-account-avatar-fallback{
   display:flex;
   align-items:center;
@@ -2810,7 +2817,7 @@ body.light .nav-btn.active{
     class="search-box"
     type="search"
     autocomplete="off"
-    placeholder="<svg class=icon aria-hidden=true><use href=/icons.svg#i-search></use></svg> Search countries..."
+    placeholder="Search countries..."
     oninput="filterCountries()"
   >
 
@@ -4598,13 +4605,45 @@ async function loadDashboardData(){
 
     dashboardData=result;
 
+    /*
+      Merge what the API gave us with what was saved at sign-in time. The
+      dashboard route returns the full profile (first/last name, photo), but
+      for older sessions or partial payloads fall back to the values the
+      login stored so the UI never regresses to "User" / an empty avatar.
+    */
+    const apiUser = result.user || {};
+    const saved = (key) => { try { return localStorage.getItem(key) || ""; } catch(e){ return ""; } };
+
+    const profile = Object.assign({}, apiUser, {
+      firstName: apiUser.firstName || saved("tga_first_name") || null,
+      lastName:  apiUser.lastName  || saved("tga_last_name")  || null,
+      photoUrl:  apiUser.photoUrl  || saved("tga_photo")      || null,
+      username:  apiUser.username  || saved("tga_username")   || null,
+      telegramId: apiUser.telegramId || saved("tga_telegram_id") || null,
+    });
+
+    try {
+      if(profile.photoUrl)  localStorage.setItem("tga_photo", profile.photoUrl);
+      if(profile.firstName) localStorage.setItem("tga_first_name", profile.firstName);
+      if(profile.lastName)  localStorage.setItem("tga_last_name", profile.lastName);
+      if(profile.username)  localStorage.setItem("tga_username", profile.username);
+      if(profile.telegramId) localStorage.setItem("tga_telegram_id", String(profile.telegramId));
+    } catch(e) {}
+
+    const displayName =
+      [profile.firstName, profile.lastName]
+        .filter(Boolean)
+        .join(" ")
+        .trim();
+
     document.getElementById(
       "welcomeName"
     ).textContent =
-      result.user?.username ||
+      displayName ||
+      profile.username ||
       "User";
 
-    renderTelegramAccount(result.user);
+    renderTelegramAccount(profile);
 
     document.getElementById(
       "totalOrders"
@@ -7265,10 +7304,20 @@ function paintAvatar(container, photo, fallbackText){
     img.onerror = ()=>{
       img.remove();
       container.classList.remove("has-photo");
+      // Photo broke (expired signed URL, offline): fall back to initials so
+      // the avatar is not a blank circle.
+      container.classList.remove("hidden");
+      const fb = container.querySelector(
+        ".welcome-avatar-fallback, .header-avatar-fallback, .tg-account-avatar-fallback"
+      );
+      if(fb) fb.textContent = initialsOf(fallbackText);
     };
     img.src = photo;
     if(!existing) container.appendChild(img);
     container.classList.add("has-photo");
+    // BUGFIX: must un-hide the avatar here too — otherwise a user with a
+    // photo_url keeps the `hidden` class and the avatar never appears.
+    container.classList.remove("hidden");
     return;
   }
 
@@ -7350,6 +7399,19 @@ function showDashboard(){
       localStorage.getItem("tga_username") ||
       "User";
   }
+
+  // Paint the avatar / Telegram chip straight from the saved session so a
+  // returning Mini App user sees their photo instantly, not after the API
+  // round-trip (loadDashboardData repaints with fresh server data).
+  try {
+    renderTelegramAccount({
+      telegramId: localStorage.getItem("tga_telegram_id") || null,
+      username: localStorage.getItem("tga_username") || null,
+      firstName: savedFirst || null,
+      lastName: savedLast || null,
+      photoUrl: localStorage.getItem("tga_photo") || null,
+    });
+  } catch(e) {}
 
   loadDashboardData();
 
@@ -7828,6 +7890,13 @@ function showTelegramBooting(){
   the user can still log in with ID / email / phone + password.
 */
 function showNormalLoginAfterTelegram(customMessage){
+
+  // A session may have been created in the meantime (manual login completed,
+  // or the watcher already signed the user in). Never re-show the form or paint
+  // an error over a live dashboard.
+  try {
+    if (getSessionToken()) return;
+  } catch (e) {}
 
   const booting =
     document.getElementById(
