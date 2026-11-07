@@ -22,6 +22,9 @@ const PORT = Number(process.argv[2] || process.env.PORT || 3000);
 const PUBLIC_DIR = path.join(__dirname, "..", "public");
 
 let activeTheme = process.env.THEME || "default";
+let maintState = null;
+let paymentState = { active_inr_gateway: "upi", binance_enabled: true, crypto_enabled: true };
+let serverConfig = { s2_api: "tglion", s2_profit: 5 };
 
 // Fake API keys so /docs can be clicked through without MongoDB.
 const MOCK_KEYS = [
@@ -170,6 +173,82 @@ async function api(req, res, url) {
   }
 
   if (route === "admin") {
+    const adminNow = Date.now();
+    const isoDays = (d, hours) => new Date(adminNow - d * 864e5 - (hours || 0) * 36e5).toISOString();
+    const MOCK_LOGS = [
+      { type: "login", status: "success", username: "tg_demo_user", user_id: 7888066934, message: "Telegram sign-in", created_at: isoDays(0, 2) },
+      { type: "buy", status: "success", username: "tg_demo_user", number: "+14155550142", country: "United States", message: "US account", created_at: isoDays(0, 5) },
+      { type: "otp", status: "success", username: "tg_demo_user", number: "+14155550142", created_at: isoDays(0, 6) },
+      { type: "buy", status: "failed", username: "another_user", number: "+23480055", country: "Nigeria", message: "Insufficient balance", created_at: isoDays(1, 3) },
+      { type: "recharge", status: "success", username: "tg_demo_user", message: "₹500 UPI", created_at: isoDays(1, 8) },
+      { type: "login", status: "failed", username: "bot_user_91", message: "bad password", created_at: isoDays(2, 2) }
+    ];
+    if (action === "overview") {
+      return json(res, 200, { success: true, data: {
+        totalUsers: 128, totalOrders: 341, completedOrders: 296, inProgress: 3,
+        failedBuys: 7, successfulLogins: 934, failedLogins: 41, otpReceived: 388,
+        revenue: 98450, totalRecharge: 152300, recentLogs: MOCK_LOGS,
+        maintenance: { enabled: false, message: "", updated_by: "admin", updated_at: isoDays(3) }
+      } });
+    }
+    if (action === "logs") {
+      return json(res, 200, { success: true, data: { logs: MOCK_LOGS, total: MOCK_LOGS.length, limit: 200, skip: 0 } });
+    }
+    if (action === "api_logs") {
+      const logs = [
+        { created_at: isoDays(0, 1), creator: { username: "demo_dev", email: "", phone: "", telegram_id: "7888066934" }, api_key: "TGA_9f2c4e8a…2d3e", method: "GET", action: "available_countries", query: { action: "available_countries", apiKey: "TGA_9f***" }, success: true, status_code: 200 },
+        { created_at: isoDays(0, 4), creator: { username: "demo_dev", email: "", phone: "", telegram_id: "7888066934" }, api_key: "TGA_9f2c4e8a…2d3e", method: "POST", action: "buy", query: { action: "buy", country_code: "US" }, success: true, status_code: 200 },
+        { created_at: isoDays(1, 2), creator: { username: "another_user", email: "", phone: "", telegram_id: "5511223344" }, api_key: "TGA_0e8d7c6b…b0a9", method: "POST", action: "otp", query: { action: "otp", number: "+23480055" }, success: false, status_code: 402 }
+      ];
+      return json(res, 200, { success: true, data: { logs, total: logs.length, limit: 200, skip: 0 } });
+    }
+    if (action === "users") {
+      const users = [
+        { username: "tg_demo_user", telegramId: "7888066934", balance: 4720, logins: 58, last_login: isoDays(0, 2), orders: 4, in_progress: 1, failed_buys: 0, spent: 236 },
+        { username: "another_user", telegramId: "5511223344", balance: 150, logins: 12, last_login: isoDays(1, 4), orders: 2, in_progress: 0, failed_buys: 3, spent: 118 },
+        { username: "bot_user_91", telegramId: "6611223344", balance: 0, logins: 3, last_login: isoDays(2, 2), orders: 0, in_progress: 0, failed_buys: 0, spent: 0 }
+      ];
+      return json(res, 200, { success: true, data: { users } });
+    }
+    if (action === "orders") {
+      const orders = [
+        { created_at: isoDays(0, 6), username: "tg_demo_user", user_id: "7888066934", country: "United States", country_code: "US", number: "+14155550142", otp: "48213", price: 58, status: "purchased" },
+        { created_at: isoDays(0, 20), username: "tg_demo_user", user_id: "7888066934", country: "Indonesia", country_code: "ID", number: "+628115550091", otp: "", price: 29, status: "purchased" },
+        { created_at: isoDays(1, 12), username: "another_user", user_id: "5511223344", country: "Nigeria", country_code: "NG", number: "+23480055", otp: "91330", price: 27, status: "completed" }
+      ];
+      return json(res, 200, { success: true, data: { orders } });
+    }
+    if (action === "maintenance") {
+      if (!maintState) maintState = { enabled: false, message: "", updated_by: "admin", updated_at: isoDays(3) };
+      if (req.method === "POST") {
+        maintState = { enabled: Boolean(body.enabled), message: String(body.message || ""), updated_by: "admin", updated_at: new Date().toISOString() };
+      }
+      return json(res, 200, { success: true, maintenance: maintState });
+    }
+    if (action === "payments" || action === "recharge_settings" || action === "payment_settings") {
+      if (req.method === "POST") {
+        Object.assign(paymentState, body || {});
+      }
+      return json(res, 200, { success: true, settings: paymentState, binance: { pay_id: "123456789", qr_url: "" }, usdt_to_inr: 90, min_usdt: 0.1 });
+    }
+    if (action === "server_config" || action === "server2" || action === "servers") {
+      if (req.method === "POST") { serverConfig = Object.assign(serverConfig, body || {}, { s2_api: "tglion" }); }
+      return json(res, 200, { success: true, config: serverConfig });
+    }
+    if (action === "recharges" || action === "transactions") {
+      const recharges = [
+        { _id: "rc_preview_001", created_at: isoDays(0, 9), username: "tg_demo_user", user_id: "7888066934", method: "UPI", amount: 500, status: "paid" },
+        { _id: "rc_preview_002", created_at: isoDays(1, 15), username: "tg_demo_user", user_id: "7888066934", method: "BINANCE", amount: 1200, amount_usdt: 13.33, status: "paid" },
+        { _id: "rc_preview_003", created_at: isoDays(2, 6), username: "another_user", user_id: "5511223344", method: "CRYPTO", amount: 900, amount_usdt: 10, status: "pending" }
+      ];
+      return json(res, 200, { success: true, data: { recharges } });
+    }
+    if (action === "notify") {
+      return json(res, 200, { success: true, sent: true });
+    }
+    if (action === "logout") {
+      return json(res, 200, { success: true });
+    }
     if (action === "theme" || action === "themes") {
       if (req.method === "POST") {
         activeTheme = normalizeTheme(body.theme || body.id || "default");
