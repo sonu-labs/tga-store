@@ -571,7 +571,9 @@ async def cmd_start(m: Message):
         if user_doc and user_doc.get("password_hash"):
             kb_already = InlineKeyboardMarkup(inline_keyboard=[
                 [InlineKeyboardButton(text="Copy User ID", copy_text=CopyTextButton(text=str(m.from_user.id)))],
-                [InlineKeyboardButton(text="Change Password", callback_data="change_pass_help")]
+                [InlineKeyboardButton(text="Change Password", callback_data="change_pass_help")],
+                # Mini App button: opens the store inside Telegram with automatic sign-in.
+                [InlineKeyboardButton(text="Open Store", web_app=WebAppInfo(url=WEBSITE_URL))]
             ])
             await m.answer(
                 f"Already registered!\n\n"

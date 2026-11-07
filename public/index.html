@@ -7791,7 +7791,77 @@ function hideMaintenance(){
    SAVED SESSION
 ================================================== */
 
+/*
+  A Mini App launch is recognisable before Telegram's SDK fills initData: the
+  URL carries the payload in its hash (#tgWebAppData=…) or the SDK object
+  exists. Treating only a filled initData as "inside Telegram" is what used to
+  flash the password form on a cold launch.
+*/
+/*
+  A session is "live" only when a token was written AFTER the page booted
+  (manual login completing, or a fresh Mini App sign-in overwriting the stale
+  boot-time token). The raw localStorage token alone is not enough inside
+  Telegram, where the stored token may be the stale one from an older visit.
+*/
+function hasLiveSession(){
+  try{
+    const t = getSessionToken();
+    if(!t) return false;
+    const snapshot = window.__tgaStaleBootToken;
+    if(typeof snapshot === "string" && snapshot && t === snapshot) return false;
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+
+function detectMiniAppLaunch(){
+  try{
+    if(window.Telegram && window.Telegram.WebApp) return true;
+    if(window.__tgaTelegramDiag && window.__tgaTelegramDiag.hasTelegramObject) return true;
+    if(location.hash && location.hash.indexOf("tgWebAppData") !== -1) return true;
+    if(location.search && location.search.indexOf("tgWebApp") !== -1) return true;
+  }catch(e){}
+  return false;
+}
+
+function bootTelegramSession(){
+  // Don't paint a stale/local session inside Telegram — /telegram-app.js is
+  // signing in with initData right now and it OVERWRITES whatever session is
+  // in localStorage. Until it resolves (or fails), show the booting spinner —
+  // not the password form, and not the old account's dashboard.
+  try{ window.__tgaStaleBootToken = getSessionToken() || ""; }catch(e){ window.__tgaStaleBootToken = ""; }
+  const dash =
+    document.getElementById(
+      "dashboardScreen"
+    );
+
+  if(dash){ dash.style.display="none"; }
+
+  showTelegramBooting();
+
+  // Watchdog: if the Mini App sign-in has not produced a session after a few
+  // seconds (offline, rejected initData, very slow cold start), stop showing
+  // the spinner and let the user log in normally — with the reason.
+  setTimeout(()=>{
+    if(hasLiveSession()) return;
+    showNormalLoginAfterTelegram(
+      (window.__tgaTelegramAuthFailed && TELEGRAM_FAIL_MESSAGES[window.__tgaTelegramAuthFailed.reason]) ||
+      "Telegram sign-in is taking longer than usual. You can log in with your details below, or reopen the store from the bot."
+    );
+  }, 8000);
+}
+
 function restoreSavedSession(){
+
+  // Inside Telegram the Mini App owns the session. Never paint the stale
+  // website session here — initData signs in fresh and overwrites it.
+  if(detectMiniAppLaunch()){
+
+    bootTelegramSession();
+
+    return false;
+  }
 
   const savedToken =
     getSessionToken();
@@ -7813,9 +7883,7 @@ function restoreSavedSession(){
     return true;
   }
 
-  // Nothing usable saved. Do not force a login screen yet when the page is
-  // inside Telegram (Mini App) — /telegram-app.js is about to sign us in and
-  // showing "Login" first only flickers.
+  // Nothing usable saved — show the normal login form.
   clearSession();
 
   const dash =
@@ -7825,44 +7893,9 @@ function restoreSavedSession(){
 
   if(dash){ dash.style.display="none"; }
 
-  /*
-    A Mini App launch is recognisable before Telegram's SDK fills initData: the
-    URL carries the payload in its hash (#tgWebAppData=…) or the SDK object
-    exists with a platform set. Treating only a filled initData as "inside
-    Telegram" is what used to flash the password form on a cold launch.
-  */
-  const inTelegram = (function(){
-    try{
-      if(window.Telegram && window.Telegram.WebApp) return true;
-      if(window.__tgaTelegramDiag && window.__tgaTelegramDiag.hasTelegramObject) return true;
-      if(location.hash && location.hash.indexOf("tgWebAppData") !== -1) return true;
-      if(location.search && location.search.indexOf("tgWebApp") !== -1) return true;
-    }catch(e){}
-    return false;
-  })();
-
-  if(!inTelegram){
-
-    document.getElementById(
-      "loginScreen"
-    ).style.display="";
-
-  }else{
-
-    showTelegramBooting();
-
-    // Watchdog: if the Mini App sign-in has not produced a session after a few
-    // seconds (offline, rejected initData, very slow cold start), stop showing
-    // the spinner and let the user log in normally — with the reason.
-    setTimeout(()=>{
-      if(getSessionToken()) return;
-      showNormalLoginAfterTelegram(
-        (window.__tgaTelegramAuthFailed && TELEGRAM_FAIL_MESSAGES[window.__tgaTelegramAuthFailed.reason]) ||
-        "Telegram sign-in is taking longer than usual. You can log in with your details below, or reopen the store from the bot."
-      );
-    }, 8000);
-
-  }
+  document.getElementById(
+    "loginScreen"
+  ).style.display="";
 
   return false;
 }
@@ -7944,7 +7977,7 @@ function showNormalLoginAfterTelegram(customMessage){
   // or the watcher already signed the user in). Never re-show the form or paint
   // an error over a live dashboard.
   try {
-    if (getSessionToken()) return;
+    if (hasLiveSession()) return;
   } catch (e) {}
 
   const booting =
