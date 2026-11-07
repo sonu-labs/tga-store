@@ -7891,6 +7891,13 @@ function showTelegramBooting(){
 */
 function showNormalLoginAfterTelegram(customMessage){
 
+  // A session may have been created in the meantime (manual login completed,
+  // or the watcher already signed the user in). Never re-show the form or paint
+  // an error over a live dashboard.
+  try {
+    if (getSessionToken()) return;
+  } catch (e) {}
+
   const booting =
     document.getElementById(
       "telegramBooting"
