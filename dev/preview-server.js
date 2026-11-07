@@ -32,11 +32,6 @@ const MOCK_KEYS = [
     _id: "TGA_9f2c4e8a1b6d70354c2f8e9a0b1c2d3e",
     created_at: new Date(Date.now() - 6 * 864e5).toISOString(),
     last_used_at: new Date(Date.now() - 22 * 60e3).toISOString()
-  },
-  {
-    _id: "TGA_1a7b3c9d5e2f68044b1c8d7e6a5f4c3b",
-    created_at: new Date(Date.now() - 2 * 864e5).toISOString(),
-    last_used_at: null
   }
 ];
 
@@ -283,10 +278,12 @@ async function api(req, res, url) {
       });
     }
     if (action === "generate") {
+      if (MOCK_KEYS.length >= 1) {
+        return json(res, 400, { success: false, message: "You already have an API key. Revoke it to create a new one." });
+      }
       const key = "TGA_" + Math.random().toString(16).slice(2).padEnd(20, "0").slice(0, 20) +
         Math.random().toString(16).slice(2).padEnd(20, "0").slice(0, 20);
       MOCK_KEYS.unshift({ _id: key, created_at: new Date().toISOString(), last_used_at: null });
-      MOCK_KEYS.length = Math.min(MOCK_KEYS.length, 3);
       return json(res, 200, { success: true, key, message: "API key generated." });
     }
     if (action === "revoke") {

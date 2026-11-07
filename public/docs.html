@@ -938,7 +938,7 @@ tbody td.muted{
 
         <div class="key-toolbar">
           <button class="btn primary" type="button" id="generateBtn"><svg class="icon sm" aria-hidden="true"><use href="/icons.svg#i-plus"></use></svg> Generate new key</button>
-          <span class="badge" id="keyCountBadge">0 / 3 keys</span>
+          <span class="badge" id="keyCountBadge">0 / 1 key</span>
         </div>
 
         <div class="key-list" id="keyList"></div>
@@ -1318,7 +1318,7 @@ tbody td.muted{
 (function () {
   "use strict";
 
-  var MAX_KEYS = 3;
+  var MAX_KEYS = 1;
   var STORE = {
     keys: [],
     logs: [],
@@ -1519,7 +1519,7 @@ tbody td.muted{
     if (!list) return;
 
     if (count) {
-      count.textContent = STORE.keys.length + " / " + MAX_KEYS + " keys";
+      count.textContent = STORE.keys.length + " / " + MAX_KEYS + (MAX_KEYS === 1 ? " key" : " keys");
       count.classList.toggle("green", STORE.keys.length > 0);
     }
 
@@ -1587,7 +1587,7 @@ tbody td.muted{
   async function generateKey() {
     if (!STORE.loggedIn) { toast("Sign in to the store first", true); return; }
     if (STORE.keys.length >= MAX_KEYS) {
-      toast("You already have " + MAX_KEYS + " keys — revoke one first", true);
+      toast("You already have your API key — revoke it to create a new one", true);
       return;
     }
 
