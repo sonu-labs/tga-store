@@ -1,0 +1,10 @@
+{
+  "$schema": "https://unpkg.com/wrangler@latest/config-schema.json",
+  "name": "tgastore",
+  "main": "worker.js",
+  "compatibility_date": "2025-11-07",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  }
+}

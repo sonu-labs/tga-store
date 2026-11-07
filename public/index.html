@@ -322,13 +322,24 @@ body.light #loginScreen::after{
   width:100%;
   max-width:432px;
   background:color-mix(in srgb,var(--surface) 88%,transparent);
-  border:1px solid var(--border);
+  border:1px solid rgba(255,255,255,.09);
   border-radius:26px;
   padding:30px 28px 26px;
   text-align:center;
-  box-shadow:0 34px 90px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.05);
+  box-shadow:0 40px 110px rgba(0,0,0,.62),0 0 0 1px rgba(var(--green-rgb),.08),inset 0 1px 0 rgba(255,255,255,.06);
   -webkit-backdrop-filter:blur(22px);
   backdrop-filter:blur(22px);
+}
+
+.login-card::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:10%;
+  right:10%;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(var(--green-rgb),.7),transparent);
+  pointer-events:none;
 }
 
 @supports not (background:color-mix(in srgb,red 50%,blue)){
@@ -336,6 +347,7 @@ body.light #loginScreen::after{
 }
 
 body.light .login-card{
+  border-color:var(--border);
   box-shadow:0 30px 70px rgba(0,0,0,.10),inset 0 1px 0 #fff;
 }
 
@@ -345,6 +357,23 @@ body.light .login-card{
   align-items:center;
   gap:4px;
   margin-bottom:20px;
+}
+
+.login-card-logo{
+  display:none;
+  width:56px;
+  height:56px;
+  border-radius:16px;
+  object-fit:cover;
+  background:#0b0b0b;
+  margin-bottom:8px;
+  box-shadow:0 0 0 1px rgba(255,255,255,.12),0 12px 30px rgba(0,0,0,.5),0 0 24px rgba(var(--green-rgb),.18);
+}
+
+@media (max-width:1000px){
+  .login-card-logo{
+    display:block;
+  }
 }
 
 /* brand title / sub are reused by other screens */
@@ -531,7 +560,7 @@ body.light .auth-tab.active{
   border-radius:14px;
   padding:15px;
   margin-top:20px;
-  background:var(--btn);
+  background:linear-gradient(180deg,#ffffff 0%,#ececec 100%);
   color:var(--btn-text);
   font-weight:800;
   font-size:14.5px;
@@ -542,10 +571,15 @@ body.light .auth-tab.active{
   transition:transform .15s ease,opacity .15s ease,box-shadow .15s ease;
 }
 
+body.light .login-btn,
+body.light .primary-btn{
+  background:var(--btn);
+}
+
 .login-btn:hover,
 .primary-btn:hover{
   transform:translateY(-1px);
-  box-shadow:0 12px 30px rgba(0,0,0,.35);
+  box-shadow:0 14px 36px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.35);
 }
 
 .login-btn:disabled{
@@ -665,25 +699,21 @@ body.light .btn-telegram{
 }
 
 @media (max-width:600px){
-  /* The API Docs pill would sit on top of the centred brand title on a narrow
-     card, so it shrinks to a tidy round icon button. */
   .login-api-link{
-    gap:0;
-    width:38px;
-    height:38px;
-    padding:0;
-    justify-content:center;
-    font-size:0;
-    border-radius:50%;
+    top:10px;
+    right:10px;
+    padding:8px 11px 8px 10px;
+    gap:6px;
+    font-size:11px;
   }
 
   .login-api-link .icon{
-    width:17px;
-    height:17px;
+    width:13px;
+    height:13px;
   }
 
   .login-card-head{
-    margin-top:6px;
+    margin-top:10px;
   }
 }
 
@@ -2201,28 +2231,46 @@ body.light .nav-btn.active{
 
 .login-api-link{
   position:absolute;
-  top:12px;
-  right:12px;
+  top:14px;
+  right:14px;
   z-index:60;
-  display:flex;
+  display:inline-flex;
   align-items:center;
   gap:7px;
-  padding:9px 14px;
+  padding:9px 14px 9px 12px;
   border-radius:999px;
-  background:var(--surface2, rgba(255,255,255,.08));
-  border:1px solid var(--border);
-  color:var(--text);
-  font-size:13px;
+  background:rgba(13,13,13,.78);
+  border:1px solid rgba(255,255,255,.15);
+  color:#e9f8ef;
+  font-size:12px;
   font-weight:800;
+  letter-spacing:.5px;
+  line-height:1;
+  white-space:nowrap;
   cursor:pointer;
-  backdrop-filter:blur(16px);
-  -webkit-backdrop-filter:blur(16px);
-  transition:transform .15s ease, border-color .15s ease;
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  box-shadow:0 10px 26px rgba(0,0,0,.40),inset 0 1px 0 rgba(255,255,255,.08);
+  transition:transform .16s ease,border-color .16s ease,background .16s ease,color .16s ease,box-shadow .16s ease;
+}
+
+.login-api-link .icon{
+  width:15px;
+  height:15px;
+  color:var(--green);
+  vertical-align:0;
 }
 
 .login-api-link:hover{
-  border-color:rgba(var(--green-rgb),.5);
   transform:translateY(-1px);
+  border-color:rgba(var(--green-rgb),.6);
+  background:rgba(var(--green-rgb),.12);
+  color:#fff;
+  box-shadow:0 12px 30px rgba(0,0,0,.45),0 0 0 1px rgba(var(--green-rgb),.16);
+}
+
+.login-api-link:active{
+  transform:translateY(0);
 }
 
 /* ==================================================
@@ -2394,6 +2442,7 @@ body.light .nav-btn.active{
       </button>
 
       <div class="login-card-head">
+        <img class="login-card-logo" src="/assets/logo.png" alt="TGA Store logo">
         <div class="brand-title">TGA STORE</div>
         <div class="brand-sub">Sign in to continue</div>
       </div>
@@ -7907,6 +7956,8 @@ function showNormalLoginAfterTelegram(customMessage){
 
   const tabs = document.querySelector(".login-card .auth-tabs");
   if(tabs) tabs.classList.remove("hidden");
+  document.querySelectorAll(".login-card .method-switch")
+    .forEach(function(el){ el.classList.remove("hidden"); });
 
   const activeTab = authTab === "register" ? "register" : "login";
   const loginArea = document.getElementById("loginFormArea");

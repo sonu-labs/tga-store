@@ -463,6 +463,16 @@ Set all of these in the Vercel project. **No real password or API key is written
 6. Deploy. `vercel.json` automatically routes `/admin` → `/admin.html`.
 7. The single catch-all `api/[...slug].js` becomes the one serverless Function, and every `/api/*` request is routed through it. All routes are consolidated here (instead of one Function per endpoint) so the project stays within the **Vercel Hobby plan's Function limit**.
 
+## ☁️ Deployment (Cloudflare Workers — mirror)
+
+The repo is also wired to **Cloudflare Workers Builds** (the `tgastore` service), so pushes to `main` can deploy a full Cloudflare mirror automatically. It works without any secrets in the Worker:
+
+- `worker.js` serves the static frontend from **Workers Static Assets** (`./public`), replicating the `vercel.json` pretty-URL rewrites (`/docs`, `/admin`, `/admin_login`).
+- Every `/api/*` request is **proxied same-origin to the Vercel deployment** (`https://tga-store.vercel.app`), which owns the serverless API, MongoDB and all secrets. The proxy forwards method, headers, query and body and returns the upstream response untouched.
+- `wrangler.json` pins the Worker name `tgastore` and the assets binding.
+
+Nothing to configure in Cloudflare beyond the existing Workers Builds connection — on push, `npx wrangler deploy` picks up `wrangler.json` and deploys. If the build ever fails in the dashboard, check that the project build settings have **no custom build command** (or `npx wrangler deploy`). To point the mirror at a different API origin, set a plain (non-secret) variable `API_ORIGIN` in the Worker's settings.
+
 ### Local dev
 ```bash
 npm install
