@@ -1348,7 +1348,13 @@ tbody td.muted{
   }
 
   function storedUsername() {
-    try { return localStorage.getItem("tga_username") || ""; } catch (e) { return ""; }
+    try {
+      var first = localStorage.getItem("tga_first_name") || "";
+      var last = localStorage.getItem("tga_last_name") || "";
+      var full = (first + " " + last).trim();
+      if (full) return full;
+      return localStorage.getItem("tga_username") || "";
+    } catch (e) { return ""; }
   }
 
   function authHeaders(withJson) {
