@@ -47,24 +47,6 @@
     return (window.Telegram && window.Telegram.WebApp) || null;
   }
 
-  /*
-    Is this launch even a Mini App? When the page is opened in a normal
-    browser there is no SDK object and no payload in the URL — the sign-in
-    flow used to keep polling for 3 seconds anyway, and its late "not in
-    Telegram" failure then re-showed the login form *after* a successful
-    manual sign-in. Failing fast keeps the form state stable.
-  */
-  function looksLikeTelegramLaunch() {
-    try {
-      if (webApp()) return true;
-      var hash = String((window.location && window.location.hash) || "");
-      if (hash.indexOf("tgWebAppData") !== -1) return true;
-      var search = String((window.location && window.location.search) || "");
-      if (search.indexOf("tgWebApp") !== -1) return true;
-    } catch (e) {}
-    return false;
-  }
-
   /* Telegram Web/Desktop sometimes only fills initData after the SDK script
      has fully booted. Poll briefly instead of giving up on the first tick. */
   function waitForInitData(deadline) {
@@ -155,7 +137,7 @@
     diag.finished = true;
 
     // Message ids map to the human explanations in index.html.
-    console.warn("[tga] Telegram auto-login failed:", reason, detail || "");
+    console.error("[tga] Telegram auto-login failed:", reason, detail || "");
 
     try {
       localStorage.removeItem("tga_login_source");
@@ -208,14 +190,15 @@
       } catch (e) {}
     }
 
-    // 1. wait for the SDK, then fall back to the launch hash — but only when
-    // the launch actually looks like a Mini App (SDK object or tgWebAppData
-    // marker). A normal browser tab must not stall three seconds.
-    var initData = looksLikeTelegramLaunch()
-      ? await waitForInitData(Date.now() + SDK_WAIT_MS)
-      : "";
-    diag.source = initData ? "sdk" : "";
-
+    // 1. Prefer the SDK's signed initData (poll briefly — Telegram Web/
+    // Desktop sometimes fills it late). If the SDK is missing or comes up
+    // empty, fall back to the launch hash (#tgWebAppData=…) immediately —
+    // no point stalling three seconds when the payload is already in the URL.
+    var initData = "";
+    if (app) {
+      initData = await waitForInitData(Date.now() + SDK_WAIT_MS);
+      diag.source = initData ? "sdk" : "";
+    }
     if (!initData) {
       initData = initDataFromHash();
       if (initData) diag.source = "hash";
