@@ -5,5 +5,11 @@
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "mongodb": "^6.18.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.158.0"
+  },
+  "scripts": {
+    "build": "echo \"No build step - worker.js and public/ deploy as-is\""
   }
 }
