@@ -29,7 +29,7 @@ let serverConfig = { s2_api: "tglion", s2_profit: 5 };
 // Fake API keys so /docs can be clicked through without MongoDB.
 const MOCK_KEYS = [
   {
-    _id: "TGA_9f2c4e8a1b6d70354c2f8e9a0b1c2d3e",
+    _id: "TGAS21234567890",
     created_at: new Date(Date.now() - 6 * 864e5).toISOString(),
     last_used_at: new Date(Date.now() - 22 * 60e3).toISOString()
   }
@@ -191,9 +191,9 @@ async function api(req, res, url) {
     }
     if (action === "api_logs") {
       const logs = [
-        { created_at: isoDays(0, 1), creator: { username: "demo_dev", email: "", phone: "", telegram_id: "7888066934" }, api_key: "TGA_9f2c4e8a…2d3e", method: "GET", action: "available_countries", query: { action: "available_countries", apiKey: "TGA_9f***" }, success: true, status_code: 200 },
-        { created_at: isoDays(0, 4), creator: { username: "demo_dev", email: "", phone: "", telegram_id: "7888066934" }, api_key: "TGA_9f2c4e8a…2d3e", method: "POST", action: "buy", query: { action: "buy", country_code: "US" }, success: true, status_code: 200 },
-        { created_at: isoDays(1, 2), creator: { username: "another_user", email: "", phone: "", telegram_id: "5511223344" }, api_key: "TGA_0e8d7c6b…b0a9", method: "POST", action: "otp", query: { action: "otp", number: "+23480055" }, success: false, status_code: 402 }
+        { created_at: isoDays(0, 1), creator: { username: "demo_dev", email: "", phone: "", telegram_id: "7888066934" }, api_key: "TGAS21234…7890", method: "GET", action: "available_countries", query: { action: "available_countries", apiKey: "TGAS2***" }, success: true, status_code: 200 },
+        { created_at: isoDays(0, 4), creator: { username: "demo_dev", email: "", phone: "", telegram_id: "7888066934" }, api_key: "TGAS21234…7890", method: "POST", action: "buy", query: { action: "buy", country_code: "US" }, success: true, status_code: 200 },
+        { created_at: isoDays(1, 2), creator: { username: "another_user", email: "", phone: "", telegram_id: "5511223344" }, api_key: "TGAS25556…67777", method: "POST", action: "otp", query: { action: "otp", number: "+23480055" }, success: false, status_code: 402 }
       ];
       return json(res, 200, { success: true, data: { logs, total: logs.length, limit: 200, skip: 0 } });
     }
@@ -260,9 +260,9 @@ async function api(req, res, url) {
           users: 2,
           totalRequests: 47,
           keys: [
-            { key: "TGA_9f2c4e8a1b6d70354c2f8e9a0b1c2d3e", username: "demo_dev", user_id: "7888066934", telegram_id: "7888066934", created_at: iso(6), last_used_at: iso(0, 22), requests: 31, user_keys: 2 },
-            { key: "TGA_1a7b3c9d5e2f68044b1c8d7e6a5f4c3b", username: "demo_dev", user_id: "7888066934", telegram_id: "7888066934", created_at: iso(2), last_used_at: iso(1, 4), requests: 12, user_keys: 2 },
-            { key: "TGA_0e8d7c6b5a4938271605f4e3d2c1b0a9", username: "another_user", user_id: "5511223344", telegram_id: "5511223344", created_at: iso(4), last_used_at: null, requests: 4, user_keys: 1 }
+            { key: "TGAS21234567890", username: "demo_dev", user_id: "7888066934", telegram_id: "7888066934", created_at: iso(6), last_used_at: iso(0, 22), requests: 31, user_keys: 2 },
+            { key: "TGAS29876543210", username: "demo_dev", user_id: "7888066934", telegram_id: "7888066934", created_at: iso(2), last_used_at: iso(1, 4), requests: 12, user_keys: 2 },
+            { key: "TGAS25556667777", username: "another_user", user_id: "5511223344", telegram_id: "5511223344", created_at: iso(4), last_used_at: null, requests: 4, user_keys: 1 }
           ]
         }
       });
@@ -281,8 +281,9 @@ async function api(req, res, url) {
       if (MOCK_KEYS.length >= 1) {
         return json(res, 400, { success: false, message: "You already have an API key. Revoke it to create a new one." });
       }
-      const key = "TGA_" + Math.random().toString(16).slice(2).padEnd(20, "0").slice(0, 20) +
-        Math.random().toString(16).slice(2).padEnd(20, "0").slice(0, 20);
+      let digits = "";
+      for (let i = 0; i < 10; i++) digits += Math.floor(Math.random() * 10);
+      const key = "TGAS2" + digits;
       MOCK_KEYS.unshift({ _id: key, created_at: new Date().toISOString(), last_used_at: null });
       return json(res, 200, { success: true, key, message: "API key generated." });
     }
