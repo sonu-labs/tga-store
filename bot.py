@@ -58,7 +58,7 @@ s3_catalog = db["server3_catalog"]
 #--------- Config : don't use @
 BOTUSER = "TGAStore1Bot"
 # Store URL used by the Mini App buttons (override with WEBSITE_URL in the env).
-WEBSITE_URL = os.getenv("WEBSITE_URL", "https://tga-store.vercel.app")
+WEBSITE_URL = os.getenv("WEBSITE_URL", "https://tgastore.rulebreaker.cc")
 SUPPORT = "OfcCuteSmile"
 USAGE = "twalllogs"
 OWNER = "OfcCuteSmile"

@@ -10,9 +10,12 @@
      2. proxies every `/api/*` request (same path, query and body) to the
         production Vercel deployment, which answers it.
 
-   No secrets live in this file or in the Worker. `API_ORIGIN` can be
-   overridden with a plain (non-secret) environment variable in the dashboard
-   if the Vercel deployment ever moves — defaults to production.
+   The public site is served at https://tgastore.rulebreaker.cc (Workers
+   custom domain). No secrets live in this file or in the Worker. `API_ORIGIN`
+   can be overridden with a plain (non-secret) environment variable in the
+   dashboard if the Vercel deployment ever moves — defaults to the Vercel
+   origin. It must NOT point at the Cloudflare domain or `/api/*` would be
+   proxied to this Worker itself.
    ========================================================================== */
 
 const API_ORIGIN_DEFAULT = "https://tga-store.vercel.app";

@@ -2,10 +2,12 @@
 
 TGA Store is a dark-themed, mobile-friendly web store where users can buy Telegram accounts (phone numbers + OTP), top up their wallet (UPI / FamPay / Binance Pay / Crypto), and an admin can control the entire store from one panel. The website shares the same MongoDB database used by the Telegram bot (`bot.py`).
 
-> **Live URL:** https://tga-store.vercel.app
-> **API Docs:** https://tga-store.vercel.app/docs
-> **Admin Panel:** https://tga-store.vercel.app/admin
-> **Admin Login:** https://tga-store.vercel.app/admin_login
+> **Live URL (Cloudflare):** https://tgastore.rulebreaker.cc
+> **API Docs:** https://tgastore.rulebreaker.cc/docs
+> **Admin Panel:** https://tgastore.rulebreaker.cc/admin
+> **Admin Login:** https://tgastore.rulebreaker.cc/admin_login
+>
+> Served by Cloudflare Workers; `/api/*` is proxied to the Vercel origin (`https://tga-store.vercel.app`), which owns the serverless API, MongoDB and all secrets. The Vercel URL keeps working too.
 
 ---
 
@@ -230,6 +232,7 @@ Below it is a **Recent Activity** feed (last 25 logs) — login, buy, OTP, and r
 - Saved to `settings.server_config.s2_profit`
 
 #### 🔑 API Keys
+- Keys are server-tagged: **`TGAS2` + 10 random digits** (e.g. `TGAS2123456789`). The `2` is this deployment's server digit — set `API_KEY_SERVER=1|2|3` when this project is reused for Server 1 or 3. Legacy `TGA_…` keys keep working (validation is a DB lookup on the key itself).
 - Lists **every API key created by every user** — full key (with copy button), owner (username + Telegram/account ID), how many keys that user has, total requests made with the key, created + last-used times
 - Summary pill up top: total users, total keys, total requests
 - Backed by `GET /api/admin?action=api_keys` (joins `api_keys` + `users` + `api_logs` request counts)
@@ -330,7 +333,7 @@ login screen top corner, the header ⋯ menu, and Settings → API Docs). Every
 | `getNumber` | `apiKey`, `country_code` | Buys a number (deducts balance) |
 | `getCode` | `apiKey`, `number` | Login code + password for a purchase |
 
-Example: `GET /api/v1?action=getNumber&apiKey=TGA_…&country_code=uz`
+Example: `GET /api/v1?action=getNumber&apiKey=TGAS2…&country_code=uz`
 
 ### Telegram Mini App sign-in
 | Piece | File | What it does |
@@ -339,7 +342,7 @@ Example: `GET /api/v1?action=getNumber&apiKey=TGA_…&country_code=uz`
 | Client | `public/telegram-app.js` | Reads `Telegram.WebApp.initData`, posts it to `/api/telegram`, saves the session like a normal login, opens the dashboard. No-op outside Telegram. Shows a short "Signing you in…" state, and falls back to the normal login form if verification fails |
 | Verify | `lib/telegramAuth.js` | HMAC-SHA256 check (`WebAppData` + `BOT_TOKEN`), `auth_date` must be < 24 h old, `user.id` required |
 | Route | `lib/routes/telegram.js` | Finds the user by numeric Telegram id (or `telegram_id`), creates it if missing (bot-compatible document), refreshes name/username/photo, returns a normal session token |
-| Bot | `bot.py` | `set_chat_menu_button(MenuButtonWebApp(...))` on startup + `web_app` button after `/start register`; store URL comes from `WEBSITE_URL` (default `https://tga-store.vercel.app`) |
+| Bot | `bot.py` | `set_chat_menu_button(MenuButtonWebApp(...))` on startup + `web_app` button after `/start register`; store URL comes from `WEBSITE_URL` (default `https://tgastore.rulebreaker.cc`) |
 
 Requirements: the URL must be HTTPS and served from a domain the bot can use as
 a Mini App. Nothing else is needed — the signature check uses the same
@@ -412,7 +415,8 @@ Set all of these in the Vercel project. **No real password or API key is written
 |---|---|---|
 | `BOT_TOKEN` | — (required) | Also used to verify Mini App `initData` signatures |
 | `BOT_USERNAME` | `TGAStore1Bot` | Public bot username (deep links, docs) |
-| `WEBSITE_URL` | `https://tga-store.vercel.app` | Store URL used by the bot's Mini App menu button and `/start` button |
+| `WEBSITE_URL` | `https://tgastore.rulebreaker.cc` | Store URL used by the bot's Mini App menu button and `/start` button |
+| `API_KEY_SERVER` | `2` | Server digit stamped into new API keys (`TGAS<digit><10 random digits>`) |
 
 ### TG-Lion (Number Provider)
 | Var | Description |
@@ -470,6 +474,7 @@ The repo is also wired to **Cloudflare Workers Builds** (the `tgastore` service)
 - `worker.js` serves the static frontend from **Workers Static Assets** (`./public`), replicating the `vercel.json` pretty-URL rewrites (`/docs`, `/admin`, `/admin_login`).
 - Every `/api/*` request is **proxied same-origin to the Vercel deployment** (`https://tga-store.vercel.app`), which owns the serverless API, MongoDB and all secrets. The proxy forwards method, headers, query and body and returns the upstream response untouched.
 - `wrangler.json` pins the Worker name `tgastore` and the assets binding.
+- The public site lives at **`tgastore.rulebreaker.cc`** (Workers custom domain). Keep `API_ORIGIN` pointing at the **Vercel origin** — setting it to the Cloudflare URL would make the Worker proxy `/api/*` to itself.
 
 Nothing to configure in Cloudflare beyond the existing Workers Builds connection — on push, `npx wrangler deploy` picks up `wrangler.json` and deploys. If the build ever fails in the dashboard, check that the project build settings have **no custom build command** (or `npx wrangler deploy`). To point the mirror at a different API origin, set a plain (non-secret) variable `API_ORIGIN` in the Worker's settings.
 
