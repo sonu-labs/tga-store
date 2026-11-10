@@ -1,0 +1,1235 @@
+/* ==========================================================================
+   TGA STORE — UI v2 (polish layer)
+   ==========================================================================
+   Loaded AFTER the original inline styles and BEFORE /theme-ui.css, so:
+
+     • every rule here applies to the DEFAULT store design,
+     • an admin-selected theme (body[data-theme="…"]) still wins, because
+       /theme-ui.css is loaded last,
+     • nothing here changes markup contracts — only looks, motion and feel.
+
+   Contents
+     1. Design tokens (default theme)
+     2. Ambient animated background
+     3. Motion library (keyframes, reduced-motion safe)
+     4. Login / hero
+     5. Auth card, fields, buttons
+     6. Dashboard shell, header, welcome, Telegram chip
+     7. Balance, stats, sections
+     8. Country cards + lazy loading
+     9. Orders, modals, recharge, settings
+    10. Bottom navigation
+    11. Toasts, skeleton loaders, misc
+    12. Light mode
+   ========================================================================== */
+
+/* ==========================================================================
+   1. DESIGN TOKENS
+   ========================================================================== */
+
+body:not([data-theme]){
+  --bg:#05070d;
+  --surface:#0a1018;
+  --surface2:#0e1621;
+  --border:rgba(255,255,255,.075);
+  --text:#f3f8ff;
+  --muted:#93a3bb;
+  --soft:#5f6f86;
+  --green:#3ee08f;
+  --green-rgb:62,224,143;
+  --red:#ff6b6b;
+  --yellow:#ffc857;
+  --btn:#f6faff;
+  --btn-text:#05101b;
+  --header-bg:rgba(5,9,16,.72);
+  --nav-bg:rgba(9,14,22,.82);
+  --nav-border:rgba(255,255,255,.09);
+  --nav-active:#101a28;
+
+  --tg:#2aabee;
+  --tg-rgb:42,171,238;
+  --ui-glow:0 24px 70px rgba(0,0,0,.55);
+  --ui-ease:cubic-bezier(.22,.9,.28,1);
+  --ui-radius:22px;
+}
+
+body:not([data-theme]){
+  background:var(--bg);
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  font-feature-settings:"ss01","cv01";
+  overscroll-behavior-y:none;
+}
+
+/* Selection + scrollbar: small details that make it feel finished. */
+body:not([data-theme]) ::selection{
+  background:rgba(var(--tg-rgb),.32);
+  color:#fff;
+}
+
+body:not([data-theme]) ::-webkit-scrollbar{
+  width:10px;
+  height:10px;
+}
+
+body:not([data-theme]) ::-webkit-scrollbar-thumb{
+  background:rgba(255,255,255,.12);
+  border-radius:20px;
+  border:2px solid transparent;
+  background-clip:content-box;
+}
+
+body:not([data-theme]) ::-webkit-scrollbar-track{
+  background:transparent;
+}
+
+/* ==========================================================================
+   2. AMBIENT ANIMATED BACKGROUND
+   ========================================================================== */
+
+.ui-aurora{
+  position:fixed;
+  inset:-20vmax;
+  z-index:-5;
+  pointer-events:none;
+  opacity:.85;
+  background:
+    radial-gradient(38vmax 38vmax at 18% 12%,rgba(var(--tg-rgb),.20),transparent 62%),
+    radial-gradient(34vmax 34vmax at 82% 18%,rgba(var(--green-rgb),.13),transparent 60%),
+    radial-gradient(44vmax 44vmax at 55% 92%,rgba(124,92,255,.16),transparent 64%);
+  filter:blur(6px) saturate(120%);
+  animation:uiAuroraDrift 26s var(--ui-ease) infinite alternate;
+  contain:layout style paint;
+}
+
+@keyframes uiAuroraDrift{
+  0%{ transform:translate3d(-1.5%,-1%,0) scale(1); }
+  50%{ transform:translate3d(2%,1.5%,0) scale(1.06); }
+  100%{ transform:translate3d(-.5%,2%,0) scale(1.02); }
+}
+
+/* Subtle grain so large dark areas never look "flat black". */
+body:not([data-theme])::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-4;
+  pointer-events:none;
+  opacity:.035;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.6'/%3E%3C/svg%3E");
+}
+
+body.light .ui-aurora{
+  opacity:.5;
+  background:
+    radial-gradient(38vmax 38vmax at 18% 12%,rgba(var(--tg-rgb),.18),transparent 62%),
+    radial-gradient(34vmax 34vmax at 82% 18%,rgba(16,185,129,.12),transparent 60%),
+    radial-gradient(44vmax 44vmax at 55% 92%,rgba(124,92,255,.10),transparent 64%);
+}
+
+/* ==========================================================================
+   3. MOTION LIBRARY
+   ========================================================================== */
+
+@keyframes uiFadeUp{
+  from{ opacity:0; transform:translate3d(0,16px,0); }
+  to{ opacity:1; transform:none; }
+}
+
+@keyframes uiFadeIn{
+  from{ opacity:0; }
+  to{ opacity:1; }
+}
+
+@keyframes uiPop{
+  0%{ opacity:0; transform:scale(.94); }
+  60%{ opacity:1; transform:scale(1.012); }
+  100%{ opacity:1; transform:scale(1); }
+}
+
+@keyframes uiFloat{
+  0%,100%{ transform:translateY(0) rotate(0deg); }
+  50%{ transform:translateY(-7px) rotate(-1.2deg); }
+}
+
+@keyframes uiSheen{
+  0%{ transform:translateX(-130%) skewX(-16deg); }
+  60%,100%{ transform:translateX(230%) skewX(-16deg); }
+}
+
+@keyframes uiShimmer{
+  0%{ background-position:-220% 0; }
+  100%{ background-position:220% 0; }
+}
+
+@keyframes uiPulseRing{
+  0%{ box-shadow:0 0 0 0 rgba(var(--green-rgb),.35); }
+  70%{ box-shadow:0 0 0 14px rgba(var(--green-rgb),0); }
+  100%{ box-shadow:0 0 0 0 rgba(var(--green-rgb),0); }
+}
+
+@keyframes uiSpin{
+  to{ transform:rotate(360deg); }
+}
+
+@keyframes uiRipple{
+  from{ opacity:.45; transform:scale(0); }
+  to{ opacity:0; transform:scale(2.6); }
+}
+
+/* Every entrance animation is disabled for users who ask for less motion. */
+@media (prefers-reduced-motion: reduce){
+  *,
+  *::before,
+  *::after{
+    animation-duration:.001ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.001ms !important;
+    scroll-behavior:auto !important;
+  }
+  .ui-aurora{ animation:none; }
+}
+
+/* ==========================================================================
+   4. LOGIN / HERO
+   ========================================================================== */
+
+body:not([data-theme]) #loginScreen::before{
+  background:
+    radial-gradient(900px 520px at 10% -10%,rgba(var(--tg-rgb),.20),transparent 62%),
+    radial-gradient(760px 520px at 108% 112%,rgba(var(--green-rgb),.14),transparent 60%),
+    radial-gradient(680px 420px at 58% 46%,rgba(124,92,255,.13),transparent 70%);
+}
+
+body:not([data-theme]) .login-hero{
+  padding:64px 60px;
+  gap:22px;
+}
+
+body:not([data-theme]) .login-hero > *{
+  animation:uiFadeUp .62s var(--ui-ease) both;
+}
+body:not([data-theme]) .login-hero > *:nth-child(1){ animation-delay:.04s; }
+body:not([data-theme]) .login-hero > *:nth-child(2){ animation-delay:.10s; }
+body:not([data-theme]) .login-hero > *:nth-child(3){ animation-delay:.16s; }
+body:not([data-theme]) .login-hero > *:nth-child(4){ animation-delay:.22s; }
+body:not([data-theme]) .login-hero > *:nth-child(5){ animation-delay:.28s; }
+body:not([data-theme]) .login-hero > *:nth-child(6){ animation-delay:.34s; }
+body:not([data-theme]) .login-hero > *:nth-child(7){ animation-delay:.40s; }
+
+/* Brand lockup */
+body:not([data-theme]) .login-hero-logo{
+  width:56px;
+  height:56px;
+  border-radius:18px;
+  animation:uiFloat 7s ease-in-out infinite;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.12),
+    0 18px 44px rgba(0,0,0,.55),
+    0 0 34px rgba(var(--tg-rgb),.30);
+}
+
+body:not([data-theme]) .login-hero-brand-text b{
+  font-size:18px;
+  letter-spacing:.2px;
+}
+
+/* Hero badge with the REAL Telegram logo */
+.hero-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:9px;
+  align-self:flex-start;
+  padding:7px 14px 7px 8px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:750;
+  letter-spacing:.2px;
+  color:#cfe9ff;
+  background:linear-gradient(180deg,rgba(var(--tg-rgb),.20),rgba(var(--tg-rgb),.07));
+  border:1px solid rgba(var(--tg-rgb),.35);
+  box-shadow:0 8px 26px rgba(var(--tg-rgb),.14),inset 0 1px 0 rgba(255,255,255,.10);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+}
+
+.hero-badge img{
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  display:block;
+  box-shadow:0 0 0 1px rgba(255,255,255,.16),0 4px 12px rgba(var(--tg-rgb),.45);
+}
+
+.hero-badge .dot{
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 0 3px rgba(var(--green-rgb),.18);
+  animation:uiPulseRing 2.6s ease-out infinite;
+}
+
+body.light .hero-badge{
+  color:#0b5f96;
+  background:linear-gradient(180deg,rgba(var(--tg-rgb),.14),rgba(var(--tg-rgb),.06));
+}
+
+body:not([data-theme]) .login-hero h1{
+  font-size:clamp(30px,3.6vw,46px);
+  letter-spacing:-1.2px;
+  max-width:19ch;
+}
+
+body:not([data-theme]) .login-hero h1 em{
+  background:linear-gradient(100deg,#7ce7ff 0%,var(--tg) 38%,var(--green) 100%);
+  background-size:200% 100%;
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  animation:uiShimmer 9s linear infinite;
+}
+
+body:not([data-theme]) .login-hero p{
+  font-size:15px;
+  max-width:46ch;
+  color:#9fb0c6;
+}
+
+/* Feature bullets */
+body:not([data-theme]) .login-points{
+  gap:10px;
+}
+
+body:not([data-theme]) .login-points li{
+  padding:12px 14px;
+  border-radius:15px;
+  background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015));
+  border:1px solid rgba(255,255,255,.06);
+  transition:transform .28s var(--ui-ease),border-color .28s ease,background .28s ease;
+}
+
+body:not([data-theme]) .login-points li:hover{
+  transform:translateX(4px);
+  border-color:rgba(var(--green-rgb),.30);
+  background:linear-gradient(180deg,rgba(var(--green-rgb),.10),rgba(255,255,255,.02));
+}
+
+body:not([data-theme]) .login-points .point-icon{
+  width:36px;
+  height:36px;
+  flex-basis:36px;
+  border-radius:12px;
+  color:var(--green);
+  background:radial-gradient(circle at 30% 20%,rgba(var(--green-rgb),.26),rgba(var(--green-rgb),.06));
+  box-shadow:inset 0 0 0 1px rgba(var(--green-rgb),.26),0 6px 18px rgba(var(--green-rgb),.12);
+}
+
+body:not([data-theme]) .login-trust{
+  color:#7c8ba1;
+}
+
+/* Payment logos strip — real brand assets, lazily loaded */
+.hero-pay{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:6px;
+}
+
+.hero-pay span{
+  font-size:11px;
+  letter-spacing:1.6px;
+  text-transform:uppercase;
+  color:#66768c;
+  margin-right:2px;
+}
+
+.hero-pay img{
+  width:34px;
+  height:34px;
+  border-radius:11px;
+  object-fit:cover;
+  background:#0b1220;
+  border:1px solid rgba(255,255,255,.09);
+  padding:2px;
+  box-shadow:0 6px 18px rgba(0,0,0,.35);
+  transition:transform .28s var(--ui-ease),box-shadow .28s ease;
+}
+
+.hero-pay img:hover{
+  transform:translateY(-3px) scale(1.04);
+  box-shadow:0 12px 26px rgba(0,0,0,.5);
+}
+
+/* ==========================================================================
+   5. AUTH CARD, FIELDS, BUTTONS
+   ========================================================================== */
+
+body:not([data-theme]) .login-card{
+  max-width:438px;
+  padding:32px 30px 28px;
+  border-radius:28px;
+  border:1px solid rgba(255,255,255,.10);
+  background:
+    linear-gradient(180deg,rgba(18,26,38,.92),rgba(9,14,22,.95));
+  box-shadow:
+    0 40px 120px rgba(0,0,0,.70),
+    0 0 0 1px rgba(var(--tg-rgb),.06),
+    inset 0 1px 0 rgba(255,255,255,.06);
+  animation:uiPop .6s var(--ui-ease) both;
+}
+
+/* Animated gradient hairline on top of the card */
+body:not([data-theme]) .login-card::before{
+  left:6%;
+  right:6%;
+  height:1.5px;
+  background:linear-gradient(90deg,transparent,rgba(var(--tg-rgb),.85),rgba(var(--green-rgb),.85),transparent);
+  background-size:200% 100%;
+  animation:uiShimmer 6s linear infinite;
+}
+
+body:not([data-theme]) .login-card-logo{
+  width:62px;
+  height:62px;
+  border-radius:20px;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.12),
+    0 14px 34px rgba(0,0,0,.55),
+    0 0 30px rgba(var(--tg-rgb),.24);
+}
+
+body:not([data-theme]) .brand-title{
+  font-size:23px;
+  letter-spacing:5px;
+  background:linear-gradient(180deg,#fff,#a9bdd4);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+
+body:not([data-theme]) .brand-sub{
+  color:#7d8ea6;
+}
+
+/* Tabs */
+body:not([data-theme]) .auth-tabs{
+  border-radius:15px;
+  background:rgba(255,255,255,.035);
+  border:1px solid rgba(255,255,255,.07);
+  padding:5px;
+}
+
+body:not([data-theme]) .auth-tab{
+  border-radius:11px;
+  transition:background .22s var(--ui-ease),color .22s ease,box-shadow .22s ease,transform .22s var(--ui-ease);
+}
+
+body:not([data-theme]) .auth-tab.active{
+  background:linear-gradient(180deg,#182233,#0d1521);
+  box-shadow:0 8px 20px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+/* Method switch */
+body:not([data-theme]) .method-btn{
+  border-radius:14px;
+  background:rgba(255,255,255,.02);
+  transition:transform .22s var(--ui-ease),border-color .22s ease,background .22s ease,color .22s ease;
+}
+
+body:not([data-theme]) .method-btn:hover{
+  transform:translateY(-2px);
+  border-color:rgba(255,255,255,.22);
+}
+
+body:not([data-theme]) .method-btn.active{
+  border-color:rgba(var(--green-rgb),.55);
+  background:linear-gradient(180deg,rgba(var(--green-rgb),.16),rgba(var(--green-rgb),.05));
+  box-shadow:0 8px 22px rgba(var(--green-rgb),.12),inset 0 1px 0 rgba(255,255,255,.07);
+}
+
+/* Fields */
+body:not([data-theme]) .field-input{
+  border-radius:14px;
+  background:rgba(255,255,255,.035);
+  border-color:rgba(255,255,255,.09);
+  transition:border-color .22s ease,box-shadow .22s ease,background .22s ease;
+}
+
+body:not([data-theme]) .field-input:hover{
+  border-color:rgba(255,255,255,.16);
+}
+
+body:not([data-theme]) .field-input:focus{
+  background:rgba(255,255,255,.06);
+  border-color:rgba(var(--tg-rgb),.65);
+  box-shadow:0 0 0 4px rgba(var(--tg-rgb),.14),0 10px 26px rgba(0,0,0,.35);
+}
+
+body:not([data-theme]) .field-shell:focus-within > .icon{
+  color:var(--tg);
+}
+
+/* Telegram button with the real logo */
+.btn-telegram{
+  position:relative;
+  overflow:hidden;
+  gap:11px;
+  border-radius:15px !important;
+  font-weight:800;
+  letter-spacing:.1px;
+  background:linear-gradient(180deg,#2fb0ea,#1d97d4) !important;
+  border:1px solid rgba(255,255,255,.18) !important;
+  color:#fff !important;
+  box-shadow:0 14px 34px rgba(var(--tg-rgb),.30),inset 0 1px 0 rgba(255,255,255,.28);
+  transition:transform .22s var(--ui-ease),box-shadow .22s ease,filter .22s ease !important;
+}
+
+.btn-telegram::after{
+  content:"";
+  position:absolute;
+  top:0;
+  bottom:0;
+  width:45%;
+  left:-60%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.42),transparent);
+  transform:skewX(-16deg);
+  pointer-events:none;
+}
+
+.btn-telegram:hover{
+  transform:translateY(-2px);
+  filter:brightness(1.05);
+  box-shadow:0 18px 44px rgba(var(--tg-rgb),.42),inset 0 1px 0 rgba(255,255,255,.36);
+}
+
+.btn-telegram:hover::after{
+  animation:uiSheen .9s ease;
+}
+
+.btn-telegram img.tg-logo{
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  display:block;
+}
+
+/* Main CTA */
+body:not([data-theme]) .login-btn,
+body:not([data-theme]) .primary-btn{
+  position:relative;
+  overflow:hidden;
+  border-radius:15px;
+  background:linear-gradient(180deg,#ffffff,#dfe9f6);
+  color:#071320;
+  box-shadow:0 14px 34px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.9);
+  transition:transform .2s var(--ui-ease),box-shadow .2s ease,filter .2s ease;
+}
+
+body:not([data-theme]) .login-btn:hover,
+body:not([data-theme]) .primary-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 20px 44px rgba(0,0,0,.55),0 0 0 4px rgba(var(--tg-rgb),.12),inset 0 1px 0 #fff;
+}
+
+body:not([data-theme]) .login-btn:active,
+body:not([data-theme]) .primary-btn:active{
+  transform:translateY(0) scale(.995);
+}
+
+/* Click ripple (added by /ui-v2.js) */
+.ui-ripple{
+  position:absolute;
+  border-radius:50%;
+  background:rgba(255,255,255,.55);
+  pointer-events:none;
+  animation:uiRipple .62s ease-out forwards;
+  transform:translate(-50%,-50%);
+}
+
+.login-error{
+  border-radius:13px;
+  animation:uiFadeUp .3s ease both;
+}
+
+/* ==========================================================================
+   6. DASHBOARD SHELL / HEADER / WELCOME / TELEGRAM CHIP
+   ========================================================================== */
+
+body:not([data-theme]) .app-header{
+  background:linear-gradient(180deg,rgba(5,9,16,.92),rgba(5,9,16,.62));
+  border-bottom:1px solid rgba(255,255,255,.06);
+  backdrop-filter:blur(18px) saturate(150%);
+  -webkit-backdrop-filter:blur(18px) saturate(150%);
+  box-shadow:0 10px 34px rgba(0,0,0,.35);
+}
+
+body:not([data-theme]) .header-logo{
+  border-radius:12px;
+  box-shadow:0 0 0 1px rgba(255,255,255,.12),0 8px 20px rgba(0,0,0,.45),0 0 18px rgba(var(--tg-rgb),.22);
+}
+
+body:not([data-theme]) .header-title{
+  letter-spacing:.3px;
+  background:linear-gradient(180deg,#fff,#b9cbe0);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+
+body:not([data-theme]) .header-refresh{
+  border-radius:13px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.08);
+  transition:transform .22s var(--ui-ease),background .22s ease,border-color .22s ease;
+}
+
+body:not([data-theme]) .header-refresh:hover{
+  transform:translateY(-1px);
+  background:rgba(255,255,255,.10);
+  border-color:rgba(var(--tg-rgb),.35);
+}
+
+body:not([data-theme]) .container{
+  padding-top:6px;
+}
+
+body:not([data-theme]) .page.active{
+  animation:uiFadeUp .4s var(--ui-ease) both;
+}
+
+body:not([data-theme]) .welcome-name{
+  font-size:26px;
+  letter-spacing:-.4px;
+}
+
+body:not([data-theme]) .welcome-line{
+  color:#8fa0b7;
+  font-size:13px;
+  letter-spacing:.4px;
+}
+
+body:not([data-theme]) .welcome-avatar,
+body:not([data-theme]) .tg-account-avatar,
+body:not([data-theme]) .header-avatar{
+  border-radius:50%;
+  box-shadow:0 0 0 1px rgba(255,255,255,.14),0 8px 22px rgba(0,0,0,.45),0 0 22px rgba(var(--tg-rgb),.16);
+}
+
+/* Telegram account strip */
+body:not([data-theme]) .tg-account{
+  position:relative;
+  overflow:hidden;
+  border-radius:20px;
+  border:1px solid rgba(var(--tg-rgb),.26);
+  background:
+    radial-gradient(120% 120% at 0% 0%,rgba(var(--tg-rgb),.16),transparent 55%),
+    linear-gradient(180deg,rgba(16,26,40,.92),rgba(9,14,22,.94));
+  box-shadow:0 16px 44px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.05);
+}
+
+body:not([data-theme]) .tg-account::after{
+  content:"";
+  position:absolute;
+  top:-40%;
+  right:-10%;
+  width:190px;
+  height:190px;
+  background:url("/assets/telegram-logo.svg") center/contain no-repeat;
+  opacity:.07;
+  transform:rotate(-12deg);
+  pointer-events:none;
+}
+
+body:not([data-theme]) #tgAccountVerified{
+  color:#7fd4ff;
+}
+
+body:not([data-theme]) .tg-account-open{
+  border-radius:11px;
+  background:rgba(var(--tg-rgb),.16);
+  border:1px solid rgba(var(--tg-rgb),.35);
+  color:#c9ecff;
+  transition:transform .22s var(--ui-ease),background .22s ease;
+}
+
+body:not([data-theme]) .tg-account-open:hover{
+  transform:translateY(-1px);
+  background:rgba(var(--tg-rgb),.26);
+}
+
+/* ==========================================================================
+   7. BALANCE / STATS / SECTIONS
+   ========================================================================== */
+
+body:not([data-theme]) .announcement{
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.07);
+  background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
+  position:relative;
+  overflow:hidden;
+}
+
+body:not([data-theme]) .announcement-title{
+  color:#dbe9fb;
+}
+
+body:not([data-theme]) .balance-card{
+  position:relative;
+  overflow:hidden;
+  border-radius:24px;
+  padding:26px;
+  border:1px solid rgba(var(--green-rgb),.22);
+  background:
+    radial-gradient(140% 120% at 0% 0%,rgba(var(--green-rgb),.20),transparent 55%),
+    radial-gradient(120% 120% at 100% 0%,rgba(var(--tg-rgb),.16),transparent 55%),
+    linear-gradient(180deg,#0d1622,#080e17);
+  box-shadow:
+    0 22px 60px rgba(0,0,0,.48),
+    inset 0 1px 0 rgba(255,255,255,.07);
+}
+
+/* slow moving light sweep across the balance card */
+body:not([data-theme]) .balance-card::after{
+  content:"";
+  position:absolute;
+  top:-60%;
+  left:-40%;
+  width:60%;
+  height:220%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);
+  transform:rotate(12deg);
+  animation:uiSheen 9s ease-in-out infinite;
+  pointer-events:none;
+}
+
+body:not([data-theme]) .balance-label{
+  color:#93a7c0;
+  letter-spacing:.3px;
+}
+
+body:not([data-theme]) .balance-value{
+  font-size:46px;
+  letter-spacing:-1.5px;
+  background:linear-gradient(180deg,#fff,#c4d6ea);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+
+body:not([data-theme]) .add-balance{
+  position:relative;
+  overflow:hidden;
+  border-radius:15px;
+  background:linear-gradient(180deg,#ffffff,#dbe8f7);
+  color:#06121f;
+  box-shadow:0 12px 30px rgba(0,0,0,.42),inset 0 1px 0 #fff;
+  transition:transform .2s var(--ui-ease),box-shadow .2s ease;
+}
+
+body:not([data-theme]) .add-balance:hover{
+  transform:translateY(-2px);
+  box-shadow:0 18px 40px rgba(0,0,0,.5),0 0 0 4px rgba(var(--green-rgb),.10);
+}
+
+body:not([data-theme]) .stat-card{
+  position:relative;
+  overflow:hidden;
+  border-radius:20px;
+  border:1px solid rgba(255,255,255,.07);
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.014));
+  transition:transform .26s var(--ui-ease),border-color .26s ease,box-shadow .26s ease;
+}
+
+body:not([data-theme]) .stat-card:hover{
+  transform:translateY(-3px);
+  border-color:rgba(var(--tg-rgb),.32);
+  box-shadow:0 18px 40px rgba(0,0,0,.40);
+}
+
+body:not([data-theme]) .stat-value{
+  font-size:30px;
+  letter-spacing:-.5px;
+}
+
+body:not([data-theme]) .section-title{
+  letter-spacing:-.2px;
+}
+
+body:not([data-theme]) .view-all{
+  border-radius:999px;
+  padding:7px 12px;
+  background:rgba(255,255,255,.045);
+  border:1px solid rgba(255,255,255,.07);
+  transition:transform .22s var(--ui-ease),background .22s ease,color .22s ease;
+}
+
+body:not([data-theme]) .view-all:hover{
+  transform:translateX(2px);
+  background:rgba(var(--tg-rgb),.14);
+  color:#bfe8ff;
+}
+
+/* ==========================================================================
+   8. COUNTRY CARDS + LAZY LOADING
+   ========================================================================== */
+
+body:not([data-theme]) .search-box{
+  border-radius:15px;
+  background:rgba(255,255,255,.04);
+  border-color:rgba(255,255,255,.09);
+  transition:border-color .22s ease,box-shadow .22s ease,background .22s ease;
+}
+
+body:not([data-theme]) .search-box:focus{
+  border-color:rgba(var(--tg-rgb),.60);
+  background:rgba(255,255,255,.06);
+  box-shadow:0 0 0 4px rgba(var(--tg-rgb),.12);
+}
+
+body:not([data-theme]) .country-card{
+  position:relative;
+  overflow:hidden;
+  border-radius:20px;
+  border:1px solid rgba(255,255,255,.07);
+  background:
+    radial-gradient(120% 100% at 50% 0%,rgba(var(--tg-rgb),.07),transparent 60%),
+    linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
+  animation:uiPop .42s var(--ui-ease) both;
+  transition:transform .26s var(--ui-ease),border-color .26s ease,box-shadow .26s ease;
+}
+
+body:not([data-theme]) .country-card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  padding:1px;
+  background:linear-gradient(140deg,rgba(var(--tg-rgb),.55),transparent 40%,transparent 60%,rgba(var(--green-rgb),.45));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  mask-composite:exclude;
+  opacity:0;
+  transition:opacity .3s ease;
+  pointer-events:none;
+}
+
+body:not([data-theme]) .country-card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 24px 50px rgba(0,0,0,.45),0 0 30px rgba(var(--tg-rgb),.14);
+}
+
+body:not([data-theme]) .country-card:hover::before{
+  opacity:1;
+}
+
+body:not([data-theme]) .country-card:active{
+  transform:translateY(-1px) scale(.995);
+}
+
+body:not([data-theme]) .country-flag{
+  font-size:31px;
+  filter:drop-shadow(0 6px 14px rgba(0,0,0,.45));
+}
+
+body:not([data-theme]) .country-price{
+  color:#dce8f7;
+}
+
+body:not([data-theme]) .stock{
+  font-variant-numeric:tabular-nums;
+}
+
+body:not([data-theme]) .buy-now{
+  position:relative;
+  overflow:hidden;
+  border-radius:13px;
+  background:linear-gradient(180deg,#ffffff,#dde9f7);
+  color:#06121f;
+  box-shadow:0 10px 24px rgba(0,0,0,.35),inset 0 1px 0 #fff;
+  transition:transform .2s var(--ui-ease),box-shadow .2s ease,filter .2s ease;
+}
+
+body:not([data-theme]) .buy-now:hover:not(:disabled){
+  transform:translateY(-2px);
+  box-shadow:0 16px 34px rgba(0,0,0,.45);
+}
+
+body:not([data-theme]) .buy-now:disabled{
+  background:rgba(255,255,255,.08);
+  color:#7f8ea3;
+  box-shadow:none;
+  opacity:.7;
+}
+
+/* Shimmering placeholder cards while live stock is on its way */
+.skeleton-grid{
+  grid-column:1 / -1;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(178px,1fr));
+  gap:16px;
+  width:100%;
+}
+
+.skeleton-card{
+  height:216px;
+  border-radius:20px;
+  border:1px solid rgba(255,255,255,.05);
+  background:
+    linear-gradient(100deg,rgba(255,255,255,.035) 20%,rgba(255,255,255,.085) 40%,rgba(255,255,255,.035) 60%);
+  background-size:220% 100%;
+  animation:uiShimmer 1.5s linear infinite;
+}
+
+.sr-only{
+  position:absolute;
+  width:1px;
+  height:1px;
+  padding:0;
+  margin:-1px;
+  overflow:hidden;
+  clip:rect(0 0 0 0);
+  white-space:nowrap;
+  border:0;
+}
+
+body.light .skeleton-card{
+  border-color:rgba(12,26,45,.05);
+  background:
+    linear-gradient(100deg,rgba(12,26,45,.04) 20%,rgba(12,26,45,.09) 40%,rgba(12,26,45,.04) 60%);
+  background-size:220% 100%;
+}
+
+/* Lazy-loading sentinel used by the chunked country renderer */
+.lazy-sentinel{
+  grid-column:1 / -1;
+  height:1px;
+  width:100%;
+  pointer-events:none;
+}
+
+.lazy-sentinel::before{
+  content:"";
+  display:block;
+  width:100%;
+  height:56px;
+}
+
+/* ==========================================================================
+   9. ORDERS / MODALS / RECHARGE / SETTINGS
+   ========================================================================== */
+
+body:not([data-theme]) .order-card,
+body:not([data-theme]) .order-item{
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.07);
+  background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
+  transition:transform .24s var(--ui-ease),border-color .24s ease;
+}
+
+body:not([data-theme]) .order-card:hover,
+body:not([data-theme]) .order-item:hover{
+  transform:translateY(-2px);
+  border-color:rgba(255,255,255,.14);
+}
+
+body:not([data-theme]) .modal{
+  border-radius:26px;
+  border:1px solid rgba(255,255,255,.09);
+  background:linear-gradient(180deg,rgba(17,25,37,.98),rgba(8,13,21,.99));
+  box-shadow:0 40px 100px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.06);
+}
+
+body:not([data-theme]) .modal-overlay.show .modal{
+  animation:uiPop .34s var(--ui-ease) both;
+}
+
+body:not([data-theme]) .modal-head{
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+
+body:not([data-theme]) .modal-overlay{
+  background:rgba(2,5,10,.72);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+}
+
+body:not([data-theme]) .recharge-method-card{
+  border-radius:20px;
+  border:1px solid rgba(255,255,255,.08);
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.012));
+  transition:transform .24s var(--ui-ease),border-color .24s ease,box-shadow .24s ease;
+}
+
+body:not([data-theme]) .recharge-method-card:hover:not(.disabled){
+  transform:translateY(-3px);
+  border-color:rgba(var(--tg-rgb),.38);
+  box-shadow:0 20px 44px rgba(0,0,0,.42);
+}
+
+body:not([data-theme]) .pay-icon{
+  border-radius:50%;
+  box-shadow:0 8px 22px rgba(0,0,0,.42),0 0 0 1px rgba(255,255,255,.10);
+}
+
+/* ==========================================================================
+   10. BOTTOM NAVIGATION
+   ========================================================================== */
+
+body:not([data-theme]) .bottom-nav{
+  bottom:16px;
+  border-radius:26px;
+  padding:8px;
+  border:1px solid rgba(255,255,255,.09);
+  background:linear-gradient(180deg,rgba(14,21,32,.92),rgba(7,11,18,.94));
+  box-shadow:
+    0 20px 50px rgba(0,0,0,.55),
+    0 0 0 1px rgba(var(--tg-rgb),.06),
+    inset 0 1px 0 rgba(255,255,255,.07);
+}
+
+body:not([data-theme]) .nav-btn{
+  border-radius:20px;
+  color:#76849a;
+  transition:color .22s ease,background .22s ease,box-shadow .22s ease;
+}
+
+body:not([data-theme]) .nav-btn:hover{
+  color:#cfe0f4;
+}
+
+body:not([data-theme]) .nav-btn.active{
+  color:#eaf6ff;
+  background:linear-gradient(180deg,rgba(var(--tg-rgb),.22),rgba(var(--tg-rgb),.05));
+  box-shadow:
+    0 0 0 1px rgba(var(--tg-rgb),.35),
+    0 10px 26px rgba(var(--tg-rgb),.18),
+    inset 0 1px 0 rgba(255,255,255,.12);
+}
+
+body:not([data-theme]) .nav-btn.active .nav-icon{
+  color:#8fdcff;
+  filter:drop-shadow(0 0 8px rgba(var(--tg-rgb),.55));
+}
+
+/* little glowing dot under the active tab */
+body:not([data-theme]) .nav-btn.active::after{
+  content:"";
+  position:absolute;
+  bottom:6px;
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:var(--tg);
+  box-shadow:0 0 10px rgba(var(--tg-rgb),.9);
+  animation:uiFadeIn .3s ease both;
+}
+
+/* ==========================================================================
+   11. TOASTS / SKELETONS / MISC
+   ========================================================================== */
+
+.tga-toast{
+  position:fixed;
+  left:50%;
+  bottom:calc(104px + env(safe-area-inset-bottom,0px));
+  z-index:9999;
+  transform:translate(-50%,18px);
+  max-width:min(420px,calc(100vw - 40px));
+  padding:12px 18px;
+  border-radius:14px;
+  font-size:13px;
+  font-weight:650;
+  text-align:center;
+  color:#eaf5ff;
+  background:rgba(13,21,33,.96);
+  border:1px solid rgba(var(--tg-rgb),.35);
+  box-shadow:0 18px 44px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.08);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .25s ease,transform .3s var(--ui-ease);
+}
+
+.tga-toast.show{
+  opacity:1;
+  transform:translate(-50%,0);
+}
+
+.tga-toast.error{
+  border-color:rgba(255,107,107,.45);
+}
+
+.tga-toast.success{
+  border-color:rgba(var(--green-rgb),.45);
+}
+
+/* Skeleton shimmer used while a section is fetching */
+.skeleton{
+  border-radius:12px;
+  background:linear-gradient(100deg,rgba(255,255,255,.05) 20%,rgba(255,255,255,.11) 40%,rgba(255,255,255,.05) 60%);
+  background-size:220% 100%;
+  animation:uiShimmer 1.5s linear infinite;
+}
+
+.loading{
+  color:#7f8ea3;
+}
+
+.spinner{
+  border-color:rgba(255,255,255,.10);
+  border-top-color:var(--tg);
+  animation:uiSpin .75s linear infinite;
+}
+
+/* Smoothly fade elements that render after the first paint */
+.ui-fade-in{
+  animation:uiFadeIn .4s ease both;
+}
+
+/* ==========================================================================
+   12. LIGHT MODE
+   ========================================================================== */
+
+body.light:not([data-theme]){
+  --bg:#f4f7fb;
+  --surface:#ffffff;
+  --surface2:#eef3f9;
+  --border:rgba(12,26,45,.10);
+  --text:#0c1a2b;
+  --muted:#5d708a;
+  --soft:#8698ad;
+  --header-bg:rgba(255,255,255,.82);
+  --nav-bg:rgba(255,255,255,.92);
+  --nav-border:rgba(12,26,45,.08);
+  --nav-active:#ffffff;
+}
+
+body.light:not([data-theme]) .login-card{
+  background:linear-gradient(180deg,#ffffff,#f7fafd);
+  border-color:rgba(12,26,45,.08);
+  box-shadow:0 34px 90px rgba(12,32,60,.14),inset 0 1px 0 #fff;
+}
+
+body.light:not([data-theme]) .brand-title{
+  background:linear-gradient(180deg,#0c1a2b,#3f5876);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+
+body.light:not([data-theme]) .login-points li{
+  background:#fff;
+  border-color:rgba(12,26,45,.07);
+}
+
+body.light:not([data-theme]) .country-card,
+body.light:not([data-theme]) .stat-card,
+body.light:not([data-theme]) .recharge-method-card,
+body.light:not([data-theme]) .order-card,
+body.light:not([data-theme]) .order-item,
+body.light:not([data-theme]) .announcement{
+  background:linear-gradient(180deg,#ffffff,#f8fbfe);
+  border-color:rgba(12,26,45,.07);
+}
+
+body.light:not([data-theme]) .balance-card{
+  border-color:rgba(16,160,90,.22);
+  background:
+    radial-gradient(140% 120% at 0% 0%,rgba(16,185,129,.16),transparent 55%),
+    radial-gradient(120% 120% at 100% 0%,rgba(var(--tg-rgb),.14),transparent 55%),
+    linear-gradient(180deg,#ffffff,#f1f7fd);
+  box-shadow:0 18px 44px rgba(12,32,60,.10),inset 0 1px 0 #fff;
+}
+
+body.light:not([data-theme]) .balance-value{
+  background:linear-gradient(180deg,#0c1a2b,#3d5876);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+
+body.light:not([data-theme]) .add-balance,
+body.light:not([data-theme]) .buy-now,
+body.light:not([data-theme]) .login-btn,
+body.light:not([data-theme]) .primary-btn{
+  background:linear-gradient(180deg,#0f1e30,#1a2f47);
+  color:#fff;
+  box-shadow:0 14px 30px rgba(12,32,60,.22),inset 0 1px 0 rgba(255,255,255,.14);
+}
+
+body.light:not([data-theme]) .tg-account{
+  background:
+    radial-gradient(120% 120% at 0% 0%,rgba(var(--tg-rgb),.14),transparent 55%),
+    linear-gradient(180deg,#ffffff,#f4f9ff);
+  border-color:rgba(var(--tg-rgb),.30);
+  box-shadow:0 16px 40px rgba(12,32,60,.10);
+}
+
+body.light:not([data-theme]) .tg-account-open{
+  color:#0b5f96;
+}
+
+body.light:not([data-theme]) .tga-toast{
+  color:#0c1a2b;
+  background:rgba(255,255,255,.97);
+  border-color:rgba(var(--tg-rgb),.30);
+  box-shadow:0 18px 44px rgba(12,32,60,.18);
+}
+
+/* ==========================================================================
+   13. RESPONSIVE TOUCH-UPS
+   ========================================================================== */
+
+@media (max-width:1000px){
+  body:not([data-theme]) .login-panel{
+    padding:24px 16px 36px;
+  }
+
+  .hero-badge{
+    display:none;
+  }
+}
+
+@media (max-width:600px){
+  body:not([data-theme]) .login-card{
+    padding:28px 20px 24px;
+    border-radius:24px;
+  }
+
+  body:not([data-theme]) .balance-value{
+    font-size:40px;
+  }
+
+  body:not([data-theme]) .country-grid{
+    gap:12px;
+  }
+}
+
+@media (max-width:420px){
+  body:not([data-theme]) .country-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  body:not([data-theme]) .country-card{
+    padding:16px 12px;
+  }
+
+  body:not([data-theme]) .country-name{
+    font-size:14.5px;
+  }
+}
+
+/* Print: keep it readable */
+@media print{
+  .ui-aurora,
+  .bottom-nav,
+  .app-header,
+  .tga-toast{
+    display:none !important;
+  }
+}

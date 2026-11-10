@@ -68,7 +68,11 @@ tga-store/
 │   │   ├── upi.png             # UPI recharge icon
 │   │   ├── binance.png         # Binance Pay icon
 │   │   └── crypto.png          # Crypto / USDT icon
-│   ├── index.html              # User-facing store (single page app)
+│   ├── index.html              # User-facing store shell (single page app, ~37 KB)
+│   ├── app.css                 # Core UI stylesheet (cached; extracted from index.html)
+│   ├── ui-v2.css               # Polish layer: motion, glass, Telegram branding
+│   ├── app.js                  # Store app logic (cached; extracted from index.html)
+│   ├── ui-v2.js                # Optional visual helpers (aurora, lazy images, ripple)
 │   ├── docs.html               # Standalone API Docs page (served at /docs)
 │   ├── app-extras.js           # Emoji, header menu, /docs redirect, pricing modal
 │   ├── telegram-app.js         # Telegram Mini App auto sign-in (initData → /api/telegram)
@@ -77,13 +81,48 @@ tga-store/
 │   └── admin_login.html        # Admin login page
 │
 ├── dev/                        # Local development helpers (never deployed)
-│   └── preview-server.js       # Static server + mock API for previewing themes
+│   ├── preview-server.js       # Static server + mock API for previewing themes
+│   ├── smoke-test.js           # jsdom smoke test: boots the store, fails on JS errors
+│   └── session-test.js         # Sliding-session unit tests (no MongoDB needed)
 │
 ├── bot.py                      # Telegram bot (hosted separately; website shares its DB)
 ├── BOT_PATCH_INSTRUCTIONS.md   # Patch notes for website login/register/connect inside the bot
 ├── vercel.json                 # Vercel rewrites (/admin → admin.html)
 └── package.json
 ```
+
+---
+
+## ⚡ Sessions, caching & performance
+
+> These notes describe the current behaviour, so nobody "fixes" it back.
+
+### Sessions never log you out while you are using the store
+- Sessions are **sliding**: `lib/site.js` stores `expires_at` and refreshes it on
+  every authenticated request (at most once every 5 minutes). A user is only
+  signed out after **30 days of inactivity** (admins: 24 hours).
+- A migration backfills `expires_at` on old session docs and adds a Mongo TTL
+  index, so dead sessions clean themselves up.
+- The client **never logs out on its own**. A 401 first tries to recover
+  (newer token, silent Telegram re-auth, `GET /api/account?action=session`);
+  only a confirmed dead session returns the user to the login form.
+- `telegram-web-app.js` exists in **every** browser, so the store no longer
+  treats "SDK present" as "Mini App launch" (`isTelegramMiniApp()` checks
+  initData / platform / launch hash). A normal visitor with a saved session keeps
+  the dashboard and never sees a Telegram error message.
+- `window.__tgaTelegramRetry()` renews a Mini App session silently, and a
+  saved dashboard is painted from `localStorage` **before** any network call.
+
+### Speed
+- `/api/countries` and `/api/status` are cached in memory in the serverless
+  function (45s / 15s) **and** at the Cloudflare edge (`worker.js`), so a page
+  load no longer waits on the number provider.
+- HTML is ~37 KB: CSS (`app.css`) and JS (`app.js`) are separate, long-cached
+  files; `theme-ui.css` (85 KB) loads without blocking the first paint.
+- Images are optimised (logo 520 KB → 30 KB, payment icons ≈60% smaller) and
+  everything below the fold is `loading="lazy"`.
+- Country grids render in chunks with `IntersectionObserver`, and dashboard /
+  countries payloads are cached in `localStorage` (stale-while-revalidate).
 
 ---
 

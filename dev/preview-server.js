@@ -161,6 +161,16 @@ async function api(req, res, url) {
   }
 
   if (route === "account") {
+    if (action === "session" || action === "me" || action === "ping") {
+      // Mirrors the real GET /api/account?action=session contract.
+      const token = String(req.headers.authorization || "").replace(/^Bearer\s+/i, "");
+      if (!token) return json(res, 200, { success: true, auth: false });
+      return json(res, 200, {
+        success: true,
+        auth: true,
+        user: { userId: "7888066934", telegramId: "7888066934", username: "tg_demo_user", firstName: "Demo", lastName: "User", balance: 4720, bot_connected: true }
+      });
+    }
     if (action === "bot-connect") {
       return json(res, 200, { success: true, connected: true, code: "TGA-DEMO", linked: true });
     }
