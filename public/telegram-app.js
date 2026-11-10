@@ -11,6 +11,16 @@
         name, username, photo and balance are all filled in automatically,
      4. tells index.html to open the dashboard (`window.__tgaOpenDashboard`).
 
+   IMPORTANT (auto-logout fix):
+   telegram-web-app.js defines `window.Telegram.WebApp` in EVERY browser. This
+   script therefore never assumes "SDK present = Mini App". It requires real
+   initData, a real platform, or the launch hash. Outside Telegram it does
+   nothing at all — the saved website session stays exactly as it was.
+
+   It also exposes `window.__tgaTelegramRetry()` so an expired session can be
+   renewed silently from the Mini App instead of throwing the user back to the
+   login form.
+
    Why it can look like "auto-login does not work":
      • The page was opened in Telegram's in-app *browser* (a normal link in a
        chat), not as a Mini App → Telegram passes no initData at all.
@@ -20,7 +30,7 @@
      • The bot token on the server belongs to a different bot than the one the
        Mini App is attached to → /api/telegram answers 401 bad_hash.
 
-   Every failure path now reports a specific reason (console + the
+   Every failure path reports a specific reason (console + the
    `tga:telegram-auth-failed` event + window.__tgaTelegramDiag) instead of
    silently showing the password form.
    ========================================================================== */
@@ -29,7 +39,6 @@
   "use strict";
 
   var SDK_WAIT_MS = 3000;
-  var started = false;
 
   var diag = {
     hasTelegramObject: false,
@@ -37,7 +46,8 @@
     source: "",
     attempts: 0,
     lastError: "",
-    finished: false
+    finished: false,
+    retries: 0
   };
   window.__tgaTelegramDiag = diag;
 
@@ -80,10 +90,6 @@
     }
     if (params.get("tgWebAppData")) return params.get("tgWebAppData");
 
-    // Older clients double-encode the whole app payload.
-    var flat = params.get("tgWebAppData");
-    if (flat) return flat;
-
     var idx = query.indexOf("tgWebAppData=");
     if (idx === -1) return "";
     var value = query.slice(idx + "tgWebAppData=".length).split("&tgWebApp")[0];
@@ -91,6 +97,34 @@
       return decodeURIComponent(value);
     } catch (e) {
       return value;
+    }
+  }
+
+  /*
+    Is this really a Telegram Mini App launch?
+    Outside Telegram the SDK still exists, but `platform` is "unknown" and
+    initData is empty — in that case we must NOT touch the website session.
+  */
+  function isTelegramContext() {
+    try {
+      var app = webApp();
+      if (app) {
+        if (app.initData) return true;
+        if (app.initDataUnsafe && app.initDataUnsafe.user) return true;
+        var platform = String(app.platform || "").toLowerCase();
+        if (platform && platform !== "unknown") return true;
+      }
+      if (window.location.hash && window.location.hash.indexOf("tgWebAppData") !== -1) return true;
+      if (window.location.search && window.location.search.indexOf("tgWebAppData") !== -1) return true;
+    } catch (e) {}
+    return false;
+  }
+
+  function hasSession() {
+    try {
+      return Boolean(localStorage.getItem("tga_session"));
+    } catch (e) {
+      return false;
     }
   }
 
@@ -139,9 +173,15 @@
     // Message ids map to the human explanations in index.html.
     console.error("[tga] Telegram auto-login failed:", reason, detail || "");
 
-    try {
-      localStorage.removeItem("tga_login_source");
-    } catch (e) {}
+    /*
+      A saved website session is NOT an error. Never paint "Telegram sign-in
+      failed" over a logged-in dashboard — that is what made the store look
+      like it logged people out on every refresh.
+    */
+    if (hasSession()) {
+      diag.lastError = String(reason || "failed") + " (kept existing session)";
+      return;
+    }
 
     var payload = { reason: String(reason || "failed"), detail: detail ? String(detail) : "" };
 
@@ -175,13 +215,28 @@
     return { resp: resp, data: data };
   }
 
-  async function signIn() {
-    if (started) return;
-    started = true;
+  async function runSignIn(silent) {
+    diag.hasTelegramObject = Boolean(webApp());
+
+    if (!isTelegramContext()) {
+      /*
+        Not a Mini App launch at all — a normal browser tab, or Telegram's
+        in-app browser opened from a shared link. Nothing to do: the saved
+        session (or the normal login form) is already on screen.
+
+        We only explain the situation when the page really is running inside a
+        Telegram client (its user agent says so). A visitor on Chrome/Safari
+        must never see a "Telegram sign-in failed" message.
+      */
+      var inTelegramApp = /Telegram/i.test(String((navigator && navigator.userAgent) || ""));
+      diag.lastError = "not_in_telegram";
+      if (!silent && inTelegramApp && !hasSession()) {
+        fail("not_in_telegram", "Open the store from the bot's menu button / Open Store button.");
+      }
+      return false;
+    }
 
     var app = webApp();
-    diag.hasTelegramObject = Boolean(app);
-
     if (app) {
       try {
         app.ready();
@@ -192,8 +247,7 @@
 
     // 1. Prefer the SDK's signed initData (poll briefly — Telegram Web/
     // Desktop sometimes fills it late). If the SDK is missing or comes up
-    // empty, fall back to the launch hash (#tgWebAppData=…) immediately —
-    // no point stalling three seconds when the payload is already in the URL.
+    // empty, fall back to the launch hash (#tgWebAppData=…) immediately.
     var initData = "";
     if (app) {
       initData = await waitForInitData(Date.now() + SDK_WAIT_MS);
@@ -206,13 +260,13 @@
     diag.initDataLength = initData ? initData.length : 0;
 
     if (!initData) {
-      // Not a Mini App launch at all (opened in Telegram's in-app browser or a
-      // normal tab). Nothing to sign in with — the normal login form is right.
-      fail(
-        app ? "no_init_data" : "not_in_telegram",
-        "Open the store from the bot's menu button / Open Store button."
-      );
-      return;
+      if (!silent) {
+        fail(
+          app ? "no_init_data" : "not_in_telegram",
+          "Open the store from the bot's menu button / Open Store button."
+        );
+      }
+      return false;
     }
 
     // 2. verify it on the server (one network retry: cold serverless start)
@@ -228,8 +282,8 @@
         await new Promise(function (r) { setTimeout(r, 1000); });
         result = await postInitData(initData);
       } catch (e2) {
-        fail("network", (e2 && e2.message) || String(e2));
-        return;
+        if (!silent) fail("network", (e2 && e2.message) || String(e2));
+        return false;
       }
     }
 
@@ -237,14 +291,15 @@
     var data = result.data || {};
 
     if (!resp.ok || !data.success || !data.token) {
-      fail(data.reason || ("http_" + resp.status), data.message || "");
-      return;
+      if (!silent) fail(data.reason || ("http_" + resp.status), data.message || "");
+      return false;
     }
 
     // 3. store the session exactly like a website login
     diag.finished = true;
     storeSession(data.token, data.user || {});
     try { sessionStorage.removeItem("tga_tg_reloaded"); } catch (e) {}
+    try { delete window.__tgaTelegramAuthFailed; } catch (e) {}
 
     // Hand the profile to the page straight away so the dashboard can paint
     // the avatar / name / username before /api/dashboard even answers.
@@ -254,20 +309,48 @@
     } catch (e) {}
 
     openDashboard(data.user || {});
+    return true;
+  }
+
+  var inFlight = null;
+
+  /*
+    Public: renew the session silently. Used by index.html when an API call
+    comes back 401 — inside the Mini App we can usually get a brand new session
+    without ever showing the login form.
+  */
+  window.__tgaTelegramRetry = function () {
+    if (inFlight) return inFlight;
+    diag.retries += 1;
+    inFlight = runSignIn(true)
+      .catch(function () { return false; })
+      .then(function (ok) {
+        inFlight = null;
+        return ok;
+      });
+    return inFlight;
+  };
+
+  function start() {
+    if (inFlight) return inFlight;
+    inFlight = runSignIn(false)
+      .catch(function () { return false; })
+      .then(function (ok) {
+        inFlight = null;
+        return ok;
+      });
+    return inFlight;
   }
 
   /*
-    Start as early as we can — but if the page script is still parsing, wait for
-    DOMContentLoaded so index.html's `__tgaOpenDashboard` hook definitely exists
-    (otherwise we would need the reload fallback on every launch).
+    Start after the document is parsed so index.html's `__tgaOpenDashboard`
+    hook definitely exists (it is registered on DOMContentLoaded). With
+    `defer` on this file, readyState is "interactive" here — DOMContentLoaded
+    has NOT fired yet, so waiting for it is still correct.
   */
-  function start() {
-    signIn();
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", start, { once: true });
-  } else {
+  if (document.readyState === "complete") {
     start();
+  } else {
+    document.addEventListener("DOMContentLoaded", start, { once: true });
   }
 })();
