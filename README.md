@@ -167,7 +167,7 @@ tga-store/
 3. The number is returned instantly; the success modal shows a "Get OTP" button.
 4. When the OTP arrives, `/api/code` fetches the code + password.
 5. If there is an error during purchase, an **automatic refund** is issued.
-6. Three Telegram notifications are fired (fire-and-forget): public sales channel, private admin log, and buyer DM.
+6. Three Telegram notifications are awaited on each step (purchase + first OTP delivery): a screenshot-style public sales-channel post (rich heading + blockquote with price and "Purchased via website"), the private admin log, and the buyer DM.
 
 ### 5. Recharge / Wallet (`/api/recharge`)
 | Method | Flow |
@@ -271,7 +271,7 @@ Below it is a **Recent Activity** feed (last 25 logs) — login, buy, OTP, and r
 - Saved to `settings.server_config.s2_profit`
 
 #### 🔑 API Keys
-- Keys are server-tagged: **`TGAS2` + 10 random digits** (e.g. `TGAS2123456789`). The `2` is this deployment's server digit — set `API_KEY_SERVER=1|2|3` when this project is reused for Server 1 or 3. Legacy `TGA_…` keys keep working (validation is a DB lookup on the key itself).
+- Keys are server-tagged: **`TGAS2` + 10 random letters & digits** (e.g. `TGAS2Kd83Jf29Qx`) — the alphanumeric suffix (~60 bits of entropy) replaces the old digits-only suffix so keys can't be brute-forced. The `2` is this deployment's server digit — set `API_KEY_SERVER=1|2|3` when this project is reused for Server 1 or 3. Legacy `TGA_…` and old digits-only keys keep working (validation is a DB lookup on the key itself).
 - Lists **every API key created by every user** — full key (with copy button), owner (username + Telegram/account ID), how many keys that user has, total requests made with the key, created + last-used times
 - Summary pill up top: total users, total keys, total requests
 - Backed by `GET /api/admin?action=api_keys` (joins `api_keys` + `users` + `api_logs` request counts)
@@ -374,6 +374,8 @@ login screen top corner, the header ⋯ menu, and Settings → API Docs). Every
 
 Example: `GET /api/v1?action=getNumber&apiKey=TGAS2…&country_code=uz`
 
+**Sales log:** API purchases hit the public sales channel only when the OTP first arrives — the channel's usual rich heading + blockquote style, with **`🌐 Purchased via API`** in place of a price line. Repeated `getCode` polls never repost.
+
 ### Telegram Mini App sign-in
 | Piece | File | What it does |
 |---|---|---|
@@ -455,7 +457,7 @@ Set all of these in the Vercel project. **No real password or API key is written
 | `BOT_TOKEN` | — (required) | Also used to verify Mini App `initData` signatures |
 | `BOT_USERNAME` | `TGAStore1Bot` | Public bot username (deep links, docs) |
 | `WEBSITE_URL` | `https://tgastore.rulebreaker.cc` | Store URL used by the bot's Mini App menu button and `/start` button |
-| `API_KEY_SERVER` | `2` | Server digit stamped into new API keys (`TGAS<digit><10 random digits>`) |
+| `API_KEY_SERVER` | `2` | Server digit stamped into new API keys (`TGAS<digit><10 random letters/digits>`) |
 
 ### TG-Lion (Number Provider)
 | Var | Description |
@@ -548,7 +550,7 @@ The website and bot share the same MongoDB database. `BOT_PATCH_INSTRUCTIONS.md`
 - `/start connect_<token>` — accepts a link generated from Website Settings → Bot Connect and links the user's `telegram_id`
 - `/changepassword old new` command
 - Uses the `users.password_hash` (bcrypt), `users.telegram_id`, `users.bot_connected` fields
-- The website automatically sends the sales channel, admin log, and buyer DM on purchase (no extra bot code needed)
+- The website automatically sends the sales channel, admin log, and buyer DM on purchase and on first OTP delivery (no extra bot code needed). API orders (`source: "api"`) post to the sales channel only when the code arrives, marked **Purchased via API** (no price line)
 
 The bot must be restarted after pasting the patches.
 
